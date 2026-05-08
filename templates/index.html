@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1e293b; }
+        .header { background: #1e3a5f; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 1.5rem; }
+        .nav { display: flex; gap: 0.5rem; }
+.nav button { background: transparent; color: #94a3b8; border: none; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; border-radius: 4px; transition: all 0.2s; }
+
+        .nav button:hover { color: white; background: rgba(255,255,255,0.1); }
+
+        .nav button.active { color: white; background: rgba(255,255,255,0.15); }
+        #page-app-settings .nav button { color: #1e293b; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #334155; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
+        tr:hover { background: #f8fafc; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-primary { background: #1e3a5f; color: white; }
+        .btn-primary:hover { background: #2d4a6f; }
+        .btn-success { background: #059669; color: white; }
+        .btn-success:hover { background: #047857; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.35rem; font-weight: 500; color: #475569; font-size: 0.9rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .modal-header h2 { margin: 0; }
+        .close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+        .paystub { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
+        .paystub-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; }
+        .paystub-header h3 { font-size: 1.1rem; }
+        .paystub-header span { color: #64748b; }
+        .paystub-row { display: flex; justify-content: space-between; padding: 0.35rem 0; }
+        .paystub-row.subtotal { border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.25rem; font-weight: 600; }
+        .paystub-row.net { border-top: 2px solid #1e3a5f; padding-top: 0.75rem; margin-top: 0.5rem; font-size: 1.15rem; font-weight: 700; color: #059669; }
+        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .summary-card { background: white; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .summary-card .label { color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .summary-card .value { font-size: 2rem; font-weight: 700; }
+        .summary-card.gross .value { color: #1e3a5f; }
+        .summary-card.net .value { color: #059669; }
+        .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-gap { display: flex; gap: 0.5rem; }
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-ca { background: #fef3c7; color: #92400e; }
+        .badge-ny { background: #dbeafe; color: #1e40af; }
+        .badge-tx { background: #dcfce7; color: #166534; }
+        .badge-fl { background: #fce7f3; color: #9d174d; }
+        .badge-wa { background: #e0e7ff; color: #3730a3; }
+        .badge-nc { background: #f0fdf4; color: #166534; }
+        .week-selector { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; }
+        .week-selector label { font-weight: 600; white-space: nowrap; }
+        .week-selector input[type="date"] { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; }
+        .week-label { color: #475569; font-weight: 500; }
+        .history-list { list-style: none; }
+        .history-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; }
+        .history-list li:hover { background: #f8fafc; }
+        .history-list li:last-child { border-bottom: none; }
+        .history-week { font-weight: 600; }
+        .history-dates { color: #64748b; font-size: 0.85rem; }
+        .history-amounts { text-align: right; }
+        .history-amounts .gross { color: #64748b; font-size: 0.85rem; }
+        .history-amounts .net { font-weight: 700; color: #059669; }
+        .delete-week { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; padding: 0.25rem 0.5rem; border-radius: 4px; }
+        .delete-week:hover { background: #fef2f2; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+        .btn-outline { background: transparent; color: #1e3a5f; border: 1px solid #1e3a5f; }
+        .btn-outline:hover { background: #1e3a5f; color: white; }
+
+        #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        #login-page .card { max-width: 400px; width: 100%; text-align: center; }
+        #login-page .card h2 { margin-bottom: 1.5rem; }
+        #login-page .form-group { text-align: left; }
+        #login-page .btn { width: 100%; margin-top: 0.5rem; }
+        #login-error { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
+        #app-content { display: none; }
+        #app-content.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div id="login-page">
+        <div class="card">
+            <h2>Payroll App</h2>
+            <p style="color: #64748b; margin-bottom: 1.5rem;">Sign in to continue</p>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username" placeholder="Enter username" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+                <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;color:#475569;cursor:pointer;">
+                    <input type="checkbox" id="login-remember" style="width:auto;">
+                    Keep me logged in
+                </label>
+                <span style="font-size:0.85rem;color:#1e3a5f;cursor:pointer;" onclick="showForgotPassword()">Forgot password?</span>
+            </div>
+            <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
+            <div id="login-error" style="display:none;">Invalid credentials</div>
+            <div id="forgot-pw" style="display:none;margin-top:0.75rem;padding:0.75rem;background:#f8fafc;border-radius:4px;font-size:0.85rem;color:#475569;text-align:left;">
+                Default credentials: <strong>admin</strong> / <strong>admin</strong>.<br>
+                If credentials were changed, check the <code>users.json</code> file or set <code>ADMIN_USER</code>/<code>ADMIN_PASS</code> env vars.
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content">
+    <div class="header">
+        <h1>Payroll App</h1>
+        <div style="display:flex;align-items:center;">
+            <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
+            <div class="nav">
+                <button onclick="showPage('employees')">Employees</button>
+                <button class="active" onclick="showPage('hours')">Enter Hours</button>
+                <button onclick="showPage('payroll')">Payroll Results</button>
+                <button onclick="showPage('history')">History</button>
+                <button onclick="showPage('reports')">Reports</button>
+                <button onclick="showPage('app-settings')">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="page-employees" class="page">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom: 1rem;">
+                    <h2>Employee Directory</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ Add Employee</button>
+                </div>
+                <div id="employee-table-container"></div>
+            </div>
+        </div>
+
+        <div id="page-hours" class="page active">
+            <div class="card">
+                <h2>Enter Hours Worked</h2>
+                <div class="week-selector">
+                    <label>Select Pay Week:</label>
+                    <input type="date" id="week-picker" onchange="onWeekChange()">
+                    <span id="week-display" class="week-label"></span>
+                </div>
+                <p style="color: #64748b; margin-bottom: 1rem;" id="hours-description">Enter the hours worked for each employee for this pay week.</p>
+                <div id="hours-form-container"></div>
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary" onclick="saveHours()">Save Hours</button>
+                    <button class="btn btn-success" onclick="calculatePayroll()">Calculate Payroll</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-payroll" class="page">
+            <div id="payroll-results"></div>
+        </div>
+
+        <div id="page-history" class="page">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">Payroll History</h2>
+                    <button class="btn btn-sm btn-outline" onclick="downloadHistoryCsv()">Download CSV</button>
+                </div>
+                <div class="form-row" style="margin-bottom:1rem;">
+                    <div class="form-group" style="margin:0;">
+                        <label>From</label>
+                        <input type="date" id="history-start">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>To</label>
+                        <input type="date" id="history-end">
+                    </div>
+                    <div class="form-group" style="margin:0; display:flex; align-items:flex-end;">
+                        <button class="btn btn-primary btn-sm" onclick="loadHistory()">Filter</button>
+                    </div>
+                </div>
+                <div id="history-container"></div>
+            </div>
+        </div>
+
+        <div id="page-reports" class="page">
+            <div class="card">
+                <h2>Reports</h2>
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label>From</label>
+                        <input type="date" id="report-start">
+                    </div>
+                    <div class="form-group">
+                        <label>To</label>
+                        <input type="date" id="report-end">
+                    </div>
+                    <div class="form-group" style="display:flex; align-items:flex-end;">
+                        <button class="btn btn-primary" onclick="runReport()">Generate Report</button>
+                    </div>
+                </div>
+                <div id="report-summary"></div>
+                <div id="report-employees"></div>
+                <div id="paystub-detail" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div id="page-app-settings" class="page">
+            <div class="card">
+                <h2>Settings</h2>
+                <div class="form-group">
+                    <label>Week starts on:</label>
+                     <select id="week-start-day" style="padding:0.5rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.95rem;">
+                        <option value="0">Monday</option>
+                        <option value="1">Tuesday</option>
+                        <option value="2">Wednesday</option>
+                        <option value="3">Thursday</option>
+                        <option value="4">Friday</option>
+                        <option value="5">Saturday</option>
+                        <option value="6">Sunday</option>
+                    </select>
+                </div>
+                <button class="btn btn-success" onclick="saveAppSettings()">Save Settings</button>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('tax-settings-body', this)">
+                    <h2 style="margin:0;">Tax Settings</h2>
+                    <span id="tax-settings-arrow" style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="tax-settings-body" style="display:none;">
+                    <p style="color: #64748b; margin-bottom: 1rem;">Configure federal withholding brackets, state tax rates, and FICA settings. Changes apply to all employees.</p>
+                    <div class="nav" style="margin-bottom: 1rem; background: #9aa7b8; padding: 0.5rem; border-radius: 4px;">
+                        <button class="active" onclick="showSettingsTab('fed')" id="stab-fed">Federal</button>
+                        <button onclick="showSettingsTab('state')" id="stab-state">State</button>
+                        <button onclick="showSettingsTab('fica')" id="stab-fica">FICA</button>
+                    </div>
+                    <div id="settings-fed" class="settings-tab"></div>
+                    <div id="settings-state" class="settings-tab" style="display:none;"></div>
+                    <div id="settings-fica" class="settings-tab" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>User Settings</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="cp-current" placeholder="Current password">
+                    </div>
+                    <div class="form-group">
+                        <label>New Username</label>
+                        <input type="text" id="cp-username" placeholder="Leave blank to keep current">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="cp-new" placeholder="New password">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="cp-confirm" placeholder="Confirm new password">
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <button class="btn btn-primary" onclick="changePassword()">Update Credentials</button>
+                    <button class="btn btn-danger" onclick="doLogout()">Logout</button>
+                </div>
+                <div id="cp-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="employee-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Employee</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="employee-form" onsubmit="saveEmployee(event)">
+                <input type="hidden" id="edit-emp-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="emp-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Pay Type</label>
+                        <select id="emp-pay-type" onchange="onPayTypeChange()" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                            <option value="hourly">Hourly</option>
+                            <option value="salary">Salary</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" id="emp-rate-group">
+                        <label>Hourly Rate ($)</label>
+                        <input type="number" id="emp-rate" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group" id="emp-salary-group" style="display:none;">
+                        <label>Weekly Salary ($)</label>
+                        <input type="number" id="emp-salary" step="0.01" min="0" oninput="onSalaryChange()">
+                        <span id="emp-salary-yearly" style="font-size:0.8rem;color:#64748b;"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Filing Status</label>
+                        <select id="emp-filing" required>
+                            <option value="single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="head_of_household">Head of Household</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <select id="emp-state" required>
+                            <option value="CA">California</option>
+                            <option value="NY">New York</option>
+                            <option value="NC">North Carolina</option>
+                            <option value="TX">Texas</option>
+                            <option value="FL">Florida</option>
+                            <option value="WA">Washington</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Federal Allowances</label>
+                        <input type="number" id="emp-fed-allow" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>State Allowances</label>
+                        <input type="number" id="emp-state-allow" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Overtime Rate (1.5 = time-and-a-half)</label>
+                        <input type="number" id="emp-ot-rate" step="0.1" min="0" value="1.5">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <label>
+                            <input type="checkbox" id="emp-step2" style="width:auto; margin-right:0.5rem;">
+                            W-4 Step 2 Checkbox
+                        </label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="display: flex; align-items: flex-end;">
+                        <label>
+                            <input type="checkbox" id="emp-tipped" onchange="toggleTipRate()" style="width:auto; margin-right:0.5rem;">
+                            Tipped Employee
+                        </label>
+                    </div>
+                </div>
+                <div style="border-top:1px solid #e2e8f0; margin:0.75rem 0;"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fed Add. Withholding</label>
+                        <div style="display:flex;gap:0.25rem;">
+                            <select id="emp-fed-add-type" style="width:auto;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                                <option value="amount">$</option>
+                                <option value="percentage">%</option>
+                            </select>
+                            <input type="number" id="emp-fed-add-val" step="0.01" min="0" value="0" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>State Add. Withholding</label>
+                        <div style="display:flex;gap:0.25rem;">
+                            <select id="emp-state-add-type" style="width:auto;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                                <option value="amount">$</option>
+                                <option value="percentage">%</option>
+                            </select>
+                            <input type="number" id="emp-state-add-val" step="0.01" min="0" value="0" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let employees = [];
+        let currentWeek = null;
+        let weekStartDay = 0;
+        const ALLOWANCE_COLS = 12;
+
+        function mirrorLessThan(input) {
+            const p = input.id.split('-');
+            const row = parseInt(p[p.length - 2]);
+            if (row > 0) {
+                p[p.length - 2] = row - 1;
+                p[p.length - 1] = '1';
+                const above = document.getElementById(p.join('-'));
+                if (above) above.value = input.value;
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            const input = e.target;
+            if (!input.classList.contains('nav-input')) return;
+            const p = input.id.split('-');
+            const col = parseInt(p[p.length - 1]);
+            const row = parseInt(p[p.length - 2]);
+            const prefix = p.slice(0, p.length - 2).join('-');
+            let targetId = null;
+            switch (e.key) {
+                case 'ArrowUp': e.preventDefault(); if (row > 0) targetId = prefix + '-' + (row - 1) + '-' + col; break;
+                case 'ArrowDown': e.preventDefault(); targetId = prefix + '-' + (row + 1) + '-' + col; break;
+                case 'ArrowLeft': if (col > 0) targetId = prefix + '-' + row + '-' + (col - 1); break;
+                case 'ArrowRight': targetId = prefix + '-' + row + '-' + (col + 1); break;
+            }
+            if (targetId) {
+                const target = document.getElementById(targetId);
+                if (target) { target.focus(); target.select(); }
+            }
+        });
+
+        async function fetchEmployees() {
+            const res = await fetch('/api/employees');
+            employees = await res.json();
+            renderEmployees();
+            renderHoursForm();
+        }
+
+        function getWeekInfo(dateStr, weekStartDay) {
+            const dt = new Date(dateStr + 'T00:00:00');
+            const jsWeekStart = (weekStartDay + 1) % 7;
+            const diff = (dt.getDay() - jsWeekStart + 7) % 7;
+            const start = new Date(dt);
+            start.setDate(dt.getDate() - diff);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            const key = (d) => d.toISOString().split('T')[0];
+            return {
+                week_start: key(start),
+                week_end: key(end),
+                week_label: `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${fmt(end)}`,
+            };
+        }
+
+        async function loadWeekPicker() {
+            const res = await fetch('/api/app-settings');
+            if (res.ok) {
+                const s = await res.json();
+                weekStartDay = s.week_start_day || 0;
+            }
+            const picker = document.getElementById('week-picker');
+            if (!picker.value) {
+                const today = new Date();
+                picker.value = today.toISOString().split('T')[0];
+                onWeekChange();
+            }
+        }
+
+        async function onWeekChange() {
+            const picker = document.getElementById('week-picker');
+            if (!picker.value) return;
+            currentWeek = getWeekInfo(picker.value, weekStartDay);
+            document.getElementById('week-display').textContent = currentWeek.week_label;
+            renderHoursForm();
+            const res = await fetch(`/api/history/${encodeURIComponent(currentWeek.week_label)}`);
+            if (res.ok) {
+                const data = await res.json();
+                populateHours(data.hours);
+            }
+        }
+
+        function populateHours(hours) {
+            employees.forEach(emp => {
+                const input = document.getElementById(`hours-${emp.id}`);
+                if (input && hours[emp.id] !== undefined) {
+                    input.value = hours[emp.id];
+                }
+                if (emp.tipped) {
+                    const tipsInput = document.getElementById(`hours-${emp.id}_tips`);
+                    if (tipsInput && hours[`${emp.id}_tips`] !== undefined) {
+                        tipsInput.value = hours[`${emp.id}_tips`];
+                    }
+                    onHoursChange(emp.id);
+                }
+            });
+        }
+
+        function renderEmployees() {
+            const container = document.getElementById('employee-table-container');
+            if (employees.length === 0) {
+                container.innerHTML = '<div class="empty-state">No employees yet. Click "+ Add Employee" to get started.</div>';
+                return;
+            }
+            let html = `<table>
+                <thead><tr>
+                    <th>ID</th><th>Name</th><th>Pay</th><th>Status</th><th>State</th>
+                    <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>Actions</th>
+                </tr></thead><tbody>`;
+            employees.forEach(emp => {
+                const stateClass = `badge-${emp.state.toLowerCase()}`;
+                html += `<tr>
+                    <td>${emp.id}</td>
+                    <td><strong>${emp.name}</strong></td>
+                    <td>${emp.pay_type === 'salary' ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
+                    <td>${emp.filing_status.replace('_', ' ')}</td>
+                    <td><span class="badge ${stateClass}">${emp.state}</span></td>
+                    <td>${emp.federal_allowances}</td>
+                    <td>${emp.state_allowances}</td>
+                    <td>${emp.tipped ? '<span class="badge" style="background:#fef3c7;color:#92400e;">Yes</span>' : 'No'}</td>
+                    <td>
+                        <div class="flex-gap">
+                            <button class="btn btn-primary btn-sm" onclick="openEditModal('${emp.id}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteEmployee('${emp.id}')">Delete</button>
+                        </div>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add Employee';
+            document.getElementById('edit-emp-id').value = '';
+            document.getElementById('employee-form').reset();
+            document.getElementById('emp-pay-type').value = 'hourly';
+            onPayTypeChange();
+            document.getElementById('employee-modal').classList.add('active');
+        }
+
+        function openEditModal(id) {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            document.getElementById('modal-title').textContent = 'Edit Employee';
+            document.getElementById('edit-emp-id').value = emp.id;
+            document.getElementById('emp-name').value = emp.name;
+            document.getElementById('emp-pay-type').value = emp.pay_type || 'hourly';
+            onPayTypeChange();
+            document.getElementById('emp-rate').value = emp.hourly_rate;
+            document.getElementById('emp-salary').value = emp.salary_amount || 0;
+            if (emp.pay_type === 'salary') onSalaryChange();
+            document.getElementById('emp-filing').value = emp.filing_status;
+            document.getElementById('emp-state').value = emp.state;
+            document.getElementById('emp-fed-allow').value = emp.federal_allowances;
+            document.getElementById('emp-state-allow').value = emp.state_allowances;
+            document.getElementById('emp-step2').checked = emp.step2_checked || false;
+            document.getElementById('emp-ot-rate').value = emp.overtime_rate || 0;
+            document.getElementById('emp-tipped').checked = emp.tipped || false;
+            document.getElementById('emp-fed-add-type').value = emp.fed_add_withholding_type || 'amount';
+            document.getElementById('emp-fed-add-val').value = emp.fed_add_withholding_value || 0;
+            document.getElementById('emp-state-add-type').value = emp.state_add_withholding_type || 'amount';
+            document.getElementById('emp-state-add-val').value = emp.state_add_withholding_value || 0;
+            document.getElementById('employee-modal').classList.add('active');
+        }
+
+        function onPayTypeChange() {
+            const isSalary = document.getElementById('emp-pay-type').value === 'salary';
+            document.getElementById('emp-rate-group').style.display = isSalary ? 'none' : 'block';
+            document.getElementById('emp-salary-group').style.display = isSalary ? 'block' : 'none';
+            document.getElementById('emp-rate').required = !isSalary;
+            if (isSalary) onSalaryChange();
+        }
+
+        function onSalaryChange() {
+            const weekly = parseFloat(document.getElementById('emp-salary').value) || 0;
+            const yearly = weekly * 52;
+            document.getElementById('emp-salary-yearly').textContent = yearly ? `$${yearly.toLocaleString('en-US', {minimumFractionDigits: 2})}/yr` : '';
+        }
+
+        function closeModal() {
+            document.getElementById('employee-modal').classList.remove('active');
+        }
+
+        async function saveEmployee(e) {
+            e.preventDefault();
+            const editId = document.getElementById('edit-emp-id').value;
+            const data = {
+                name: document.getElementById('emp-name').value,
+                pay_type: document.getElementById('emp-pay-type').value,
+                hourly_rate: parseFloat(document.getElementById('emp-rate').value) || 0,
+                salary_amount: parseFloat(document.getElementById('emp-salary').value) || 0,
+                filing_status: document.getElementById('emp-filing').value,
+                state: document.getElementById('emp-state').value,
+                federal_allowances: parseInt(document.getElementById('emp-fed-allow').value),
+                state_allowances: parseInt(document.getElementById('emp-state-allow').value),
+                step2_checked: document.getElementById('emp-step2').checked,
+                overtime_rate: parseFloat(document.getElementById('emp-ot-rate').value) || 0,
+                tipped: document.getElementById('emp-tipped').checked,
+                fed_add_withholding_type: document.getElementById('emp-fed-add-type').value,
+                fed_add_withholding_value: parseFloat(document.getElementById('emp-fed-add-val').value) || 0,
+                state_add_withholding_type: document.getElementById('emp-state-add-type').value,
+                state_add_withholding_value: parseFloat(document.getElementById('emp-state-add-val').value) || 0,
+            };
+
+            const url = editId ? `/api/employees/${editId}` : '/api/employees';
+            const method = editId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                closeModal();
+                fetchEmployees();
+            }
+        }
+
+        async function deleteEmployee(id) {
+            if (!confirm('Delete this employee?')) return;
+            const res = await fetch(`/api/employees/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchEmployees();
+        }
+
+        function getStateMinWage(code) {
+            if (taxSettings && taxSettings.state && taxSettings.state[code] && taxSettings.state[code].minimum_wage) {
+                return taxSettings.state[code].minimum_wage;
+            }
+            const defs = {CA: 16.50, NY: 15.00, NC: 7.25, TX: 7.25, FL: 12.00, WA: 16.28};
+            return defs[code] || 7.25;
+        }
+
+        function calcExpectedTips(emp, hours) {
+            const h = parseFloat(hours) || 0;
+            const regRate = emp.hourly_rate || 0;
+            const otRate = emp.overtime_rate || 0;
+            let regularPay = h * regRate;
+            if (otRate && h > 40) {
+                regularPay = 40 * regRate + (h - 40) * regRate * otRate;
+            }
+            const minWage = getStateMinWage(emp.state);
+            return Math.max(0, Math.round((minWage * h - regularPay) * 100) / 100);
+        }
+
+        function onHoursChange(empId) {
+            const emp = employees.find(e => e.id === empId);
+            if (!emp || !emp.tipped) return;
+            const hoursInput = document.getElementById(`hours-${empId}`);
+            const tipsInput = document.getElementById(`hours-${empId}_tips`);
+            const hint = document.getElementById(`tips-${empId}-hint`);
+            if (!hoursInput || !tipsInput) return;
+            const expected = calcExpectedTips(emp, hoursInput.value);
+            tipsInput.placeholder = expected.toFixed(2);
+            if (hint) hint.textContent = `Expected: $${expected.toFixed(2)}`;
+            tipsInput.value = expected.toFixed(2);
+        }
+
+        function renderHoursForm() {
+            const container = document.getElementById('hours-form-container');
+            if (employees.length === 0) {
+                container.innerHTML = '<div class="empty-state">No employees to enter hours for.</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Rate</th><th>Hours Worked</th><th>Tips ($)</th></tr></thead><tbody>';
+            employees.forEach(emp => {
+                const isTipped = emp.tipped;
+                const isSalary = emp.pay_type === 'salary';
+                html += `<tr>
+                    <td>${emp.id}</td>
+                    <td>${emp.name}</td>
+                    <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
+                    <td><input type="number" id="hours-${emp.id}" min="0" max="168" step="0.5" placeholder="0.0" oninput="onHoursChange('${emp.id}')" style="width: 100px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"></td>
+                    <td>${isTipped ? `<input type="number" id="hours-${emp.id}_tips" min="0" step="0.01" placeholder="0.00" style="width: 110px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"><br><span id="tips-${emp.id}-hint" style="font-size:0.75rem;color:#64748b;">Expected: $0.00</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            employees.forEach(emp => {
+                if (emp.tipped) onHoursChange(emp.id);
+            });
+        }
+
+        function collectHours() {
+            const hours = {};
+            employees.forEach(emp => {
+                const val = document.getElementById(`hours-${emp.id}`).value;
+                hours[emp.id] = parseFloat(val || 0);
+                if (emp.tipped) {
+                    const tipsEl = document.getElementById(`hours-${emp.id}_tips`);
+                    if (tipsEl) hours[`${emp.id}_tips`] = parseFloat(tipsEl.value) || 0;
+                }
+            });
+            return hours;
+        }
+
+        async function saveHours() {
+            const res = await fetch('/api/hours', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hours: collectHours(), week_info: currentWeek })
+            });
+            if (res.ok) alert('Hours saved for ' + currentWeek.week_label);
+        }
+
+        async function calculatePayroll() {
+            const hours = collectHours();
+
+            const res = await fetch('/api/payroll', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hours, week_info: currentWeek })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                renderPayrollResults(data);
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+                document.getElementById('page-payroll').classList.add('active');
+                document.querySelectorAll('.nav button')[2].classList.add('active');
+            } else if (res.status === 409) {
+                alert('Payroll already exists for this week. Delete it from History first to re-run.');
+            }
+        }
+
+        function renderPayrollResults(data) {
+            const container = document.getElementById('payroll-results');
+            let html = `<div class="flex-between" style="margin-bottom: 1rem;">
+                <h2>Payroll: ${data.week_label}</h2>
+                <span style="color: #64748b;">${data.week_start} to ${data.week_end}</span>
+            </div>
+            <div class="summary-cards">
+                <div class="summary-card gross">
+                    <div class="label">Total Gross</div>
+                    <div class="value">$${data.summary.total_gross.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                </div>
+                <div class="summary-card net">
+                    <div class="label">Total Net Pay</div>
+                    <div class="value">$${data.summary.total_net.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                </div>
+            </div>`;
+
+            data.results.forEach(r => {
+                html += `<div class="paystub">
+                    <div class="paystub-header">
+                        <h3>${r.employee_name}</h3>
+                        <span>${r.employee_id} | ${r.hours_worked} hrs</span>
+                    </div>
+                    ${r.tipped ? `<div class="paystub-row"><span>Regular Pay</span><span>$${r.regular_pay.toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Tips & Makeup</span><span>$${(r.tips + r.makeup).toFixed(2)}</span></div>
+                    <div class="paystub-row" style="font-weight:600;border-top:1px solid #e2e8f0;padding-top:0.5rem;"><span>Employer Paid</span><span>$${r.employer_paid.toFixed(2)}</span></div>` : ''}
+                    ${r.hours_worked > 40 ? `<div class="paystub-row"><span>Overtime Pay</span><span>$${(r.overtime_pay || (r.hours_worked - 40) * r.hourly_rate * 1.5).toFixed(2)}</span></div>` : ''}
+                    <div class="paystub-row"><span>Gross Pay</span><span><strong>$${r.gross_pay.toFixed(2)}</strong></span></div>
+                    <div style="padding: 0.5rem 0; color: #64748b; font-size: 0.9rem;">DEDUCTIONS</div>
+                    <div class="paystub-row"><span>Federal Tax</span><span>-$${r.federal_tax.toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>State Tax (${r.state})</span><span>-$${r.state_tax.toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Social Security</span><span>-$${r.social_security.toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Medicare</span><span>-$${r.medicare.toFixed(2)}</span></div>
+                    ${r.additional_medicare > 0 ? `<div class="paystub-row"><span>Additional Medicare</span><span>-$${r.additional_medicare.toFixed(2)}</span></div>` : ''}
+                    <div class="paystub-row subtotal"><span>Total Deductions</span><span>-$${r.total_deductions.toFixed(2)}</span></div>
+                    <div class="paystub-row net"><span>Net Pay</span><span>$${r.net_pay.toFixed(2)}</span></div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function loadHistory() {
+            const container = document.getElementById('history-container');
+            const start = document.getElementById('history-start')?.value || '';
+            const end = document.getElementById('history-end')?.value || '';
+            const res = await fetch('/api/history/weeks');
+            if (!res.ok) {
+                container.innerHTML = '<div class="empty-state">Failed to load history.</div>';
+                return;
+            }
+            const weeks = await res.json();
+            const filtered = weeks.filter(w => {
+                if (start && w.week_end < start) return false;
+                if (end && w.week_start > end) return false;
+                return true;
+            });
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state">No payroll history found for this date range.</div>';
+                return;
+            }
+            let html = '<ul class="history-list">';
+            filtered.forEach(w => {
+                const hasPayroll = w.has_results;
+                html += `<li onclick="viewHistoryWeek('${encodeURIComponent(w.week_key)}')">
+                    <div>
+                        <div class="history-week">${w.week_label}</div>
+                        <div class="history-dates">${w.week_start} to ${w.week_end}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div class="history-amounts">
+                            ${hasPayroll
+                              ? `<div class="gross">Gross: $${w.summary.total_gross.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                                 <div class="net">Net: $${w.summary.total_net.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>`
+                              : '<div class="net" style="color:#64748b;">Hours saved</div>'}
+                        </div>
+                        <button class="delete-week" onclick="event.stopPropagation(); deleteHistoryWeek('${encodeURIComponent(w.week_key)}')">Delete</button>
+                    </div>
+                </li>`;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        }
+
+        async function viewHistoryWeek(weekKey) {
+            const res = await fetch(`/api/history/${weekKey}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.results) {
+                    renderPayrollResults(data);
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+                    document.getElementById('page-payroll').classList.add('active');
+                    document.querySelectorAll('.nav button')[2].classList.add('active');
+                } else {
+                    document.getElementById('week-picker').value = data.week_start;
+                    await onWeekChange();
+                    populateHours(data.hours);
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+                    document.getElementById('page-hours').classList.add('active');
+                    document.querySelectorAll('.nav button')[1].classList.add('active');
+                }
+            }
+        }
+
+        async function deleteHistoryWeek(weekKey) {
+            const res = await fetch(`/api/history/${weekKey}`, {method: 'DELETE'});
+            if (res.ok) loadHistory();
+        }
+
+        function downloadHistoryCsv() {
+            const start = document.getElementById('history-start')?.value || '';
+            const end = document.getElementById('history-end')?.value || '';
+            const params = new URLSearchParams();
+            if (start) params.set('start', start);
+            if (end) params.set('end', end);
+            const qs = params.toString();
+            const a = document.createElement('a');
+            a.href = '/api/history/csv' + (qs ? '?' + qs : '');
+            a.download = 'payroll_history.csv';
+            a.click();
+        }
+
+        let taxSettings = null;
+
+        async function loadTaxSettings() {
+            const res = await fetch('/api/tax-settings');
+            const data = await res.json();
+            if (data.using_defaults) {
+                taxSettings = null;
+            } else {
+                taxSettings = data;
+            }
+            renderSettings();
+        }
+
+        function showSettingsTab(tab) {
+            document.querySelectorAll('.settings-tab').forEach(t => t.style.display = 'none');
+            document.getElementById(`stab-fed`).classList.remove('active');
+            document.getElementById(`stab-state`).classList.remove('active');
+            document.getElementById(`stab-fica`).classList.remove('active');
+            document.getElementById(`settings-${tab}`).style.display = 'block';
+            document.getElementById(`stab-${tab}`).classList.add('active');
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(`page-${page}`).classList.add('active');
+            event.target.classList.add('active');
+            if (page === 'employees') fetchEmployees();
+            if (page === 'hours') { fetchEmployees(); loadWeekPicker(); }
+            if (page === 'history') loadHistory();
+            if (page === 'reports') initReports();
+            if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); }
+        }
+
+        function renderSettings() {
+            renderFederalSettings();
+            renderStateSettings();
+            renderFicaSettings();
+        }
+
+        function getDefaultsFederal() {
+            return {brackets: [[0, -1, 0, 0, 0, 0, 0, 0]]};
+        }
+
+        function renderFederalSettings() {
+            const container = document.getElementById('settings-fed');
+            const def = getDefaultsFederal();
+            const fed = taxSettings && taxSettings.federal ? taxSettings.federal : def;
+            const brackets = fed.brackets || def.brackets;
+            const countId = 'fb-count';
+            let html = `<div style="overflow-x:auto;"><table><thead><tr>
+                <th>At Least ($)</th><th>But Less ($)</th>
+                <th style="font-size:0.8rem;">M Std</th><th style="font-size:0.8rem;">M Step2</th>
+                <th style="font-size:0.8rem;">HoH Std</th><th style="font-size:0.8rem;">HoH Step2</th>
+                <th style="font-size:0.8rem;">S Std</th><th style="font-size:0.8rem;">S Step2</th>
+            </tr></thead><tbody id="fb-body">`;
+            brackets.forEach((b, i) => {
+                let rowHtml = '<tr>';
+                for (let c = 0; c < 8; c++) {
+                    let v = b.length > c ? b[c] : 0;
+                    let extra = c === 0 ? ' oninput="mirrorLessThan(this)"' : '';
+                    rowHtml += `<td>$<input type="number" step="0.01" value="${v}" id="fb-${i}-${c}"${extra} class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+                }
+                rowHtml += '</tr>';
+                html += rowHtml;
+            });
+            html += `</tbody></table></div>
+                <button class="btn btn-primary btn-sm" onclick="addFedBracketRow()">+ Add Row</button>
+                <input type="hidden" id="${countId}" value="${brackets.length}">
+                <div style="margin-top:1rem;"><button class="btn btn-success" onclick="saveFederalSettings()">Save Federal Settings</button></div>`;
+            container.innerHTML = html;
+        }
+
+        function addFedBracketRow() {
+            const countEl = document.getElementById('fb-count');
+            if (!countEl) return;
+            const i = parseInt(countEl.value);
+            countEl.value = i + 1;
+            const tbody = document.getElementById('fb-body');
+            if (!tbody) return;
+            let cells = '';
+            for (let c = 0; c < 8; c++) {
+                let extra = c === 0 ? ' oninput="mirrorLessThan(this)"' : '';
+                cells += `<td>$<input type="number" step="0.01" value="0" id="fb-${i}-${c}"${extra} class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+            }
+            const row = tbody.insertRow();
+            row.innerHTML = cells;
+        }
+
+        function readFedBrackets() {
+            const countEl = document.getElementById('fb-count');
+            if (!countEl) return [];
+            const count = parseInt(countEl.value);
+            const brackets = [];
+            for (let i = 0; i < count; i++) {
+                const row = [];
+                for (let c = 0; c < 8; c++) {
+                    row.push(parseFloat(document.getElementById(`fb-${i}-${c}`).value) || 0);
+                }
+                brackets.push(row);
+            }
+            return brackets;
+        }
+
+        function saveFederalSettings() {
+            const settings = taxSettings || {};
+            settings.federal = {brackets: readFedBrackets()};
+            if (!settings.state) settings.state = getDefaultStateSettings();
+            if (!settings.fica) settings.fica = getDefaultFicaSettings();
+            fetch('/api/tax-settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(settings)}).then(res => {
+                if (res.ok) { taxSettings = settings; alert('Federal settings saved'); }
+            });
+        }
+
+        function renderStateSettings() {
+            const container = document.getElementById('settings-state');
+            const def = getDefaultStateSettings();
+            const states = taxSettings && taxSettings.state ? taxSettings.state : def;
+            const codes = getStateCodes();
+            let html = '';
+            for (const code of codes) {
+                const s = states[code] || def[code];
+                const name = getStateName(code);
+                html += `<h3 style="margin: 1rem 0 0.5rem;">${name} (${code}) <button class="btn btn-danger btn-sm" onclick="deleteState('${code}')" style="float:right;">× Delete</button></h3>`;
+                const minWage = s.minimum_wage || '';
+                html += `<div style="margin-bottom:0.5rem;"><label style="font-size:0.85rem;color:#475569;">Min Wage $/hr</label> <input type="number" step="0.25" min="0" value="${minWage}" id="mw-${code}" class="nav-input" style="width:80px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></div>`;
+                const brackets = s.brackets || [];
+                const countId = `sb-${code}-count`;
+                let headerHtml = '<tr><th style="font-size:0.8rem;">≥$</th><th style="font-size:0.8rem;"><$</th>';
+                for (let a = 0; a < ALLOWANCE_COLS; a++) {
+                    headerHtml += `<th style="font-size:0.75rem;">${a}</th>`;
+                }
+                headerHtml += '</tr>';
+                html += `<div style="overflow-x:auto; margin-bottom:0.5rem;"><table><thead>${headerHtml}</thead><tbody id="sb-${code}-body">`;
+                brackets.forEach((b, i) => {
+                    let rowHtml = `<tr>
+                        <td>$<input type="number" step="1" value="${b[0]}" id="sb-${code}-${i}-0" oninput="mirrorLessThan(this)" class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>
+                        <td>$<input type="number" step="1" value="${b[1]}" id="sb-${code}-${i}-1" class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+                    for (let a = 0; a < ALLOWANCE_COLS; a++) {
+                        const val = b.length > a + 2 ? b[a + 2] : 0;
+                        rowHtml += `<td>$<input type="number" step="0.01" value="${val}" id="sb-${code}-${i}-${a + 2}" class="nav-input" style="width:50px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+                    }
+                    rowHtml += '</tr>';
+                    html += rowHtml;
+                });
+                html += `</tbody></table></div>
+                    <button class="btn btn-primary btn-sm" onclick="addStateBracketRow('${code}')">+ Add Row</button>
+                    <input type="hidden" id="${countId}" value="${brackets.length}">`;
+            }
+            html += '<div style="margin-top:1rem;"><button class="btn btn-primary" onclick="showAddStateForm()">+ Add State</button> <button class="btn btn-success" onclick="saveStateSettings()">Save State Settings</button></div>';
+            container.innerHTML = html;
+        }
+
+        function addStateBracketRow(code) {
+            const countEl = document.getElementById(`sb-${code}-count`);
+            if (!countEl) return;
+            const i = parseInt(countEl.value);
+            countEl.value = i + 1;
+            const tbody = document.getElementById(`sb-${code}-body`);
+            if (!tbody) return;
+            let cells = `<td>$<input type="number" step="1" value="0" id="sb-${code}-${i}-0" oninput="mirrorLessThan(this)" class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>
+                <td>$<input type="number" step="1" value="0" id="sb-${code}-${i}-1" class="nav-input" style="width:55px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+            for (let a = 0; a < ALLOWANCE_COLS; a++) {
+                cells += `<td>$<input type="number" step="0.01" value="0" id="sb-${code}-${i}-${a + 2}" class="nav-input" style="width:50px; padding:0.15rem; border:1px solid #cbd5e1; border-radius:4px; font-size:0.8rem;"></td>`;
+            }
+            const row = tbody.insertRow();
+            row.innerHTML = cells;
+        }
+
+        function readStateBrackets(code) {
+            const countEl = document.getElementById(`sb-${code}-count`);
+            if (!countEl) return [];
+            const count = parseInt(countEl.value);
+            const brackets = [];
+            for (let i = 0; i < count; i++) {
+                const minVal = parseFloat(document.getElementById(`sb-${code}-${i}-0`).value) || 0;
+                const maxVal = parseFloat(document.getElementById(`sb-${code}-${i}-1`).value) || 0;
+                const row = [minVal, maxVal];
+                for (let a = 0; a < ALLOWANCE_COLS; a++) {
+                    row.push(parseFloat(document.getElementById(`sb-${code}-${i}-${a + 2}`).value) || 0);
+                }
+                brackets.push(row);
+            }
+            return brackets;
+        }
+
+        function getStateCodes() {
+            if (taxSettings && taxSettings.stateCodes && taxSettings.stateCodes.length > 0) {
+                return taxSettings.stateCodes;
+            }
+            return ['CA', 'NY', 'NC', 'TX', 'FL', 'WA'];
+        }
+
+        function getStateNames() {
+            if (taxSettings && taxSettings.stateNames) {
+                return taxSettings.stateNames;
+            }
+            return {CA: 'California', NY: 'New York', NC: 'North Carolina', TX: 'Texas', FL: 'Florida', WA: 'Washington'};
+        }
+
+        function getStateName(code) {
+            const names = getStateNames();
+            return names[code] || code;
+        }
+
+        function showAddStateForm() {
+            const code = prompt('Enter 2-letter state code (e.g., AZ):');
+            if (!code || code.length !== 2) return;
+            const upperCode = code.toUpperCase();
+            const name = prompt(`Enter full state name for ${upperCode}:`);
+            if (!name) return;
+            addState(upperCode, name);
+        }
+
+        function addState(code, name) {
+            const codes = getStateCodes();
+            if (codes.includes(code)) {
+                alert(`State ${code} already exists.`);
+                return;
+            }
+            codes.push(code);
+            const names = getStateNames();
+            names[code] = name;
+            if (!taxSettings) {
+                taxSettings = {};
+            }
+            if (!taxSettings.state) {
+                const def = getDefaultStateSettings();
+                taxSettings.state = JSON.parse(JSON.stringify(def));
+            }
+            if (!taxSettings.state[code]) {
+                const defaultRow = [0, -1];
+                for (let a = 0; a < ALLOWANCE_COLS; a++) defaultRow.push(0);
+                taxSettings.state[code] = {brackets: [defaultRow], minimum_wage: 7.25};
+            }
+            taxSettings.stateCodes = codes;
+            taxSettings.stateNames = names;
+            renderStateSettings();
+        }
+
+        function deleteState(code) {
+            const name = getStateName(code);
+            if (!confirm(`Delete ${name} (${code}) from state tax settings?`)) return;
+            const codes = getStateCodes();
+            const idx = codes.indexOf(code);
+            if (idx === -1) return;
+            codes.splice(idx, 1);
+            const names = getStateNames();
+            delete names[code];
+            if (!taxSettings) taxSettings = {};
+            taxSettings.stateCodes = codes;
+            taxSettings.stateNames = names;
+            if (taxSettings.state) delete taxSettings.state[code];
+            renderStateSettings();
+        }
+
+        function saveStateSettings() {
+            const settings = taxSettings || {};
+            settings.state = {};
+            settings.stateCodes = getStateCodes();
+            settings.stateNames = getStateNames();
+            const codes = getStateCodes();
+            for (const code of codes) {
+                const brackets = readStateBrackets(code);
+                const mwEl = document.getElementById(`mw-${code}`);
+                const minimum_wage = mwEl ? parseFloat(mwEl.value) || 0 : 0;
+                settings.state[code] = {brackets, minimum_wage};
+            }
+            if (!settings.federal) settings.federal = getDefaultsFederal();
+            if (!settings.fica) settings.fica = getDefaultFicaSettings();
+            fetch('/api/tax-settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(settings)}).then(res => {
+                if (res.ok) { taxSettings = settings; alert('State settings saved'); }
+            });
+        }
+
+        function renderFicaSettings() {
+            const container = document.getElementById('settings-fica');
+            const settings = window._taxSettings || {};
+            if (!settings.fica) settings.fica = getDefaultFicaSettings();
+            const fica = settings.fica;
+            container.innerHTML = `
+                <div class="form-row">
+                    <div class="form-group"><label>Social Security Rate %</label><input type="number" step="0.01" value="${fica.social_security_rate}" id="fica-ss-rate"></div>
+                    <div class="form-group"><label>Medicare Rate %</label><input type="number" step="0.01" value="${fica.medicare_rate}" id="fica-med-rate"></div>
+                </div>
+                <div class="flex-gap" style="margin-top: 1rem;">
+                    <button class="btn btn-success" onclick="saveFicaSettings()">Save FICA</button>
+                </div>`;
+        }
+
+        function saveFicaSettings() {
+            const settings = taxSettings || {};
+            settings.fica = {
+                social_security_rate: parseFloat(document.getElementById('fica-ss-rate').value) || 6.2,
+                medicare_rate: parseFloat(document.getElementById('fica-med-rate').value) || 1.45,
+            };
+            if (!settings.federal) settings.federal = getDefaultsFederal();
+            if (!settings.state) settings.state = getDefaultStateSettings();
+            fetch('/api/tax-settings', {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(settings)}).then(res => {
+                if (res.ok) { taxSettings = settings; alert('FICA settings saved'); }
+            });
+        }
+
+        function getDefaultStateSettings() {
+            const row = [0, -1];
+            for (let a = 0; a < ALLOWANCE_COLS; a++) row.push(0);
+            const minWages = {CA: 16.50, NY: 15.00, NC: 7.25, TX: 7.25, FL: 12.00, WA: 16.28};
+            const defaults = {};
+            for (const code of ['CA', 'NY', 'TX', 'FL', 'WA', 'NC']) {
+                defaults[code] = {brackets: [[...row]], minimum_wage: minWages[code]};
+            }
+            return defaults;
+        }
+
+        function getDefaultFicaSettings() {
+            return {social_security_rate: 6.2, medicare_rate: 1.45};
+        }
+
+        async function loadAppSettings() {
+            const res = await fetch('/api/app-settings');
+            if (!res.ok) return;
+            const s = await res.json();
+            weekStartDay = s.week_start_day || 0;
+            document.getElementById('week-start-day').value = weekStartDay;
+        }
+
+        async function saveAppSettings() {
+            const val = parseInt(document.getElementById('week-start-day').value);
+            const res = await fetch('/api/app-settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ week_start_day: val })
+            });
+            if (res.ok) {
+                weekStartDay = val;
+                alert('Settings saved');
+            }
+        }
+
+        function fmt(n) { return '$' + Number(n).toFixed(2); }
+
+        function initReports() {
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 30);
+            document.getElementById('report-end').value = end.toISOString().split('T')[0];
+            document.getElementById('report-start').value = start.toISOString().split('T')[0];
+            runReport();
+        }
+
+        async function runReport() {
+            const start = document.getElementById('report-start').value;
+            const end = document.getElementById('report-end').value;
+            if (!start || !end) { alert('Select a date range'); return; }
+            const res = await fetch(`/api/reports?start=${start}&end=${end}`);
+            if (!res.ok) { alert('Failed to generate report'); return; }
+            const data = await res.json();
+            renderReportSummary(data);
+            renderReportEmployees(data);
+            document.getElementById('paystub-detail').style.display = 'none';
+        }
+
+        function renderReportSummary(data) {
+            const s = data.summary;
+            const container = document.getElementById('report-summary');
+            if (data.weeks_in_range.length === 0) {
+                container.innerHTML = '<div class="empty-state">No payroll results found in this date range.</div>';
+                document.getElementById('report-employees').innerHTML = '';
+                return;
+            }
+            container.innerHTML = `
+                <div class="card" style="background:#f8fafc; padding:1rem; margin-bottom:1rem;">
+                    <div class="flex-between" style="margin-bottom:0.5rem;">
+                        <h3>Summary — ${data.weeks_in_range.length} week(s)</h3>
+                        <div class="flex-gap">
+                            <button class="btn btn-sm btn-outline" onclick="downloadReport()">HTML</button>
+                            <button class="btn btn-sm btn-outline" onclick="downloadReportCsv()">CSV</button>
+                            <button class="btn btn-sm btn-outline" onclick="printReport()">PDF</button>
+                            <button class="btn btn-sm btn-outline" onclick="shareReport()">Share</button>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.75rem;">
+                        <div><strong>Gross Pay</strong><br>${fmt(s.total_gross)}</div>
+                        <div><strong>Federal Tax</strong><br>${fmt(s.total_federal_tax)}</div>
+                        <div><strong>State Tax</strong><br>${fmt(s.total_state_tax)}</div>
+                        <div><strong>Social Security</strong><br>${fmt(s.total_social_security)}</div>
+                        <div><strong>Medicare</strong><br>${fmt(s.total_medicare)}</div>
+                        <div><strong>Total Tax</strong><br>${fmt(s.total_tax)}</div>
+                        <div><strong>Total Deductions</strong><br>${fmt(s.total_deductions)}</div>
+                        <div><strong>Net Pay</strong><br>${fmt(s.total_net)}</div>
+                    </div>
+                </div>`;
+        }
+
+        function renderReportEmployees(data) {
+            const container = document.getElementById('report-employees');
+            const empIds = Object.keys(data.employees);
+            if (empIds.length === 0) { container.innerHTML = ''; return; }
+            let html = `<table>
+                <thead><tr>
+                    <th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Tax</th><th>Deductions</th><th>Net</th><th></th>
+                </tr></thead><tbody>`;
+            for (const eid of empIds) {
+                const e = data.employees[eid];
+                const t = e.totals;
+                html += `<tr>
+                    <td>${e.name}</td>
+                    <td>${e.weeks.length}</td>
+                    <td>${t.total_hours.toFixed(1)}</td>
+                    <td>${fmt(t.total_gross)}</td>
+                    <td>${fmt(t.total_tax)}</td>
+                    <td>${fmt(t.total_deductions)}</td>
+                    <td>${fmt(t.total_net)}</td>
+                    <td><button class="btn btn-sm btn-primary" onclick="showEmployeeDetail('${eid}')">Paystubs</button></td>
+                </tr>`;
+            }
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            window._reportData = data;
+        }
+
+        function showEmployeeDetail(eid) {
+            const data = window._reportData;
+            if (!data || !data.employees[eid]) return;
+            const emp = data.employees[eid];
+            const container = document.getElementById('paystub-detail');
+            let html = `<div class="card" style="margin-top:1rem;">
+                <div class="flex-between" style="margin-bottom:0.75rem;">
+                    <h3>${emp.name} — Paystubs</h3>
+                    <div class="flex-gap">
+                        <button class="btn btn-sm btn-outline" onclick="downloadPaystubs('${eid}')">Download</button>
+                        <button class="btn btn-sm btn-outline" onclick="printPaystubs('${eid}')">Print</button>
+                        <button class="btn btn-sm btn-outline" onclick="sharePaystubs('${eid}')">Share</button>
+                        <button class="btn btn-sm btn-secondary" onclick="document.getElementById('paystub-detail').style.display='none'">Close</button>
+                    </div>
+                </div>`;
+            for (const w of emp.weeks) {
+                html += `
+                <div class="paystub">
+                    <div class="paystub-header">
+                        <h3>${w.week_label}</h3>
+                        <span>${w.week_start} to ${w.week_end}</span>
+                    </div>
+                    <div class="paystub-row"><span>Hours Worked</span><span>${w.hours_worked}</span></div>
+                    <div class="paystub-row"><span>Hourly Rate</span><span>${fmt(w.hourly_rate)}</span></div>
+                    ${w.hours_worked > 40 ? `<div class="paystub-row"><span>Overtime Pay</span><span>${fmt(w.overtime_pay || (w.hours_worked - 40) * w.hourly_rate * 1.5)}</span></div>` : ''}
+                    <div class="paystub-row" style="font-weight:600; border-top:1px solid #e2e8f0; padding-top:0.5rem;"><span>Gross Pay</span><span>${fmt(w.gross_pay)}</span></div>
+                    <div class="paystub-row"><span>Federal Tax</span><span>-${fmt(w.federal_tax)}</span></div>
+                    <div class="paystub-row"><span>State Tax</span><span>-${fmt(w.state_tax)}</span></div>
+                    <div class="paystub-row"><span>Social Security</span><span>-${fmt(w.social_security)}</span></div>
+                    <div class="paystub-row"><span>Medicare</span><span>-${fmt(w.medicare)}</span></div>
+                    <div class="paystub-row" style="border-top:1px solid #e2e8f0; padding-top:0.5rem;"><span>Total Deductions</span><span>-${fmt(w.total_deductions)}</span></div>
+                    <div class="paystub-row" style="font-weight:700; border-top:2px solid #1e3a5f; padding-top:0.5rem; margin-top:0.5rem; color:#059669;"><span>Net Pay</span><span>${fmt(w.net_pay)}</span></div>
+                </div>`;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        function buildReportHtml(data) {
+            const s = data.summary;
+            let empRows = '';
+            for (const eid of Object.keys(data.employees)) {
+                const e = data.employees[eid];
+                const t = e.totals;
+                empRows += `<tr><td>${e.name}</td><td>${e.weeks.length}</td><td>${t.total_hours.toFixed(1)}</td><td>${fmt(t.total_gross)}</td><td>${fmt(t.total_tax)}</td><td>${fmt(t.total_deductions)}</td><td>${fmt(t.total_net)}</td></tr>`;
+            }
+            return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payroll Report</title><style>
+                body { font-family: -apple-system, sans-serif; padding: 2rem; color: #1e293b; }
+                h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+                .meta { color: #64748b; margin-bottom: 1.5rem; }
+                table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+                th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+                th { background: #f8fafc; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
+                .summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+                .sum-item { padding: 0.75rem; background: #f8fafc; border-radius: 4px; }
+                .sum-item .val { font-size: 1.25rem; font-weight: 700; }
+                .sum-item .lbl { font-size: 0.8rem; color: #64748b; }
+                .net { color: #059669; }
+            </style></head><body>
+                <h1>Payroll Report</h1>
+                <div class="meta">${data.start} to ${data.end} — ${data.weeks_in_range.length} week(s)</div>
+                <div class="summary">
+                    <div class="sum-item"><div class="lbl">Gross Pay</div><div class="val">${fmt(s.total_gross)}</div></div>
+                    <div class="sum-item"><div class="lbl">Federal Tax</div><div class="val">${fmt(s.total_federal_tax)}</div></div>
+                    <div class="sum-item"><div class="lbl">State Tax</div><div class="val">${fmt(s.total_state_tax)}</div></div>
+                    <div class="sum-item"><div class="lbl">Social Security</div><div class="val">${fmt(s.total_social_security)}</div></div>
+                    <div class="sum-item"><div class="lbl">Medicare</div><div class="val">${fmt(s.total_medicare)}</div></div>
+                    <div class="sum-item"><div class="lbl">Total Tax</div><div class="val">${fmt(s.total_tax)}</div></div>
+                    <div class="sum-item"><div class="lbl">Total Deductions</div><div class="val">${fmt(s.total_deductions)}</div></div>
+                    <div class="sum-item"><div class="lbl net">Net Pay</div><div class="val net">${fmt(s.total_net)}</div></div>
+                </div>
+                <table><thead><tr><th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Tax</th><th>Deductions</th><th>Net</th></tr></thead><tbody>${empRows}</tbody></table>
+            </body></html>`;
+        }
+
+        function buildPaystubHtml(eid) {
+            const data = window._reportData;
+            const emp = data.employees[eid];
+            let stubsHtml = '';
+            for (const w of emp.weeks) {
+                stubsHtml += `
+                <div style="border:1px solid #e2e8f0; border-radius:8px; padding:1.25rem; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem; padding-bottom:0.5rem; border-bottom:1px solid #e2e8f0;">
+                        <strong>${w.week_label}</strong><span>${w.week_start} to ${w.week_end}</span>
+                    </div>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <tr><td style="padding:0.35rem 0;">Hours Worked</td><td style="text-align:right;">${w.hours_worked}</td></tr>
+                        <tr><td style="padding:0.35rem 0;">Hourly Rate</td><td style="text-align:right;">${fmt(w.hourly_rate)}</td></tr>
+                        ${w.hours_worked > 40 ? `<tr><td style="padding:0.35rem 0;">Overtime Pay</td><td style="text-align:right;">${fmt(w.overtime_pay || (w.hours_worked - 40) * w.hourly_rate * 1.5)}</td></tr>` : ''}
+                        <tr><td style="padding:0.35rem 0; font-weight:600; border-top:1px solid #e2e8f0; padding-top:0.5rem;">Gross Pay</td><td style="text-align:right; font-weight:600; border-top:1px solid #e2e8f0; padding-top:0.5rem;">${fmt(w.gross_pay)}</td></tr>
+                        <tr><td style="padding:0.35rem 0;">Federal Tax</td><td style="text-align:right;">-${fmt(w.federal_tax)}</td></tr>
+                        <tr><td style="padding:0.35rem 0;">State Tax</td><td style="text-align:right;">-${fmt(w.state_tax)}</td></tr>
+                        <tr><td style="padding:0.35rem 0;">Social Security</td><td style="text-align:right;">-${fmt(w.social_security)}</td></tr>
+                        <tr><td style="padding:0.35rem 0;">Medicare</td><td style="text-align:right;">-${fmt(w.medicare)}</td></tr>
+                        <tr><td style="padding:0.35rem 0; border-top:1px solid #e2e8f0; padding-top:0.5rem;">Total Deductions</td><td style="text-align:right; border-top:1px solid #e2e8f0; padding-top:0.5rem;">-${fmt(w.total_deductions)}</td></tr>
+                        <tr><td style="padding:0.35rem 0; font-weight:700; border-top:2px solid #1e3a5f; padding-top:0.5rem; color:#059669;">Net Pay</td><td style="text-align:right; font-weight:700; border-top:2px solid #1e3a5f; padding-top:0.5rem; color:#059669;">${fmt(w.net_pay)}</td></tr>
+                    </table>
+                </div>`;
+            }
+            return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${emp.name} Paystubs</title><style>
+                body { font-family: -apple-system, sans-serif; padding: 2rem; color: #1e293b; }
+                h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+                .meta { color: #64748b; margin-bottom: 1.5rem; }
+            </style></head><body>
+                <h1>${emp.name} — Paystubs</h1>
+                <div class="meta">${data.start} to ${data.end} — ${emp.weeks.length} pay period(s)</div>
+                ${stubsHtml}
+            </body></html>`;
+        }
+
+        function buildReportText(data) {
+            const s = data.summary;
+            let text = `Payroll Report: ${data.start} to ${data.end} (${data.weeks_in_range.length} weeks)\n`;
+            text += `Gross Pay: ${fmt(s.total_gross)}\nFederal Tax: ${fmt(s.total_federal_tax)}\nState Tax: ${fmt(s.total_state_tax)}\n`;
+            text += `Social Security: ${fmt(s.total_social_security)}\nMedicare: ${fmt(s.total_medicare)}\n`;
+            text += `Total Tax: ${fmt(s.total_tax)}\nTotal Deductions: ${fmt(s.total_deductions)}\nNet Pay: ${fmt(s.total_net)}\n\n`;
+            text += `Employees:\n`;
+            for (const eid of Object.keys(data.employees)) {
+                const e = data.employees[eid];
+                const t = e.totals;
+                text += `  ${e.name}: ${e.weeks.length} weeks, Gross ${fmt(t.total_gross)}, Net ${fmt(t.total_net)}\n`;
+            }
+            return text;
+        }
+
+        function buildPaystubText(eid) {
+            const data = window._reportData;
+            const emp = data.employees[eid];
+            let text = `${emp.name} — Paystubs (${data.start} to ${data.end})\n\n`;
+            for (const w of emp.weeks) {
+                text += `${w.week_label} (${w.week_start} to ${w.week_end})\n`;
+                text += `  Hours: ${w.hours_worked}, Rate: ${fmt(w.hourly_rate)}\n`;
+                if (w.hours_worked > 40) text += `  Overtime: ${fmt(w.overtime_pay || (w.hours_worked - 40) * w.hourly_rate * 1.5)}\n`;
+                text += `  Gross: ${fmt(w.gross_pay)}\n  Federal: -${fmt(w.federal_tax)}\n  State: -${fmt(w.state_tax)}\n`;
+                text += `  SS: -${fmt(w.social_security)}\n  Medicare: -${fmt(w.medicare)}\n`;
+                text += `  Deductions: -${fmt(w.total_deductions)}\n  Net: ${fmt(w.net_pay)}\n\n`;
+            }
+            return text;
+        }
+
+        function triggerDownload(html, filename) {
+            const blob = new Blob([html], {type: 'text/html'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function triggerPrint(html) {
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => win.print(), 250);
+        }
+
+        function triggerShare(text) {
+            if (navigator.share) {
+                navigator.share({title: 'Payroll Report', text}).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard'));
+            } else {
+                alert(text);
+            }
+        }
+
+        function downloadReport() { const d = window._reportData; if (d) triggerDownload(buildReportHtml(d), `payroll-report-${d.start}-to-${d.end}.html`); }
+        function downloadReportCsv() {
+            const start = document.getElementById('report-start')?.value || '';
+            const end = document.getElementById('report-end')?.value || '';
+            const params = new URLSearchParams();
+            if (start) params.set('start', start);
+            if (end) params.set('end', end);
+            const a = document.createElement('a');
+            a.href = '/api/reports/csv?' + params.toString();
+            a.download = 'payroll_report.csv';
+            a.click();
+        }
+        function printReport() { const d = window._reportData; if (d) triggerPrint(buildReportHtml(d)); }
+        function shareReport() { const d = window._reportData; if (d) triggerShare(buildReportText(d)); }
+        function toggleCollapse(id, headerEl) {
+            const body = document.getElementById(id);
+            const arrow = document.getElementById(id.replace('body', 'arrow'));
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            arrow.innerHTML = isHidden ? '&#9650;' : '&#9660;';
+        }
+        function downloadPaystubs(eid) { const d = window._reportData; if (d) triggerDownload(buildPaystubHtml(eid), `paystubs-${eid}.html`); }
+        function printPaystubs(eid) { const d = window._reportData; if (d) triggerPrint(buildPaystubHtml(eid)); }
+        function sharePaystubs(eid) { const d = window._reportData; if (d) triggerShare(buildPaystubText(eid)); }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const res = await fetch('/api/session');
+            const data = await res.json();
+            if (data.user) {
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('app-content').classList.add('visible');
+                document.getElementById('user-label').textContent = data.user;
+                fetchEmployees();
+                loadWeekPicker();
+            }
+        });
+
+        async function doLogin() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('login-remember').checked;
+            const errEl = document.getElementById('login-error');
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password, remember}),
+                });
+                if (res.ok) {
+                    document.getElementById('login-page').style.display = 'none';
+                    document.getElementById('app-content').classList.add('visible');
+                    document.getElementById('user-label').textContent = username;
+                    fetchEmployees();
+                    loadWeekPicker();
+                } else {
+                    errEl.textContent = 'Invalid credentials';
+                    errEl.style.display = 'block';
+                }
+            } catch (e) {
+                errEl.textContent = 'Error: ' + e.message;
+                errEl.style.display = 'block';
+            }
+        }
+
+        function showForgotPassword() {
+            const el = document.getElementById('forgot-pw');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function doLogout() {
+            await fetch('/api/logout', {method: 'POST'});
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('app-content').classList.remove('visible');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        async function changePassword() {
+            const statusEl = document.getElementById('cp-status');
+            const current = document.getElementById('cp-current').value;
+            const newUser = document.getElementById('cp-username').value.trim();
+            const newPass = document.getElementById('cp-new').value;
+            const confirm = document.getElementById('cp-confirm').value;
+            if (newPass !== confirm) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = 'Passwords do not match';
+                return;
+            }
+            try {
+                const res = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({current_password: current, new_username: newUser || undefined, new_password: newPass}),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('user-label').textContent = data.username;
+                    document.getElementById('cp-current').value = '';
+                    document.getElementById('cp-username').value = '';
+                    document.getElementById('cp-new').value = '';
+                    document.getElementById('cp-confirm').value = '';
+                    statusEl.style.color = '#059669';
+                    statusEl.textContent = 'Credentials updated successfully';
+                } else {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = data.error || 'Failed to update';
+                }
+            } catch (e) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = 'Error: ' + e.message;
+            }
+        }
+    </script>
+</body>
+</html>

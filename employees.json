@@ -1,0 +1,53 @@
+{
+  "employees": [
+    {
+      "name": "Mitchel Simmons",
+      "hourly_rate": 14.0,
+      "filing_status": "married",
+      "state": "NC",
+      "federal_allowances": 0,
+      "state_allowances": 0,
+      "step2_checked": false,
+      "overtime_rate": 1.5,
+      "tipped": false,
+      "tip_rate": 0.0,
+      "id": "EMP004"
+    },
+    {
+      "name": "allison Dorman",
+      "pay_type": "hourly",
+      "hourly_rate": 3.8,
+      "salary_amount": 0.0,
+      "filing_status": "married",
+      "state": "NC",
+      "federal_allowances": 0,
+      "state_allowances": 0,
+      "step2_checked": false,
+      "overtime_rate": 1.5,
+      "tipped": true,
+      "fed_add_withholding_type": "amount",
+      "fed_add_withholding_value": 0.0,
+      "state_add_withholding_type": "amount",
+      "state_add_withholding_value": 0.0,
+      "id": "EMP005"
+    },
+    {
+      "name": "Justin White",
+      "pay_type": "salary",
+      "hourly_rate": 0.0,
+      "salary_amount": 240.0,
+      "filing_status": "single",
+      "state": "NC",
+      "federal_allowances": 0,
+      "state_allowances": 0,
+      "step2_checked": false,
+      "overtime_rate": 1.5,
+      "tipped": false,
+      "fed_add_withholding_type": "amount",
+      "fed_add_withholding_value": 17.0,
+      "state_add_withholding_type": "amount",
+      "state_add_withholding_value": 2.0,
+      "id": "EMP006"
+    }
+  ]
+}
