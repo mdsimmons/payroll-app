@@ -98,6 +98,35 @@
         #login-error { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
         #app-content { display: none; }
         #app-content.visible { display: block; }
+
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 0.75rem; padding: 0.75rem 1rem; }
+            .header > div { flex-wrap: wrap; justify-content: center; }
+            .nav { flex-wrap: wrap; justify-content: center; }
+            .nav button { font-size: 0.8rem; padding: 0.4rem 0.6rem; }
+            .container { margin: 1rem auto; padding: 0 0.75rem; }
+            .card { padding: 1rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-group input, .form-group select { font-size: 1rem; }
+            .summary-cards { grid-template-columns: 1fr; }
+            .week-selector { flex-wrap: wrap; }
+            .modal-content { width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+            .modal.active { align-items: flex-end; }
+            #login-page .card { margin: 1rem; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            .paystub { padding: 0.75rem; font-size: 0.9rem; }
+            .paystub-row { padding: 0.25rem 0; }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1.2rem; }
+            .nav button { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+            .btn { font-size: 0.85rem; padding: 0.45rem 0.75rem; }
+            .summary-card .value { font-size: 1.5rem; }
+            .paystub-row.net { font-size: 1rem; }
+            .history-list li { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+            #page-app-settings .nav button { font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+        }
     </style>
 </head>
 <body>
@@ -680,7 +709,7 @@
                 html += `<tr>
                     <td>${emp.id}</td>
                     <td>${emp.name}</td>
-                    <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
+                    <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td><input type="number" id="hours-${emp.id}" min="0" max="168" step="0.5" placeholder="0.0" oninput="onHoursChange('${emp.id}')" style="width: 100px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"></td>
                     <td>${isTipped ? `<input type="number" id="hours-${emp.id}_tips" min="0" step="0.01" placeholder="0.00" style="width: 110px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"><br><span id="tips-${emp.id}-hint" style="font-size:0.75rem;color:#64748b;">Expected: $0.00</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
                 </tr>`;
