@@ -1,0 +1,13 @@
+{
+  "requests": [
+    {
+      "id": 1,
+      "employee_id": "EMP001",
+      "start_date": "2026-06-01",
+      "end_date": "2026-06-03",
+      "reason": "Vacation",
+      "status": "pending",
+      "created_at": "2026-05-08T19:16:38.582339"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "status": "draft",
+  "shifts": {
+    "EMP001": [
+      {
+        "start": "09:00",
+        "end": "17:00"
+      },
+      {
+        "start": "09:00",
+        "end": "17:00"
+      },
+      {},
+      {},
+      {},
+      {},
+      {}
+    ]
+  },
+  "open_shifts": [],
+  "week_start": "2026-05-11",
+  "week_label": "May 11 - May 17, 2026"
+}

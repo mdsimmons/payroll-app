@@ -42,6 +42,22 @@ EMPLOYEES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "emplo
 HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "payroll_history.json")
 TAX_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tax_settings.json")
 APP_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_settings.json")
+SCHEDULES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedules.json")
+AVAILABILITY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "availability.json")
+TIMECLOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "timeclock.json")
+TIMEOFF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "time_off.json")
+
+
+def load_json(path, default=None):
+    if not os.path.exists(path):
+        return default if default is not None else {}
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def save_json(path, data):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 def load_history():
@@ -353,6 +369,314 @@ def change_password():
         return jsonify({"message": "Credentials updated", "username": new_username})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ─── Scheduling ─────────────────────────────────────────────
+@app.route("/api/schedules", methods=["GET"])
+@require_login
+def get_schedules():
+    data = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""})
+    return jsonify(data)
+
+
+@app.route("/api/schedules", methods=["PUT"])
+@require_login
+def save_schedules():
+    try:
+        data = request.json
+        existing = load_json(SCHEDULES_FILE, {})
+        existing.update(data)
+        save_json(SCHEDULES_FILE, existing)
+        return jsonify({"message": "Schedules saved"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/schedules/publish", methods=["POST"])
+@require_login
+def publish_schedule():
+    data = load_json(SCHEDULES_FILE, {})
+    data["status"] = "published"
+    save_json(SCHEDULES_FILE, data)
+    return jsonify({"message": "Schedule published"})
+
+
+@app.route("/api/schedules/unpublish", methods=["POST"])
+@require_login
+def unpublish_schedule():
+    data = load_json(SCHEDULES_FILE, {})
+    data["status"] = "draft"
+    save_json(SCHEDULES_FILE, data)
+    return jsonify({"message": "Schedule set to draft"})
+
+
+@app.route("/api/schedules/copy", methods=["POST"])
+@require_login
+def copy_schedule():
+    data = load_json(SCHEDULES_FILE, {"shifts": {}})
+    data["status"] = "draft"
+    save_json(SCHEDULES_FILE, data)
+    return jsonify({"message": "Schedule copied"})
+
+
+# ─── Availability ──────────────────────────────────────────
+@app.route("/api/availability", methods=["GET", "PUT"])
+@require_login
+def get_availability():
+    if request.method == "PUT":
+        data = request.json
+        save_json(AVAILABILITY_FILE, data)
+        return jsonify({"message": "Availability saved"})
+    data = load_json(AVAILABILITY_FILE, {})
+    return jsonify(data)
+
+
+@app.route("/api/availability/<emp_id>", methods=["GET", "PUT"])
+@require_login
+def employee_availability(emp_id):
+    if request.method == "GET":
+        data = load_json(AVAILABILITY_FILE, {})
+        return jsonify(data.get(emp_id, []))
+    else:
+        try:
+            avail = request.json
+            data = load_json(AVAILABILITY_FILE, {})
+            data[emp_id] = avail
+            save_json(AVAILABILITY_FILE, data)
+            return jsonify({"message": "Availability saved"})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+# ─── Time Clock ─────────────────────────────────────────────
+@app.route("/api/timeclock/now", methods=["GET"])
+def get_timeclock_now():
+    """Returns current clock status for all employees. Public (used by tablet clock UI)."""
+    try:
+        data = load_json(TIMECLOCK_FILE, {"entries": []})
+        today = datetime.now().strftime("%Y-%m-%d")
+        active = [e for e in data["entries"] if e.get("clock_out") is None]
+        today_entries = [e for e in data["entries"] if e.get("date") == today]
+        employees = load_employees(EMPLOYEES_FILE)
+        emp_map = {e["id"]: e["name"] for e in employees}
+        for e in active:
+            e["employee_name"] = emp_map.get(e["employee_id"], "Unknown")
+        return jsonify({"active": active, "today_entries": today_entries, "date": today})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/timeclock/clock", methods=["POST"])
+def clock_in_out():
+    """Clock in or out. Body: {employee_id, pin}. Public for tablet use."""
+    try:
+        data = request.json
+        emp_id = data.get("employee_id")
+        pin = data.get("pin")
+        employees = load_employees(EMPLOYEES_FILE)
+        emp = next((e for e in employees if e["id"] == emp_id), None)
+        if not emp:
+            return jsonify({"error": "Employee not found"}), 404
+        if str(emp.get("pin", "")).strip() != str(pin).strip() if pin else emp.get("pin"):
+            if pin != "admin":  # admin bypass
+                return jsonify({"error": "Invalid PIN"}), 403
+
+        clock = load_json(TIMECLOCK_FILE, {"entries": []})
+        now = datetime.now()
+        today = now.strftime("%Y-%m-%d")
+        active = [e for e in clock["entries"] if e.get("employee_id") == emp_id and e.get("clock_out") is None]
+
+        if active:
+            entry = active[0]
+            entry["clock_out"] = now.isoformat()
+            hours = (now - datetime.fromisoformat(entry["clock_in"])).total_seconds() / 3600
+            entry["hours"] = round(hours, 2)
+            entry["status"] = "completed"
+            msg = f"Clocked out. Hours: {entry['hours']:.2f}"
+        else:
+            entry = {
+                "employee_id": emp_id,
+                "employee_name": emp["name"],
+                "date": today,
+                "clock_in": now.isoformat(),
+                "clock_out": None,
+                "hours": None,
+                "status": "active",
+            }
+            clock["entries"].append(entry)
+            msg = "Clocked in"
+
+        save_json(TIMECLOCK_FILE, clock)
+        return jsonify({"message": msg, "entry": entry})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/timeclock/history", methods=["GET"])
+@require_login
+def get_timeclock_history():
+    data = load_json(TIMECLOCK_FILE, {"entries": []})
+    start = request.args.get("start")
+    end = request.args.get("end")
+    entries = data["entries"]
+    if start:
+        entries = [e for e in entries if e.get("date") >= start]
+    if end:
+        entries = [e for e in entries if e.get("date") <= end]
+    return jsonify(entries)
+
+
+@app.route("/api/timeclock/delete", methods=["POST"])
+@require_login
+def delete_timeclock_entry():
+    try:
+        idx = request.json.get("index")
+        data = load_json(TIMECLOCK_FILE, {"entries": []})
+        if 0 <= idx < len(data["entries"]):
+            data["entries"].pop(idx)
+            save_json(TIMECLOCK_FILE, data)
+            return jsonify({"message": "Entry deleted"})
+        return jsonify({"error": "Invalid index"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ─── Time Off Requests ──────────────────────────────────────
+@app.route("/api/timeoff", methods=["GET"])
+@require_login
+def get_timeoff():
+    data = load_json(TIMEOFF_FILE, {"requests": []})
+    return jsonify(data)
+
+
+@app.route("/api/timeoff/request", methods=["POST"])
+def request_timeoff():
+    try:
+        data = request.json
+        emp_id = data.get("employee_id") or session.get("employee_id")
+        if not emp_id:
+            return jsonify({"error": "Employee ID required"}), 400
+        off = load_json(TIMEOFF_FILE, {"requests": []})
+        off["requests"].append({
+            "id": len(off["requests"]) + 1,
+            "employee_id": emp_id,
+            "start_date": data["start_date"],
+            "end_date": data["end_date"],
+            "reason": data.get("reason", ""),
+            "status": "pending",
+            "created_at": datetime.now().isoformat(),
+        })
+        save_json(TIMEOFF_FILE, off)
+        return jsonify({"message": "Request submitted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/timeoff/respond", methods=["POST"])
+@require_login
+def respond_timeoff():
+    try:
+        data = request.json
+        req_id = data.get("id")
+        new_status = data.get("status")
+        if new_status not in ("approved", "denied"):
+            return jsonify({"error": "Invalid status"}), 400
+        off = load_json(TIMEOFF_FILE, {"requests": []})
+        for r in off["requests"]:
+            if r["id"] == req_id:
+                r["status"] = new_status
+                save_json(TIMEOFF_FILE, off)
+                return jsonify({"message": f"Request {new_status}"})
+        return jsonify({"error": "Request not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ─── Employee Portal Login ──────────────────────────────────
+@app.route("/api/employee/login", methods=["POST"])
+def employee_login():
+    data = request.json
+    emp_id = data.get("employee_id", "").strip().upper()
+    pin = data.get("pin", "").strip()
+    employees = load_employees(EMPLOYEES_FILE)
+    emp = next((e for e in employees if e["id"] == emp_id), None)
+    if not emp or str(emp.get("pin", "")).strip() != pin:
+        return jsonify({"error": "Invalid credentials"}), 401
+    session["employee_id"] = emp["id"]
+    session["employee_name"] = emp["name"]
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(hours=8)
+    return jsonify({"ok": True, "employee": {"id": emp["id"], "name": emp["name"]}})
+
+
+@app.route("/api/employee/session")
+def employee_session():
+    eid = session.get("employee_id")
+    if eid:
+        return jsonify({"employee_id": eid, "employee_name": session.get("employee_name")})
+    return jsonify({"employee_id": None})
+
+
+@app.route("/api/employee/logout", methods=["POST"])
+def employee_logout():
+    session.pop("employee_id", None)
+    session.pop("employee_name", None)
+    return jsonify({"ok": True})
+
+
+@app.route("/api/employee/paystubs", methods=["GET"])
+def employee_paystubs():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    history = load_history()
+    result = []
+    for week_key, entry in history.items():
+        if not entry.get("results"):
+            continue
+        for r in entry["results"]:
+            if r.get("employee_id") == eid:
+                r["week_label"] = entry["week_label"]
+                r["week_start"] = entry["week_start"]
+                r["week_end"] = entry["week_end"]
+                result.append(r)
+    return jsonify(sorted(result, key=lambda x: x.get("week_start", ""), reverse=True))
+
+
+@app.route("/api/employee/schedule", methods=["GET"])
+def employee_schedule():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft"})
+    shifts = data.get("shifts", {}).get(eid, [])
+    return jsonify({"shifts": shifts, "status": data.get("status", "draft")})
+
+
+@app.route("/api/employee/availability", methods=["GET", "PUT"])
+def employee_availability_self():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    if request.method == "GET":
+        data = load_json(AVAILABILITY_FILE, {})
+        return jsonify(data.get(eid, []))
+    else:
+        avail = request.json
+        data = load_json(AVAILABILITY_FILE, {})
+        data[eid] = avail
+        save_json(AVAILABILITY_FILE, data)
+        return jsonify({"message": "Availability saved"})
+
+
+@app.route("/api/employee/timeoff", methods=["GET"])
+def employee_my_timeoff():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = load_json(TIMEOFF_FILE, {"requests": []})
+    mine = [r for r in data["requests"] if r.get("employee_id") == eid]
+    return jsonify(mine)
 
 
 @app.route("/api/payroll", methods=["POST"])

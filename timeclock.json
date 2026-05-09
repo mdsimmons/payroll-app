@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-05-08",
+      "clock_in": "2026-05-08T19:16:51.027780",
+      "clock_out": "2026-05-08T19:17:31.382460",
+      "hours": 0.01,
+      "status": "completed"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-05-08",
+      "clock_in": "2026-05-08T19:17:31.392453",
+      "clock_out": "2026-05-08T19:35:55.430231",
+      "hours": 0.31,
+      "status": "completed"
+    }
+  ]
+}

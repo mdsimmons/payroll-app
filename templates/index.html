@@ -98,6 +98,9 @@
         #login-error { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
         #app-content { display: none; }
         #app-content.visible { display: block; }
+        #emp-clock-btn { transition: all 0.2s; min-width: 250px; }
+        #emp-clock-btn:active { transform: scale(0.95); }
+        #tc-employee, #tc-pin { font-size: 1.1rem; }
 
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 0.75rem; padding: 0.75rem 1rem; }
@@ -155,6 +158,19 @@
                 Default credentials: <strong>admin</strong> / <strong>admin</strong>.<br>
                 If credentials were changed, check the <code>users.json</code> file or set <code>ADMIN_USER</code>/<code>ADMIN_PASS</code> env vars.
             </div>
+            <div id="emp-login-section" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;">
+                <h3 style="margin-bottom:1rem;font-size:1rem;">Employee Login</h3>
+                <div class="form-group">
+                    <label>Employee ID</label>
+                    <input type="text" id="emp-login-id" placeholder="e.g. EMP001" onkeydown="if(event.key==='Enter') doEmpLogin()">
+                </div>
+                <div class="form-group">
+                    <label>PIN</label>
+                    <input type="password" id="emp-login-pin" maxlength="6" placeholder="Your PIN" onkeydown="if(event.key==='Enter') doEmpLogin()">
+                </div>
+                <button class="btn btn-primary" onclick="doEmpLogin()" style="margin-top:0.5rem;">Sign In as Employee</button>
+                <div id="emp-login-error" style="color:#dc2626;font-size:0.9rem;margin-top:0.5rem;display:none;"></div>
+            </div>
         </div>
     </div>
 
@@ -163,14 +179,24 @@
         <h1>Payroll App</h1>
         <div style="display:flex;align-items:center;">
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
-            <div class="nav">
+            <div class="nav" id="admin-nav">
                 <button onclick="showPage('employees')">Employees</button>
                 <button class="active" onclick="showPage('hours')">Enter Hours</button>
                 <button onclick="showPage('payroll')">Payroll Results</button>
+                <button onclick="showPage('schedule')">Schedule</button>
+                <button onclick="showPage('timeclock')">Time Clock</button>
                 <button onclick="showPage('history')">History</button>
                 <button onclick="showPage('reports')">Reports</button>
                 <button onclick="showPage('app-settings')">Settings</button>
             </div>
+            <div class="nav" id="emp-nav" style="display:none;">
+                <button class="active" onclick="showEmpPage('emp-schedule')">My Schedule</button>
+                <button onclick="showEmpPage('emp-timeoff')">Request Time Off</button>
+                <button onclick="showEmpPage('emp-paystubs')">My Paystubs</button>
+                <button onclick="showEmpPage('emp-clock')">Clock In/Out</button>
+            </div>
+            <span id="emp-label" style="color:#94a3b8;font-size:0.85rem;margin:0 0.5rem;"></span>
+            <button id="portal-toggle" class="btn btn-sm btn-outline" style="margin-left:0.5rem;padding:0.25rem 0.5rem;font-size:0.8rem;" onclick="togglePortal()">Employee Portal</button>
         </div>
     </div>
 
@@ -204,6 +230,56 @@
 
         <div id="page-payroll" class="page">
             <div id="payroll-results"></div>
+        </div>
+
+        <div id="page-schedule" class="page">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">Schedule Builder</h2>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="toggleAvailPanel()">Availability</button>
+                        <button class="btn btn-secondary btn-sm" onclick="copyPrevWeek()">Copy Prev</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveSchedules()">Save</button>
+                        <button class="btn btn-success btn-sm" id="publish-btn" onclick="publishSchedule()">Publish</button>
+                    </div>
+                </div>
+                <div class="week-selector">
+                    <label>Week:</label>
+                    <input type="date" id="sched-week-picker" onchange="renderSchedule()">
+                    <span id="sched-week-display" class="week-label"></span>
+                    <span id="sched-status-badge" style="margin-left:1rem;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;"></span>
+                </div>
+                <div id="avail-panel" style="display:none;margin-bottom:1rem;padding:1rem;background:#f8fafc;border-radius:8px;">
+                    <h3 style="font-size:1rem;margin-bottom:0.75rem;">Employee Availability</h3>
+                    <div id="avail-editor"></div>
+                </div>
+                <p style="color:#64748b;margin-bottom:0.75rem;font-size:0.85rem;">⚠️ = unavailable  •  Click notes to add shift instructions</p>
+                <div id="schedule-container"></div>
+            </div>
+        </div>
+
+        <div id="page-timeclock" class="page">
+            <div class="card" style="text-align:center;">
+                <h2>Time Clock</h2>
+                <p style="color:#64748b;margin-bottom:1.5rem;">Select employee and enter PIN to clock in/out</p>
+                <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
+                    <select id="tc-employee" style="padding:0.75rem;font-size:1.1rem;border:1px solid #cbd5e1;border-radius:8px;min-width:200px;">
+                        <option value="">— Select Employee —</option>
+                    </select>
+                    <input type="password" id="tc-pin" placeholder="PIN" maxlength="6" style="width:100px;padding:0.75rem;font-size:1.1rem;border:1px solid #cbd5e1;border-radius:8px;text-align:center;" onkeydown="if(event.key==='Enter') doClock()">
+                    <button class="btn btn-primary" onclick="doClock()" style="font-size:1.1rem;padding:0.75rem 2rem;">Clock In / Out</button>
+                </div>
+                <div id="tc-status" style="font-size:1.1rem;margin-bottom:0.5rem;"></div>
+                <div id="tc-active" style="margin-bottom:1rem;"></div>
+                <div id="tc-today"></div>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">All Clock Entries</h2>
+                    <button class="btn btn-sm btn-secondary" onclick="refreshTimeClock()">Refresh</button>
+                </div>
+                <div id="tc-history-container"></div>
+            </div>
         </div>
 
         <div id="page-history" class="page">
@@ -316,6 +392,69 @@
         </div>
     </div>
 
+    <!-- Employee Portal Pages -->
+    <div id="page-emp-schedule" class="page">
+        <div class="card">
+            <h2>My Schedule</h2>
+            <div id="sched-status-badge-emp" style="margin-bottom:0.75rem;"></div>
+            <div id="emp-schedule-container"></div>
+        </div>
+        <div class="card" style="margin-top:1rem;">
+            <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('emp-avail-body', this)">
+                <h2 style="margin:0;font-size:1rem;">My Availability</h2>
+                <span style="color:#64748b;font-size:1.2rem;">▸</span>
+            </div>
+            <div id="emp-avail-body">
+                <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Set your weekly recurring availability. Days/times you don't set will be unavailable.</p>
+                <div id="emp-avail-editor"></div>
+                <button class="btn btn-primary btn-sm" onclick="empSaveAvailability()" style="margin-top:0.75rem;">Save Availability</button>
+                <div id="emp-avail-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-emp-timeoff" class="page">
+        <div class="card">
+            <h2>Request Time Off</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" id="emp-to-start">
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" id="emp-to-end">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                <label>Reason</label>
+                <input type="text" id="emp-to-reason" placeholder="Vacation, sick, etc.">
+            </div>
+            <button class="btn btn-primary" onclick="submitTimeOff()">Submit Request</button>
+            <div id="emp-to-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+            <div id="emp-to-list" style="margin-top:1rem;"></div>
+        </div>
+    </div>
+    </div>
+
+    <div id="page-emp-paystubs" class="page">
+        <div class="card">
+            <h2>My Paystubs</h2>
+            <div id="emp-paystubs-container"></div>
+        </div>
+    </div>
+
+    <div id="page-emp-clock" class="page">
+        <div class="card" style="text-align:center;padding:3rem 1rem;">
+            <h2>Time Clock</h2>
+            <p style="color:#64748b;margin-bottom:2rem;" id="emp-clock-name"></p>
+            <button id="emp-clock-btn" class="btn btn-primary" onclick="empDoClock()" style="font-size:2rem;padding:2rem 4rem;border-radius:16px;">Clock In</button>
+            <div id="emp-clock-status" style="margin-top:1.5rem;font-size:1.2rem;"></div>
+            <div id="emp-clock-today" style="margin-top:1rem;"></div>
+        </div>
+    </div>
+
     <div id="employee-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -325,9 +464,13 @@
             <form id="employee-form" onsubmit="saveEmployee(event)">
                 <input type="hidden" id="edit-emp-id">
                 <div class="form-row">
-                    <div class="form-group">
+                    <div class="form-group" style="flex:2;">
                         <label>Name</label>
                         <input type="text" id="emp-name" required>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Employee ID</label>
+                        <input type="text" id="emp-id-display" readonly style="background:#f1f5f9;color:#64748b;cursor:default;">
                     </div>
                     <div class="form-group">
                         <label>Pay Type</label>
@@ -398,6 +541,10 @@
                             Tipped Employee
                         </label>
                     </div>
+                    <div class="form-group">
+                        <label>Time Clock PIN</label>
+                        <input type="text" id="emp-pin" maxlength="6" placeholder="4-6 digit PIN" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                    </div>
                 </div>
                 <div style="border-top:1px solid #e2e8f0; margin:0.75rem 0;"></div>
                 <div class="form-row">
@@ -409,7 +556,7 @@
                                 <option value="percentage">%</option>
                             </select>
                             <input type="number" id="emp-fed-add-val" step="0.01" min="0" value="0" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
-                        </div>
+                    </div>
                     </div>
                     <div class="form-group">
                         <label>State Add. Withholding</label>
@@ -428,7 +575,6 @@
                 </div>
             </form>
         </div>
-    </div>
     </div>
 
     <script>
@@ -543,13 +689,12 @@
             }
             let html = `<table>
                 <thead><tr>
-                    <th>ID</th><th>Name</th><th>Pay</th><th>Status</th><th>State</th>
+                    <th>Name</th><th>Pay</th><th>Status</th><th>State</th>
                     <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>Actions</th>
                 </tr></thead><tbody>`;
             employees.forEach(emp => {
                 const stateClass = `badge-${emp.state.toLowerCase()}`;
                 html += `<tr>
-                    <td>${emp.id}</td>
                     <td><strong>${emp.name}</strong></td>
                     <td>${emp.pay_type === 'salary' ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td>${emp.filing_status.replace('_', ' ')}</td>
@@ -570,37 +715,53 @@
         }
 
         function openAddModal() {
-            document.getElementById('modal-title').textContent = 'Add Employee';
-            document.getElementById('edit-emp-id').value = '';
-            document.getElementById('employee-form').reset();
-            document.getElementById('emp-pay-type').value = 'hourly';
-            onPayTypeChange();
-            document.getElementById('employee-modal').classList.add('active');
+            try {
+                const modal = document.getElementById('employee-modal');
+                if (!modal) { alert('ERROR: employee-modal element not found!'); return; }
+                document.getElementById('modal-title').textContent = 'Add Employee';
+                document.getElementById('edit-emp-id').value = '';
+                document.getElementById('employee-form').reset();
+                document.getElementById('emp-id-display').value = '(auto-generated)';
+                document.getElementById('emp-pay-type').value = 'hourly';
+                onPayTypeChange();
+                modal.classList.add('active');
+            } catch(e) {
+                console.error('openAddModal error:', e.message);
+                alert('Error: ' + e.message);
+            }
         }
 
         function openEditModal(id) {
-            const emp = employees.find(e => e.id === id);
-            if (!emp) return;
-            document.getElementById('modal-title').textContent = 'Edit Employee';
-            document.getElementById('edit-emp-id').value = emp.id;
-            document.getElementById('emp-name').value = emp.name;
-            document.getElementById('emp-pay-type').value = emp.pay_type || 'hourly';
-            onPayTypeChange();
-            document.getElementById('emp-rate').value = emp.hourly_rate;
-            document.getElementById('emp-salary').value = emp.salary_amount || 0;
-            if (emp.pay_type === 'salary') onSalaryChange();
-            document.getElementById('emp-filing').value = emp.filing_status;
-            document.getElementById('emp-state').value = emp.state;
-            document.getElementById('emp-fed-allow').value = emp.federal_allowances;
-            document.getElementById('emp-state-allow').value = emp.state_allowances;
-            document.getElementById('emp-step2').checked = emp.step2_checked || false;
-            document.getElementById('emp-ot-rate').value = emp.overtime_rate || 0;
-            document.getElementById('emp-tipped').checked = emp.tipped || false;
-            document.getElementById('emp-fed-add-type').value = emp.fed_add_withholding_type || 'amount';
-            document.getElementById('emp-fed-add-val').value = emp.fed_add_withholding_value || 0;
-            document.getElementById('emp-state-add-type').value = emp.state_add_withholding_type || 'amount';
-            document.getElementById('emp-state-add-val').value = emp.state_add_withholding_value || 0;
-            document.getElementById('employee-modal').classList.add('active');
+            try {
+                const emp = employees.find(e => e.id === id);
+                if (!emp) { return; }
+                const modal = document.getElementById('employee-modal');
+                if (!modal) { return; }
+                document.getElementById('modal-title').textContent = 'Edit Employee';
+                document.getElementById('edit-emp-id').value = emp.id;
+                document.getElementById('emp-id-display').value = emp.id;
+                document.getElementById('emp-name').value = emp.name;
+                document.getElementById('emp-pay-type').value = emp.pay_type || 'hourly';
+                onPayTypeChange();
+                document.getElementById('emp-rate').value = emp.hourly_rate;
+                document.getElementById('emp-salary').value = emp.salary_amount || 0;
+                if (emp.pay_type === 'salary') onSalaryChange();
+                document.getElementById('emp-filing').value = emp.filing_status;
+                document.getElementById('emp-state').value = emp.state;
+                document.getElementById('emp-fed-allow').value = emp.federal_allowances;
+                document.getElementById('emp-state-allow').value = emp.state_allowances;
+                document.getElementById('emp-step2').checked = emp.step2_checked || false;
+                document.getElementById('emp-ot-rate').value = emp.overtime_rate || 0;
+                document.getElementById('emp-tipped').checked = emp.tipped || false;
+                document.getElementById('emp-pin').value = emp.pin || '';
+                document.getElementById('emp-fed-add-type').value = emp.fed_add_withholding_type || 'amount';
+                document.getElementById('emp-fed-add-val').value = emp.fed_add_withholding_value || 0;
+                document.getElementById('emp-state-add-type').value = emp.state_add_withholding_type || 'amount';
+                document.getElementById('emp-state-add-val').value = emp.state_add_withholding_value || 0;
+                modal.classList.add('active');
+            } catch (e) {
+                console.error('openEditModal error:', e.message);
+            }
         }
 
         function onPayTypeChange() {
@@ -636,6 +797,7 @@
                 step2_checked: document.getElementById('emp-step2').checked,
                 overtime_rate: parseFloat(document.getElementById('emp-ot-rate').value) || 0,
                 tipped: document.getElementById('emp-tipped').checked,
+                pin: document.getElementById('emp-pin').value,
                 fed_add_withholding_type: document.getElementById('emp-fed-add-type').value,
                 fed_add_withholding_value: parseFloat(document.getElementById('emp-fed-add-val').value) || 0,
                 state_add_withholding_type: document.getElementById('emp-state-add-type').value,
@@ -702,13 +864,12 @@
                 container.innerHTML = '<div class="empty-state">No employees to enter hours for.</div>';
                 return;
             }
-            let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Rate</th><th>Hours Worked</th><th>Tips ($)</th></tr></thead><tbody>';
+            let html = '<table><thead><tr><th>Name</th><th>Rate</th><th>Hours Worked</th><th>Tips ($)</th></tr></thead><tbody>';
             employees.forEach(emp => {
                 const isTipped = emp.tipped;
                 const isSalary = emp.pay_type === 'salary';
                 html += `<tr>
-                    <td>${emp.id}</td>
-                    <td>${emp.name}</td>
+                    <td><strong>${emp.name}</strong></td>
                     <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td><input type="number" id="hours-${emp.id}" min="0" max="168" step="0.5" placeholder="0.0" oninput="onHoursChange('${emp.id}')" style="width: 100px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"></td>
                     <td>${isTipped ? `<input type="number" id="hours-${emp.id}_tips" min="0" step="0.01" placeholder="0.00" style="width: 110px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"><br><span id="tips-${emp.id}-hint" style="font-size:0.75rem;color:#64748b;">Expected: $0.00</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
@@ -914,12 +1075,388 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
             document.getElementById(`page-${page}`).classList.add('active');
-            event.target.classList.add('active');
+            const btn = document.querySelector(`.nav button[onclick*="'${page}'"]`);
+            if (btn) btn.classList.add('active');
             if (page === 'employees') fetchEmployees();
             if (page === 'hours') { fetchEmployees(); loadWeekPicker(); }
             if (page === 'history') loadHistory();
             if (page === 'reports') initReports();
             if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); }
+            if (page === 'schedule') renderSchedule();
+            if (page === 'timeclock') initTimeClock();
+        }
+
+        // ─── Schedule ─────────────────────────────────────
+        let scheduleData = {shifts: {}, status: 'draft', open_shifts: []};
+        const SCHED_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+        function getSchedWeekInfo(dateStr) {
+            const dt = new Date(dateStr + 'T00:00:00');
+            const diff = (dt.getDay() + 6) % 7;
+            const start = new Date(dt); start.setDate(dt.getDate() - diff);
+            const end = new Date(start); end.setDate(start.getDate() + 6);
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            const key = (d) => d.toISOString().split('T')[0];
+            return { week_start: key(start), week_end: key(end), week_label: `${start.toLocaleDateString('en-US', {month:'short',day:'2-digit'})} - ${fmt(end)}` };
+        }
+
+        async function renderSchedule() {
+            const picker = document.getElementById('sched-week-picker');
+            if (!picker.value) {
+                const today = new Date();
+                picker.value = today.toISOString().split('T')[0];
+            }
+            const wi = getSchedWeekInfo(picker.value);
+            document.getElementById('sched-week-display').textContent = wi.week_label;
+
+            const [schedRes, empRes, availRes] = await Promise.all([
+                fetch('/api/schedules'),
+                fetch('/api/employees'),
+                fetch('/api/availability')
+            ]);
+            scheduleData = await schedRes.json();
+            if (!scheduleData.shifts) scheduleData.shifts = {};
+            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
+            const emps = await empRes.json();
+            const availability = await availRes.json();
+
+            const container = document.getElementById('schedule-container');
+            const isPub = scheduleData.status === 'published';
+            document.getElementById('publish-btn').textContent = isPub ? 'Unpublish' : 'Publish';
+            document.getElementById('publish-btn').className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
+            const badge = document.getElementById('sched-status-badge');
+            badge.textContent = isPub ? 'Published' : 'Draft';
+            badge.style.background = isPub ? '#dcfce7' : '#fef3c7';
+            badge.style.color = isPub ? '#166534' : '#92400e';
+
+            let html = '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
+            SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;min-width:100px;">${d.slice(0,3)}</th>`; });
+            html += '</tr></thead><tbody>';
+
+            emps.forEach(emp => {
+                const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({start:'', end:'', notes:''}));
+                const empAvail = availability[emp.id] || [];
+                html += `<tr><td><strong>${emp.name}</strong></td>`;
+                shifts.forEach((s, i) => {
+                    const isAvail = empAvail.some(a => a.weekday === i);
+                    const conflict = !isAvail && (s.start || s.end);
+                    html += `<td style="padding:0.35rem;text-align:center;${conflict ? 'background:#fef2f2;' : ''}">
+                        <div style="display:flex;gap:2px;justify-content:center;align-items:center;">
+                            ${!isAvail && s.start ? '<span title="Unavailable" style="color:#dc2626;font-size:0.9rem;">⚠️</span>' : ''}
+                            <input type="time" id="sched-${emp.id}-${i}-start" value="${s.start||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
+                            <span style="font-size:0.75rem;color:#94a3b8;">-</span>
+                            <input type="time" id="sched-${emp.id}-${i}-end" value="${s.end||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
+                            <button class="btn btn-sm" style="padding:0.15rem 0.4rem;font-size:0.7rem;background:transparent;border:1px solid #e2e8f0;border-radius:3px;cursor:pointer;" onclick="editShiftNote('${emp.id}',${i})" title="Add note">📝</button>
+                        </div>
+                        ${s.notes ? `<div style="font-size:0.7rem;color:#64748b;margin-top:2px;">${s.notes}</div>` : ''}
+                    </td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+
+            if (!isPub) {
+                html += '<div style="margin-top:1rem;"><h3 style="font-size:1rem;margin-bottom:0.5rem;">Open Shifts</h3>';
+                html += '<div id="open-shifts-container">';
+                const os = scheduleData.open_shifts || [];
+                os.forEach((osft, oi) => {
+                    html += `<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
+                        <select id="os-day-${oi}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">${SCHED_DAYS.map((d,di) => `<option value="${di}" ${di===osft.weekday?'selected':''}>${d.slice(0,3)}</option>`).join('')}</select>
+                        <input type="time" id="os-start-${oi}" value="${osft.start||''}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">
+                        <span style="color:#94a3b8;">-</span>
+                        <input type="time" id="os-end-${oi}" value="${osft.end||''}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">
+                        <input type="text" id="os-notes-${oi}" value="${osft.notes||''}" placeholder="Notes" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;flex:1;">
+                        <button class="btn btn-danger btn-sm" onclick="removeOpenShift(${oi})" style="padding:0.25rem 0.5rem;">✕</button>
+                    </div>`;
+                });
+                html += `</div>
+                <button class="btn btn-secondary btn-sm" onclick="addOpenShift()" style="margin-top:0.35rem;">+ Add Open Shift</button>
+                <span id="open-shift-claim-area" style="margin-left:1rem;color:#64748b;font-size:0.85rem;">Employees can claim open shifts from their portal</span>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function saveSchedules() {
+            const res = await fetch('/api/employees');
+            const emps = await res.json();
+            const shifts = {};
+            emps.forEach(emp => {
+                const empShifts = [];
+                SCHED_DAYS.forEach((d, i) => {
+                    empShifts.push({
+                        start: document.getElementById(`sched-${emp.id}-${i}-start`)?.value || '',
+                        end: document.getElementById(`sched-${emp.id}-${i}-end`)?.value || '',
+                        notes: scheduleData.shifts?.[emp.id]?.[i]?.notes || '',
+                    });
+                });
+                shifts[emp.id] = empShifts;
+            });
+
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            const openShifts = [];
+            const osCount = (scheduleData.open_shifts || []).length;
+            for (let i = 0; i < osCount; i++) {
+                const dayEl = document.getElementById(`os-day-${i}`);
+                if (dayEl) {
+                    openShifts.push({
+                        weekday: parseInt(dayEl.value),
+                        start: document.getElementById(`os-start-${i}`)?.value || '',
+                        end: document.getElementById(`os-end-${i}`)?.value || '',
+                        notes: document.getElementById(`os-notes-${i}`)?.value || '',
+                    });
+                }
+            }
+
+            await fetch('/api/schedules', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({shifts, open_shifts: openShifts, week_start: wi.week_start, week_label: wi.week_label}),
+            });
+            alert('Schedules saved');
+        }
+
+        async function publishSchedule() {
+            const isPub = scheduleData.status === 'published';
+            await fetch(`/api/schedules/${isPub ? 'unpublish' : 'publish'}`, {method: 'POST'});
+            await renderSchedule();
+        }
+
+        async function copyPrevWeek() {
+            await fetch('/api/schedules/copy', {method: 'POST'});
+            await renderSchedule();
+            alert('Schedule reset to draft (copied from current data)');
+        }
+
+        function addOpenShift() {
+            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
+            scheduleData.open_shifts.push({weekday: 0, start: '09:00', end: '17:00', notes: ''});
+            renderSchedule();
+        }
+
+        function removeOpenShift(idx) {
+            scheduleData.open_shifts.splice(idx, 1);
+            renderSchedule();
+        }
+
+        let osIdCounter = 0;
+
+        function editShiftNote(empId, dayIdx) {
+            const current = scheduleData.shifts?.[empId]?.[dayIdx]?.notes || '';
+            const note = prompt('Shift notes:', current);
+            if (note !== null) {
+                if (!scheduleData.shifts[empId]) scheduleData.shifts[empId] = SCHED_DAYS.map(() => ({}));
+                if (!scheduleData.shifts[empId][dayIdx]) scheduleData.shifts[empId][dayIdx] = {};
+                scheduleData.shifts[empId][dayIdx].notes = note;
+                renderSchedule();
+            }
+        }
+
+        // ─── Availability (Admin) ─────────────────────────
+        let availVisible = false;
+        function toggleAvailPanel() {
+            availVisible = !availVisible;
+            document.getElementById('avail-panel').style.display = availVisible ? 'block' : 'none';
+            if (availVisible) renderAvailEditor();
+        }
+
+        async function renderAvailEditor() {
+            const [empRes, availRes] = await Promise.all([
+                fetch('/api/employees'),
+                fetch('/api/availability')
+            ]);
+            const emps = await empRes.json();
+            const availability = await availRes.json();
+            const container = document.getElementById('avail-editor');
+            let html = '<div style="overflow-x:auto;"><table style="min-width:700px;"><thead><tr><th>Employee</th>';
+            SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;">${d.slice(0,3)}</th>`; });
+            html += '</tr></thead><tbody>';
+            emps.forEach(emp => {
+                const avail = availability[emp.id] || [];
+                html += `<tr><td><strong>${emp.name}</strong></td>`;
+                SCHED_DAYS.forEach((d, i) => {
+                    const a = avail.find(x => x.weekday === i);
+                    html += `<td style="text-align:center;">
+                        <input type="time" id="avail-${emp.id}-${i}-start" value="${a ? a.start : ''}" style="width:60px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.8rem;">
+                        <span style="font-size:0.75rem;color:#94a3b8;">-</span>
+                        <input type="time" id="avail-${emp.id}-${i}-end" value="${a ? a.end : ''}" style="width:60px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.8rem;">
+                    </td>`;
+                });
+                html += `</tr>`;
+            });
+            html += '</tbody></table></div>';
+            html += `<button class="btn btn-primary btn-sm" onclick="saveAllAvail()">Save All Availability</button>`;
+            html += ` <span id="avail-status" style="font-size:0.85rem;color:#64748b;"></span>`;
+            container.innerHTML = html;
+        }
+
+        async function saveAllAvail() {
+            const res = await fetch('/api/employees');
+            const emps = await res.json();
+            const data = {};
+            emps.forEach(emp => {
+                const days = [];
+                SCHED_DAYS.forEach((d, i) => {
+                    const start = document.getElementById(`avail-${emp.id}-${i}-start`)?.value;
+                    const end = document.getElementById(`avail-${emp.id}-${i}-end`)?.value;
+                    if (start && end) days.push({weekday: i, start, end});
+                });
+                data[emp.id] = days;
+            });
+            await fetch('/api/availability', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data),
+            });
+            document.getElementById('avail-status').textContent = 'Availability saved';
+            renderSchedule();
+        }
+
+        // ─── Employee Schedule & Availability ─────────────
+        function toggleCollapse(id, headerEl) {
+            const body = document.getElementById(id);
+            if (!body) return;
+            const isHidden = body.style.display === 'none';
+            body.style.display = isHidden ? 'block' : 'none';
+            if (headerEl) {
+                const arrow = headerEl.querySelector('span');
+                if (arrow) arrow.textContent = isHidden ? '▾' : '▸';
+            }
+        }
+
+        async function empLoadSchedule() {
+            const res = await fetch(`/api/employee/schedule?employee_id=${empSession.id}`);
+            const data = await res.json();
+            const container = document.getElementById('emp-schedule-container');
+            const shifts = data.shifts || [];
+            const status = data.status || 'draft';
+            const badge = document.getElementById('sched-status-badge-emp');
+            badge.innerHTML = status === 'published'
+                ? '<span style="padding:0.2rem 0.5rem;background:#dcfce7;color:#166534;border-radius:4px;font-size:0.8rem;font-weight:600;">Published</span>'
+                : '<span style="padding:0.2rem 0.5rem;background:#fef3c7;color:#92400e;border-radius:4px;font-size:0.8rem;font-weight:600;">Draft — not yet finalized</span>';
+            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Notes</th></tr></thead><tbody>';
+            let hasAny = false;
+            SCHED_DAYS.forEach((d, i) => {
+                const s = shifts[i] || {};
+                if (s.start && s.end) {
+                    hasAny = true;
+                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td><td style="color:#64748b;font-size:0.85rem;">${s.notes || ''}</td></tr>`;
+                }
+            });
+            html += '</tbody></table>';
+            html += !hasAny ? '<p style="color:#64748b;">No schedule set for this week.</p>' : '';
+            container.innerHTML = html;
+            empLoadAvailability();
+        }
+
+        async function empLoadAvailability() {
+            const res = await fetch(`/api/employee/availability?employee_id=${empSession.id}`);
+            const avail = await res.json();
+            const container = document.getElementById('emp-avail-editor');
+            let html = '<div style="overflow-x:auto;"><table style="min-width:400px;"><thead><tr><th>Day</th><th>Start</th><th>End</th></tr></thead><tbody>';
+            SCHED_DAYS.forEach((d, i) => {
+                const a = avail.find(x => x.weekday === i);
+                html += `<tr>
+                    <td>${d}</td>
+                    <td><input type="time" id="eavail-${i}-start" value="${a ? a.start : ''}" style="width:80px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;"></td>
+                    <td><input type="time" id="eavail-${i}-end" value="${a ? a.end : ''}" style="width:80px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;"></td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function empSaveAvailability() {
+            const avail = [];
+            SCHED_DAYS.forEach((d, i) => {
+                const start = document.getElementById(`eavail-${i}-start`)?.value;
+                const end = document.getElementById(`eavail-${i}-end`)?.value;
+                if (start && end) avail.push({weekday: i, start, end});
+            });
+            const res = await fetch(`/api/employee/availability?employee_id=${empSession.id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(avail),
+            });
+            document.getElementById('emp-avail-status').textContent = res.ok ? 'Availability saved' : 'Error saving';
+            document.getElementById('emp-avail-status').style.color = res.ok ? '#059669' : '#dc2626';
+        }
+
+        // ─── Time Clock ────────────────────────────────────
+        let timeClockTimer = null;
+
+        async function initTimeClock() {
+            loadTcEmployees();
+            refreshTimeClock();
+            if (timeClockTimer) clearInterval(timeClockTimer);
+            timeClockTimer = setInterval(refreshTimeClock, 15000);
+        }
+
+        function loadTcEmployees() {
+            const sel = document.getElementById('tc-employee');
+            sel.innerHTML = '<option value="">— Select Employee —</option>';
+            employees.forEach(emp => {
+                sel.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+            });
+        }
+
+        async function refreshTimeClock() {
+            const res = await fetch('/api/timeclock/now');
+            const data = await res.json();
+            const statusEl = document.getElementById('tc-status');
+            const activeEl = document.getElementById('tc-active');
+            const todayEl = document.getElementById('tc-today');
+
+            if (data.active && data.active.length) {
+                activeEl.innerHTML = '<strong>Currently Clocked In:</strong><br>' +
+                    data.active.map(e => `<span style="color:#059669;">&#9679; ${e.employee_name} (since ${new Date(e.clock_in).toLocaleTimeString()})</span>`).join('<br>');
+            } else {
+                activeEl.innerHTML = '<span style="color:#64748b;">No one clocked in</span>';
+            }
+
+            if (data.today_entries && data.today_entries.length) {
+                let html = `<h3 style="margin-bottom:0.5rem;">Today's Entries</h3><div style="overflow-x:auto;"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr></thead><tbody>`;
+                data.today_entries.forEach(e => {
+                    const cin = new Date(e.clock_in).toLocaleTimeString();
+                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString() : '<span style="color:#059669;">Clocked In</span>';
+                    const hrs = e.hours ? e.hours.toFixed(2) : '—';
+                    html += `<tr><td>${e.employee_name||e.employee_id}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+                todayEl.innerHTML = html;
+            } else {
+                todayEl.innerHTML = '<span style="color:#64748b;">No entries today</span>';
+            }
+        }
+
+        async function doClock() {
+            const empId = document.getElementById('tc-employee').value;
+            const pin = document.getElementById('tc-pin').value;
+            const statusEl = document.getElementById('tc-status');
+            if (!empId) { statusEl.textContent = 'Select an employee'; return; }
+            try {
+                const res = await fetch('/api/timeclock/clock', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({employee_id: empId, pin}),
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('tc-pin').value = '';
+                    statusEl.style.color = '#059669';
+                    statusEl.textContent = data.message;
+                    refreshTimeClock();
+                } else {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = data.error || 'Error';
+                }
+            } catch (e) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = 'Error: ' + e.message;
+            }
         }
 
         function renderSettings() {
@@ -1491,28 +2028,10 @@
         }
         function printReport() { const d = window._reportData; if (d) triggerPrint(buildReportHtml(d)); }
         function shareReport() { const d = window._reportData; if (d) triggerShare(buildReportText(d)); }
-        function toggleCollapse(id, headerEl) {
-            const body = document.getElementById(id);
-            const arrow = document.getElementById(id.replace('body', 'arrow'));
-            const isHidden = body.style.display === 'none';
-            body.style.display = isHidden ? 'block' : 'none';
-            arrow.innerHTML = isHidden ? '&#9650;' : '&#9660;';
-        }
         function downloadPaystubs(eid) { const d = window._reportData; if (d) triggerDownload(buildPaystubHtml(eid), `paystubs-${eid}.html`); }
         function printPaystubs(eid) { const d = window._reportData; if (d) triggerPrint(buildPaystubHtml(eid)); }
         function sharePaystubs(eid) { const d = window._reportData; if (d) triggerShare(buildPaystubText(eid)); }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const res = await fetch('/api/session');
-            const data = await res.json();
-            if (data.user) {
-                document.getElementById('login-page').style.display = 'none';
-                document.getElementById('app-content').classList.add('visible');
-                document.getElementById('user-label').textContent = data.user;
-                fetchEmployees();
-                loadWeekPicker();
-            }
-        });
 
         async function doLogin() {
             const username = document.getElementById('login-username').value;
@@ -1590,6 +2109,254 @@
                 statusEl.textContent = 'Error: ' + e.message;
             }
         }
+
+        // ─── Employee Portal ───────────────────────────────
+        let empSession = null;
+
+        function togglePortal() {
+            if (empSession) {
+                showEmpPage('emp-schedule');
+            } else {
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('app-content').classList.remove('visible');
+                document.getElementById('login-username').value = '';
+                document.getElementById('login-password').value = '';
+                document.getElementById('login-error').style.display = 'none';
+                // Show employee login hint on the login page
+                document.getElementById('forgot-pw').style.display = 'none';
+                const empLoginSection = document.getElementById('emp-login-section');
+                if (empLoginSection) empLoginSection.style.display = 'block';
+            }
+        }
+
+        async function doEmpLogin() {
+            const empId = document.getElementById('emp-login-id').value.trim().toUpperCase();
+            const pin = document.getElementById('emp-login-pin').value;
+            const errEl = document.getElementById('emp-login-error');
+            errEl.style.display = 'none';
+            if (!empId || !pin) { errEl.textContent = 'Enter ID and PIN'; errEl.style.display = 'block'; return; }
+            const ok = await empLogin(empId, pin);
+            if (!ok) {
+                errEl.textContent = 'Invalid ID or PIN';
+                errEl.style.display = 'block';
+            }
+        }
+
+        function showEmpPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('#emp-nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(page).classList.add('active');
+            const btn = document.querySelector(`#emp-nav button[onclick*="'${page}'"]`);
+            if (btn) btn.classList.add('active');
+
+            if (page === 'emp-schedule') empLoadSchedule();
+            if (page === 'emp-timeoff') empLoadTimeOff();
+            if (page === 'emp-paystubs') empLoadPaystubs();
+            if (page === 'emp-clock') empInitClock();
+        }
+
+        async function empLogin(empId, pin) {
+            try {
+                const res = await fetch('/api/employee/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({employee_id: empId, pin}),
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    empSession = data.employee;
+                    document.getElementById('login-page').style.display = 'none';
+                    document.getElementById('app-content').classList.add('visible');
+                    document.getElementById('admin-nav').style.display = 'none';
+                    document.getElementById('emp-nav').style.display = 'flex';
+                    document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('portal-toggle').textContent = 'Admin Portal';
+                    showEmpPage('emp-schedule');
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function empLogout() {
+            empSession = null;
+            document.getElementById('admin-nav').style.display = 'flex';
+            document.getElementById('emp-nav').style.display = 'none';
+            document.getElementById('emp-label').textContent = '';
+            document.getElementById('portal-toggle').textContent = 'Employee Portal';
+            fetch('/api/employee/logout', {method: 'POST'});
+            showPage('hours');
+        }
+
+        async function empLoadSchedule() {
+            const res = await fetch(`/api/employee/schedule?employee_id=${empSession.id}`);
+            const data = await res.json();
+            const container = document.getElementById('emp-schedule-container');
+            const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const shifts = data.shifts || [];
+            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th></tr></thead><tbody>';
+            let hasAny = false;
+            DAYS.forEach((d, i) => {
+                const s = shifts[i] || {};
+                if (s.start && s.end) {
+                    hasAny = true;
+                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td></tr>`;
+                }
+            });
+            html += '</tbody></table>';
+            container.innerHTML = hasAny ? html : '<p style="color:#64748b;">No schedule set for this week.</p>';
+        }
+
+        async function submitTimeOff() {
+            const statusEl = document.getElementById('emp-to-status');
+            const start = document.getElementById('emp-to-start').value;
+            const end = document.getElementById('emp-to-end').value;
+            const reason = document.getElementById('emp-to-reason').value;
+            if (!start || !end) { statusEl.textContent = 'Select start and end dates'; return; }
+            const res = await fetch('/api/timeoff/request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: empSession.id, start_date: start, end_date: end, reason}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                statusEl.style.color = '#059669';
+                statusEl.textContent = 'Request submitted';
+                document.getElementById('emp-to-start').value = '';
+                document.getElementById('emp-to-end').value = '';
+                document.getElementById('emp-to-reason').value = '';
+                empLoadTimeOff();
+            } else {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = data.error || 'Error';
+            }
+        }
+
+        async function empLoadTimeOff() {
+            const res = await fetch(`/api/employee/timeoff?employee_id=${empSession.id}`);
+            const data = await res.json();
+            const container = document.getElementById('emp-to-list');
+            if (!data.length) {
+                container.innerHTML = '<p style="color:#64748b;">No requests yet.</p>';
+                return;
+            }
+            let html = '<h3 style="margin-top:1rem;">My Requests</h3><div style="overflow-x:auto;"><table><thead><tr><th>Dates</th><th>Reason</th><th>Status</th></tr></thead><tbody>';
+            data.forEach(r => {
+                const color = r.status === 'approved' ? '#059669' : r.status === 'denied' ? '#dc2626' : '#f59e0b';
+                html += `<tr><td>${r.start_date} to ${r.end_date}</td><td>${r.reason}</td><td style="color:${color};font-weight:600;">${r.status}</td></tr>`;
+            });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function empLoadPaystubs() {
+            const res = await fetch(`/api/employee/paystubs?employee_id=${empSession.id}`);
+            const data = await res.json();
+            const container = document.getElementById('emp-paystubs-container');
+            if (!data.length) {
+                container.innerHTML = '<p style="color:#64748b;">No paystubs yet.</p>';
+                return;
+            }
+            let html = '';
+            data.forEach(r => {
+                html += `<div class="paystub" id="eps-${r.employee_id}-${r.week_label}">
+                    <div class="paystub-header">
+                        <h3>${r.employee_name}</h3>
+                        <span>${r.week_label} (${r.week_start} - ${r.week_end})</span>
+                    </div>
+                    <div class="paystub-row"><span>Gross Pay</span><span>$${(r.gross_pay||0).toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Federal Tax</span><span>$${(r.federal_tax||0).toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>State Tax</span><span>$${(r.state_tax||0).toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Social Security</span><span>$${(r.social_security||0).toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Medicare</span><span>$${(r.medicare||0).toFixed(2)}</span></div>
+                    <div class="paystub-row subtotal"><span>Total Deductions</span><span>$${(r.total_deductions||0).toFixed(2)}</span></div>
+                    <div class="paystub-row net"><span>Net Pay</span><span>$${(r.net_pay||0).toFixed(2)}</span></div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function empInitClock() {
+            const nameEl = document.getElementById('emp-clock-name');
+            const btn = document.getElementById('emp-clock-btn');
+            nameEl.textContent = empSession.name;
+            const res = await fetch('/api/timeclock/now');
+            const data = await res.json();
+            const active = data.active.find(e => e.employee_id === empSession.id);
+            if (active) {
+                btn.textContent = 'Clock Out';
+                btn.style.background = '#dc2626';
+                document.getElementById('emp-clock-status').innerHTML =
+                    `<span style="color:#059669;">Clocked in since ${new Date(active.clock_in).toLocaleTimeString()}</span>`;
+            } else {
+                btn.textContent = 'Clock In';
+                btn.style.background = '#059669';
+                document.getElementById('emp-clock-status').textContent = '';
+            }
+            empClockToday();
+        }
+
+        async function empClockToday() {
+            const res = await fetch('/api/timeclock/now');
+            const data = await res.json();
+            const mine = data.today_entries.filter(e => e.employee_id === empSession.id);
+            const el = document.getElementById('emp-clock-today');
+            if (mine.length) {
+                let html = '<h3>Today</h3><table><thead><tr><th>In</th><th>Out</th><th>Hours</th></tr></thead><tbody>';
+                mine.forEach(e => {
+                    html += `<tr><td>${new Date(e.clock_in).toLocaleTimeString()}</td>
+                        <td>${e.clock_out ? new Date(e.clock_out).toLocaleTimeString() : '—'}</td>
+                        <td>${e.hours ? e.hours.toFixed(2) : '—'}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                el.innerHTML = html;
+            } else {
+                el.innerHTML = '';
+            }
+        }
+
+        async function empDoClock() {
+            const res = await fetch('/api/timeclock/clock', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: empSession.id, pin: 'admin'}), // employee already authenticated
+            });
+            const data = await res.json();
+            if (res.ok) {
+                empInitClock();
+            } else {
+                document.getElementById('emp-clock-status').innerHTML =
+                    `<span style="color:#dc2626;">${data.error || 'Error'}</span>`;
+            }
+        }
+
+        // Add employee login option to login page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check employee session on load
+            fetch('/api/employee/session').then(r => r.json()).then(data => {
+                if (data.employee_id) {
+                    empSession = {id: data.employee_id, name: data.employee_name};
+                    document.getElementById('login-page').style.display = 'none';
+                    document.getElementById('app-content').classList.add('visible');
+                    document.getElementById('admin-nav').style.display = 'none';
+                    document.getElementById('emp-nav').style.display = 'flex';
+                    document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('portal-toggle').textContent = 'Admin Portal';
+                    showEmpPage('emp-schedule');
+                } else {
+                    // Check admin session
+                    fetch('/api/session').then(r => r.json()).then(s => {
+                        if (s.user) {
+                            document.getElementById('login-page').style.display = 'none';
+                            document.getElementById('app-content').classList.add('visible');
+                            document.getElementById('user-label').textContent = s.user;
+                            fetchEmployees();
+                            loadWeekPicker();
+                        }
+                    });
+                }
+            });
+        });
     </script>
 </body>
 </html>

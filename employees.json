@@ -11,7 +11,8 @@
       "overtime_rate": 1.5,
       "tipped": false,
       "tip_rate": 0.0,
-      "id": "EMP004"
+      "id": "EMP004",
+      "pin": "1234"
     },
     {
       "name": "allison Dorman",
@@ -29,7 +30,8 @@
       "fed_add_withholding_value": 0.0,
       "state_add_withholding_type": "amount",
       "state_add_withholding_value": 0.0,
-      "id": "EMP005"
+      "id": "EMP005",
+      "pin": "1234"
     },
     {
       "name": "Justin White",
@@ -47,7 +49,8 @@
       "fed_add_withholding_value": 17.0,
       "state_add_withholding_type": "amount",
       "state_add_withholding_value": 2.0,
-      "id": "EMP006"
+      "id": "EMP006",
+      "pin": "1234"
     }
   ]
 }

@@ -62,13 +62,34 @@ payroll_app/
 
 ### API Endpoints
 - `GET /api/employees` - list all
-- `POST /api/employees` - add new (auto-generates EMP### id)
+- `POST /api/employees` - add new (auto-generates EMP### id). Supports `pin` field for time clock.
 - `PUT /api/employees/<id>` - update
 - `DELETE /api/employees/<id>` - remove
 - `POST /api/payroll` - run payroll with `{hours, week_info}` payload; saves to history
 - `GET /api/history/weeks` - list all saved pay weeks
 - `GET /api/history/<week_key>` - get full payroll for a week
 - `DELETE /api/history/<week_key>` - remove a week from history
+- `GET /api/schedules` - get all employee schedules
+- `PUT /api/schedules` - save all employee schedules
+- `GET /api/timeclock/now` - get current clock status (public, for tablet)
+- `POST /api/timeclock/clock` - clock in/out with `{employee_id, pin}` (public)
+- `GET /api/timeclock/history` - get all clock entries (admin)
+- `POST /api/timeclock/delete` - delete a clock entry by index
+- `GET /api/timeoff` - get all time off requests (admin)
+- `POST /api/timeoff/request` - submit time off request (public, uses session or body)
+- `POST /api/timeoff/respond` - approve/deny a request (admin)
+- `POST /api/employee/login` - employee login with `{employee_id, pin}`
+- `GET /api/employee/session` - check employee session
+- `POST /api/employee/logout` - employee logout
+- `GET /api/employee/paystubs` - get employee's paystubs
+- `GET /api/employee/schedule` - get employee's schedule (includes `status` field: draft/published)
+- `GET /api/employee/availability` - get employee's own availability (GET/PUT)
+- `GET /api/employee/timeoff` - get employee's time off requests
+- `POST /api/schedules/publish` - publish current schedule
+- `POST /api/schedules/unpublish` - unpublish current schedule  
+- `POST /api/schedules/copy` - copy previous week's schedule (`{source_week}`)
+- `GET/PUT /api/availability` - bulk get/set all availability (admin)
+- `GET/PUT /api/availability/<emp_id>` - get/set one employee's availability (admin)
 
 ### Login / Authentication
 - All routes except `/api/login`, `/api/logout`, `/api/session`, and `/` require authentication via `@require_login` decorator
@@ -81,6 +102,13 @@ payroll_app/
 ### History Storage
 - `payroll_history.json` is a flat dict keyed by `week_label` string
 - No database - all state is JSON files
+
+### New Data Files
+- `schedules.json` - employee shift schedules (`{"shifts": {"EMP001": [{"start": "09:00", "end": "17:00", "notes": ""}, ...]}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""}`)
+- `availability.json` - employee recurring weekly availability (`{"EMP001": [{"weekday": 0, "start": "09:00", "end": "17:00"}, ...]}`)
+- `timeclock.json` - clock in/out entries (`{"entries": [{"employee_id", "date", "clock_in", "clock_out", "hours", "status"}]}`)
+- `time_off.json` - time off requests (`{"requests": [{"id", "employee_id", "start_date", "end_date", "reason", "status"}]}`)
+- `users.json` - admin login credentials (auto-created when changed via Settings)
 
 ## Testing
 
