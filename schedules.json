@@ -1,20 +1,116 @@
 {
-  "status": "draft",
+  "status": "published",
   "shifts": {
-    "EMP001": [
+    "EMP004": [
       {
-        "start": "09:00",
-        "end": "17:00"
+        "start": "06:00",
+        "end": "14:00",
+        "notes": ""
       },
       {
-        "start": "09:00",
-        "end": "17:00"
+        "start": "06:00",
+        "end": "14:00",
+        "notes": ""
       },
-      {},
-      {},
-      {},
-      {},
-      {}
+      {
+        "start": "06:00",
+        "end": "14:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "14:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "14:00",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP005": [
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP006": [
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
     ]
   },
   "open_shifts": [],

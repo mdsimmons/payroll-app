@@ -82,14 +82,13 @@ payroll_app/
 - `GET /api/employee/session` - check employee session
 - `POST /api/employee/logout` - employee logout
 - `GET /api/employee/paystubs` - get employee's paystubs
-- `GET /api/employee/schedule` - get employee's schedule (includes `status` field: draft/published)
-- `GET /api/employee/availability` - get employee's own availability (GET/PUT)
+- `GET /api/employee/schedule` - get employee's schedule (includes `status` field: draft/published). Accepts optional `week_start` (YYYY-MM-DD) query param; if absent or matching current schedule, returns that schedule; otherwise returns empty shifts.
 - `GET /api/employee/timeoff` - get employee's time off requests
 - `POST /api/schedules/publish` - publish current schedule
 - `POST /api/schedules/unpublish` - unpublish current schedule  
 - `POST /api/schedules/copy` - copy previous week's schedule (`{source_week}`)
-- `GET/PUT /api/availability` - bulk get/set all availability (admin)
-- `GET/PUT /api/availability/<emp_id>` - get/set one employee's availability (admin)
+- `GET /api/notifications` - list notifications (admin sees all with is_read, employee sees theirs with is_read)
+- `POST /api/notifications/read` - mark notification as read with `{id}`. Admin marks with "admin", employee marks with their employee_id.
 
 ### Login / Authentication
 - All routes except `/api/login`, `/api/logout`, `/api/session`, and `/` require authentication via `@require_login` decorator
@@ -105,10 +104,10 @@ payroll_app/
 
 ### New Data Files
 - `schedules.json` - employee shift schedules (`{"shifts": {"EMP001": [{"start": "09:00", "end": "17:00", "notes": ""}, ...]}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""}`)
-- `availability.json` - employee recurring weekly availability (`{"EMP001": [{"weekday": 0, "start": "09:00", "end": "17:00"}, ...]}`)
 - `timeclock.json` - clock in/out entries (`{"entries": [{"employee_id", "date", "clock_in", "clock_out", "hours", "status"}]}`)
 - `time_off.json` - time off requests (`{"requests": [{"id", "employee_id", "start_date", "end_date", "reason", "status"}]}`)
 - `users.json` - admin login credentials (auto-created when changed via Settings)
+- `notifications.json` - in-app notifications with read tracking (auto-created)
 
 ## Testing
 

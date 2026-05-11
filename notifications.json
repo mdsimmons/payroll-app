@@ -1,0 +1,40 @@
+{
+  "notifications": [
+    {
+      "id": 4,
+      "type": "schedule_published",
+      "message": "Schedule for May 11 - May 17, 2026 has been published",
+      "created_at": "2026-05-11T10:21:53.350557",
+      "read_by": [
+        "EMP004"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 11 - May 17, 2026 has been unpublished",
+      "created_at": "2026-05-11T10:20:25.014450",
+      "read_by": [
+        "EMP004"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "schedule_published",
+      "message": "Schedule for May 11 - May 17, 2026 has been published",
+      "created_at": "2026-05-11T10:19:06.984545",
+      "read_by": [
+        "EMP004"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 11 - May 17, 2026 has been unpublished",
+      "created_at": "2026-05-11T10:18:41.290859",
+      "read_by": [
+        "EMP004"
+      ]
+    }
+  ]
+}

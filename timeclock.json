@@ -17,6 +17,15 @@
       "clock_out": "2026-05-08T19:35:55.430231",
       "hours": 0.31,
       "status": "completed"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-05-03",
+      "clock_in": "2026-05-03T10.22:00",
+      "clock_out": "2026-05-03T3:00:00",
+      "hours": null,
+      "status": "completed"
     }
   ]
 }

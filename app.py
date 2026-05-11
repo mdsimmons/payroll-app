@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import csv
+import re
 from datetime import datetime, timedelta
 from io import StringIO
 from flask import Flask, render_template, request, jsonify, Response, session, redirect
@@ -43,7 +44,6 @@ HISTORY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "payroll
 TAX_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tax_settings.json")
 APP_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_settings.json")
 SCHEDULES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedules.json")
-AVAILABILITY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "availability.json")
 TIMECLOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "timeclock.json")
 TIMEOFF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "time_off.json")
 SHIFT_SWAPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "shift_swaps.json")
@@ -183,6 +183,16 @@ def add_employee():
                 break
         new_emp["pin"] = pin
 
+        # Auto-generate username from name (lowercase, no spaces)
+        base_username = re.sub(r'[^a-zA-Z0-9]', '', new_emp["name"]).lower()
+        username = base_username
+        existing_usernames = {e.get("username") for e in data["employees"] if e.get("username")}
+        suffix = 1
+        while username in existing_usernames:
+            username = f"{base_username}{suffix}"
+            suffix += 1
+        new_emp["username"] = username
+
         data["employees"].append(new_emp)
 
         with open(EMPLOYEES_FILE, "w") as f:
@@ -218,6 +228,15 @@ def update_employee(emp_id):
                 data["employees"][i]["fed_add_withholding_value"] = float(updated.get("fed_add_withholding_value", 0))
                 data["employees"][i]["state_add_withholding_type"] = updated.get("state_add_withholding_type", "amount")
                 data["employees"][i]["state_add_withholding_value"] = float(updated.get("state_add_withholding_value", 0))
+                # Auto-generate username from name
+                base_username = re.sub(r'[^a-zA-Z0-9]', '', data["employees"][i]["name"]).lower()
+                username = base_username
+                existing_usernames = {e.get("username") for e in data["employees"] if e.get("username") and e["id"] != emp_id}
+                suffix = 1
+                while username in existing_usernames:
+                    username = f"{base_username}{suffix}"
+                    suffix += 1
+                data["employees"][i]["username"] = username
 
                 found = True
                 break
@@ -408,6 +427,8 @@ def publish_schedule():
     data = load_json(SCHEDULES_FILE, {})
     data["status"] = "published"
     save_json(SCHEDULES_FILE, data)
+    label = data.get("week_label", "this week")
+    create_notification("schedule_published", f"Schedule for {label} has been published")
     return jsonify({"message": "Schedule published"})
 
 
@@ -417,6 +438,8 @@ def unpublish_schedule():
     data = load_json(SCHEDULES_FILE, {})
     data["status"] = "draft"
     save_json(SCHEDULES_FILE, data)
+    label = data.get("week_label", "this week")
+    create_notification("schedule_unpublished", f"Schedule for {label} has been unpublished")
     return jsonify({"message": "Schedule set to draft"})
 
 
@@ -431,6 +454,7 @@ def copy_schedule():
 
 # ─── Schedule Templates ─────────────────────────────────────
 SCHEDULE_TEMPLATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedule_templates.json")
+NOTIFICATIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notifications.json")
 
 
 def load_templates():
@@ -532,33 +556,72 @@ def apply_schedule_template(template_id):
         return jsonify({"error": str(e)}), 500
 
 
-# ─── Availability ──────────────────────────────────────────
-@app.route("/api/availability", methods=["GET", "PUT"])
-@require_login
-def get_availability():
-    if request.method == "PUT":
-        data = request.json
-        save_json(AVAILABILITY_FILE, data)
-        return jsonify({"message": "Availability saved"})
-    data = load_json(AVAILABILITY_FILE, {})
-    return jsonify(data)
+# ─── Notifications ─────────────────────────────────────────
 
 
-@app.route("/api/availability/<emp_id>", methods=["GET", "PUT"])
-@require_login
-def employee_availability(emp_id):
-    if request.method == "GET":
-        data = load_json(AVAILABILITY_FILE, {})
-        return jsonify(data.get(emp_id, []))
-    else:
-        try:
-            avail = request.json
-            data = load_json(AVAILABILITY_FILE, {})
-            data[emp_id] = avail
-            save_json(AVAILABILITY_FILE, data)
-            return jsonify({"message": "Availability saved"})
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+def load_notifications():
+    return load_json(NOTIFICATIONS_FILE, {"notifications": []})
+
+
+def save_notifications(data):
+    save_json(NOTIFICATIONS_FILE, data)
+
+
+def create_notification(ntype, message):
+    data = load_notifications()
+    nid = 1
+    if data["notifications"]:
+        nid = max(n["id"] for n in data["notifications"]) + 1
+    data["notifications"].insert(0, {
+        "id": nid,
+        "type": ntype,
+        "message": message,
+        "created_at": datetime.now().isoformat(),
+        "read_by": [],
+    })
+    save_notifications(data)
+    return nid
+
+
+@app.route("/api/notifications", methods=["GET"])
+def get_notifications():
+    eid = session.get("employee_id")
+    is_admin = session.get("user") is not None
+    data = load_notifications()
+    notifs = data["notifications"]
+    result = []
+    for n in notifs:
+        n_copy = dict(n)
+        if eid:
+            n_copy["is_read"] = eid in n.get("read_by", [])
+        elif is_admin:
+            n_copy["is_read"] = "admin" in n.get("read_by", [])
+        result.append(n_copy)
+    return jsonify(result)
+
+
+@app.route("/api/notifications/read", methods=["POST"])
+def mark_notification_read():
+    try:
+        nid = request.json.get("id")
+        if not nid:
+            return jsonify({"error": "id required"}), 400
+        eid = session.get("employee_id")
+        is_admin = session.get("user") is not None
+        data = load_notifications()
+        for n in data["notifications"]:
+            if n["id"] == nid:
+                if is_admin:
+                    if "admin" not in n.get("read_by", []):
+                        n.setdefault("read_by", []).append("admin")
+                elif eid:
+                    if eid not in n.get("read_by", []):
+                        n.setdefault("read_by", []).append(eid)
+                save_notifications(data)
+                return jsonify({"message": "Marked as read"})
+        return jsonify({"error": "Not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ─── Time Clock ─────────────────────────────────────────────
@@ -787,10 +850,14 @@ def respond_timeoff():
 @app.route("/api/employee/login", methods=["POST"])
 def employee_login():
     data = request.json
+    username = data.get("username", "").strip().lower()
     emp_id = data.get("employee_id", "").strip().upper()
     pin = data.get("pin", "").strip()
     employees = load_employees(EMPLOYEES_FILE)
-    emp = next((e for e in employees if e["id"] == emp_id), None)
+    if username:
+        emp = next((e for e in employees if e.get("username", "").lower() == username), None)
+    else:
+        emp = next((e for e in employees if e["id"] == emp_id), None)
     if not emp or str(emp.get("pin", "")).strip() != pin:
         return jsonify({"error": "Invalid credentials"}), 401
     session["employee_id"] = emp["id"]
@@ -839,25 +906,24 @@ def employee_schedule():
     eid = request.args.get("employee_id") or session.get("employee_id")
     if not eid:
         return jsonify({"error": "Unauthorized"}), 401
+    week_start = request.args.get("week_start")
     data = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft"})
+
+    if data.get("status") != "published":
+        return jsonify({"shifts": [], "status": "draft", "week_start": week_start or "", "week_label": ""})
+
+    if week_start and data.get("week_start") != week_start:
+        return jsonify({"shifts": [], "status": "published", "week_start": week_start, "week_label": ""})
+
     shifts = data.get("shifts", {}).get(eid, [])
-    return jsonify({"shifts": shifts, "status": data.get("status", "draft")})
+    return jsonify({
+        "shifts": shifts,
+        "status": "published",
+        "week_start": data.get("week_start", ""),
+        "week_label": data.get("week_label", ""),
+    })
 
 
-@app.route("/api/employee/availability", methods=["GET", "PUT"])
-def employee_availability_self():
-    eid = request.args.get("employee_id") or session.get("employee_id")
-    if not eid:
-        return jsonify({"error": "Unauthorized"}), 401
-    if request.method == "GET":
-        data = load_json(AVAILABILITY_FILE, {})
-        return jsonify(data.get(eid, []))
-    else:
-        avail = request.json
-        data = load_json(AVAILABILITY_FILE, {})
-        data[eid] = avail
-        save_json(AVAILABILITY_FILE, data)
-        return jsonify({"message": "Availability saved"})
 
 
 @app.route("/api/employee/timeoff", methods=["GET"])

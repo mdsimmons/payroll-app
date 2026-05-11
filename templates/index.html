@@ -40,6 +40,18 @@
         .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .notif-bell { position: relative; cursor: pointer; padding: 0.35rem 0.5rem; margin-right: 0.25rem; font-size: 1.2rem; color: #475569; border-radius: 6px; transition: background 0.15s; }
+        .notif-bell:hover { background: #e2e8f0; }
+        .notif-badge { position: absolute; top: -2px; right: -2px; background: #dc2626; color: white; font-size: 0.65rem; font-weight: 700; min-width: 16px; height: 16px; border-radius: 8px; display: none; align-items: center; justify-content: center; padding: 0 4px; }
+        .notif-badge.show { display: flex; }
+        .notif-dropdown { display: none; position: absolute; top: 100%; right: 0; width: 340px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 300; margin-top: 4px; }
+        .notif-dropdown.active { display: block; }
+        .notif-dropdown-header { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 0.85rem; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
+        .notif-item { padding: 0.75rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; }
+        .notif-item:hover { background: #f8fafc; }
+        .notif-item.unread { background: #eff6ff; font-weight: 600; }
+        .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; font-weight: 400; }
+        .notif-empty { padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.85rem; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
@@ -103,17 +115,14 @@
         .sched-grid .day-cell:hover { background: #eef2f6; }
         .sched-grid .day-cell.weekend { background: #f1f5f9; }
         .sched-grid .day-cell.today-cell { background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
-        .sched-grid .day-cell.conflict { background: #fef2f2; box-shadow: inset 0 0 0 1px #fecaca; }
         .shift-block { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; line-height: 1.3; white-space: nowrap; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; transition: all 0.15s; }
         .shift-block:hover { background: #bfdbfe; }
         .shift-block.open-shift { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-        .shift-block.conflict-shift { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
         .shift-block .shift-time { font-weight: 600; }
         .shift-block .shift-notes-icon { opacity: 0.5; font-size: 0.65rem; }
         .shift-block .shift-remove { cursor: pointer; opacity: 0.4; font-size: 0.7rem; margin-left: 2px; }
         .shift-block .shift-remove:hover { opacity: 1; }
         .day-cell .empty-cell { color: #cbd5e1; font-size: 0.7rem; text-align: center; width: 100%; display: block; }
-        .day-cell .conflict-badge { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; background: #dc2626; border-radius: 50%; color: white; font-size: 0.55rem; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 
         .open-shifts-row .emp-label { color: #92400e; font-style: italic; }
         .open-shifts-row .day-cell { background: #fffbeb; }
@@ -123,8 +132,6 @@
         .sched-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
         .sched-status-dot.published { background: #059669; }
         .sched-status-dot.draft { background: #d97706; }
-
-        .avail-mini { display: block; font-size: 0.65rem; color: #94a3b8; margin-top: 1px; }
 
         /* Schedule animation */
         .sched-grid tbody tr { animation: fadeSlideIn 0.3s ease both; }
@@ -210,11 +217,11 @@
             <p style="color: #64748b; margin-bottom: 1.5rem;">Sign in to continue</p>
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" id="login-username" placeholder="Enter username" onkeydown="if(event.key==='Enter') doLogin()">
+                <input type="text" id="login-username" placeholder="Admin username or employee username" onkeydown="if(event.key==='Enter') doLogin()">
             </div>
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter') doLogin()">
+                <label>Password / PIN</label>
+                <input type="password" id="login-password" placeholder="Admin password or employee PIN" onkeydown="if(event.key==='Enter') doLogin()">
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
                 <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.85rem;color:#475569;cursor:pointer;">
@@ -240,19 +247,6 @@
                     <div id="kiosk-error" style="color:#dc2626;font-size:0.85rem;margin-top:0.5rem;display:none;"></div>
                 </div>
             </div>
-            <div id="emp-login-section" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;">
-                <h3 style="margin-bottom:1rem;font-size:1rem;">Employee Login</h3>
-                <div class="form-group">
-                    <label>Employee ID</label>
-                    <input type="text" id="emp-login-id" placeholder="e.g. EMP001" onkeydown="if(event.key==='Enter') doEmpLogin()">
-                </div>
-                <div class="form-group">
-                    <label>PIN</label>
-                    <input type="password" id="emp-login-pin" maxlength="6" placeholder="Your PIN" onkeydown="if(event.key==='Enter') doEmpLogin()">
-                </div>
-                <button class="btn btn-primary" onclick="doEmpLogin()" style="margin-top:0.5rem;">Sign In as Employee</button>
-                <div id="emp-login-error" style="color:#dc2626;font-size:0.9rem;margin-top:0.5rem;display:none;"></div>
-            </div>
         </div>
     </div>
 
@@ -260,6 +254,16 @@
     <div class="header">
         <h1>Payroll App</h1>
         <div style="display:flex;align-items:center;">
+            <div style="position:relative;display:inline-block;">
+                <span class="notif-bell" onclick="toggleNotifDropdown()" title="Notifications">🔔<span class="notif-badge" id="notif-badge">0</span></span>
+                <div class="notif-dropdown" id="notif-dropdown">
+                    <div class="notif-dropdown-header">
+                        <span>Notifications</span>
+                        <button class="btn btn-sm btn-outline" onclick="markAllNotifRead()" style="font-size:0.7rem;padding:0.2rem 0.5rem;">Mark all read</button>
+                    </div>
+                    <div id="notif-list"></div>
+                </div>
+            </div>
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
             <div class="nav" id="admin-nav">
                 <button onclick="showPage('employees')">Employees</button>
@@ -267,6 +271,7 @@
                 <button onclick="showPage('payroll')">Payroll Results</button>
                 <button onclick="showPage('schedule')">Schedule</button>
                 <button onclick="showPage('timeclock')">Time Clock</button>
+                <button onclick="showPage('admin-timeoff')">Time Off</button>
                 <button onclick="showPage('history')">History</button>
                 <button onclick="showPage('reports')">Reports</button>
                 <button onclick="showPage('app-settings')">Settings</button>
@@ -275,10 +280,11 @@
                 <button class="active" onclick="showEmpPage('emp-schedule')">My Schedule</button>
                 <button onclick="showEmpPage('emp-timeoff')">Request Time Off</button>
                 <button onclick="showEmpPage('emp-paystubs')">My Paystubs</button>
-                <button onclick="showEmpPage('emp-clock')">Clock In/Out</button>
+                <button onclick="empLogout()" style="color:#dc2626;">Logout</button>
             </div>
             <span id="emp-label" style="color:#94a3b8;font-size:0.85rem;margin:0 0.5rem;"></span>
-            <button id="portal-toggle" class="btn btn-sm btn-outline" style="margin-left:0.5rem;padding:0.25rem 0.5rem;font-size:0.8rem;" onclick="togglePortal()">Employee Portal</button>
+            <button id="emp-logout-btn" class="btn btn-sm btn-outline" style="margin-left:0.25rem;padding:0.25rem 0.5rem;font-size:0.8rem;display:none;" onclick="empLogout()">Logout</button>
+            <button id="portal-toggle" class="btn btn-sm btn-outline" style="margin-left:0.25rem;padding:0.25rem 0.5rem;font-size:0.8rem;" onclick="togglePortal()">Employee Portal</button>
         </div>
     </div>
 
@@ -321,12 +327,12 @@
                 <div class="flex-between" style="margin-bottom:1rem;">
                     <h2 style="margin:0;">Schedule Builder</h2>
                     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        <button class="btn btn-secondary btn-sm" onclick="toggleAvailPanel()">Availability</button>
                         <button class="btn btn-secondary btn-sm" onclick="copyPrevWeek()">Copy Prev</button>
                         <button class="btn btn-secondary btn-sm" onclick="saveAsTemplate()">Save as Template</button>
                         <select id="template-select" onchange="applyTemplate(this.value)" style="padding:0.35rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;">
                             <option value="">Load Template</option>
                         </select>
+                        <button class="btn btn-secondary btn-sm" onclick="openTemplateManager()">Manage</button>
                         <button class="btn btn-primary btn-sm" onclick="saveSchedules()">Save</button>
                         <button class="btn btn-success btn-sm" id="publish-btn" onclick="publishSchedule()">Publish</button>
                     </div>
@@ -337,11 +343,6 @@
                     <span id="sched-week-display" class="week-label"></span>
                     <span id="sched-status-badge" style="margin-left:1rem;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;"></span>
                 </div>
-                <div id="avail-panel" style="display:none;margin-bottom:1rem;padding:1rem;background:#f8fafc;border-radius:8px;">
-                    <h3 style="font-size:1rem;margin-bottom:0.75rem;">Employee Availability</h3>
-                    <div id="avail-editor"></div>
-                </div>
-                <p style="color:#64748b;margin-bottom:0.75rem;font-size:0.85rem;">⚠️ = unavailable  •  Click notes to add shift instructions</p>
                 <div id="schedule-container"></div>
             </div>
             <div class="card">
@@ -464,6 +465,16 @@
             </div>
         </div>
 
+        <div id="page-admin-timeoff" class="page">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">Time Off Requests</h2>
+                </div>
+                <div id="admin-timeoff-container"></div>
+                <div id="admin-timeoff-status" style="margin-top:0.75rem;font-size:0.9rem;color:#64748b;"></div>
+            </div>
+        </div>
+
         <div id="page-app-settings" class="page">
             <div class="card">
                 <h2>Settings</h2>
@@ -533,6 +544,11 @@
     <div id="page-emp-schedule" class="page">
         <div class="card">
             <h2>My Schedule</h2>
+            <div class="week-selector">
+                <label>Week:</label>
+                <input type="date" id="emp-sched-week-picker" onchange="empLoadSchedule()">
+                <span id="emp-sched-week-display" class="week-label"></span>
+            </div>
             <div id="sched-status-badge-emp" style="margin-bottom:0.75rem;"></div>
             <div id="emp-schedule-container"></div>
         </div>
@@ -563,19 +579,7 @@
                 </div>
             </div>
         </div>
-        <div class="card" style="margin-top:1rem;">
-            <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('emp-avail-body', this)">
-                <h2 style="margin:0;font-size:1rem;">My Availability</h2>
-                <span style="color:#64748b;font-size:1.2rem;">▸</span>
-            </div>
-            <div id="emp-avail-body">
-                <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Set your weekly recurring availability. Days/times you don't set will be unavailable.</p>
-                <div id="emp-avail-editor"></div>
-                <button class="btn btn-primary btn-sm" onclick="empSaveAvailability()" style="margin-top:0.75rem;">Save Availability</button>
-                <div id="emp-avail-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
-            </div>
         </div>
-    </div>
 
     <div id="page-emp-timeoff" class="page">
         <div class="card">
@@ -604,18 +608,25 @@
 
     <div id="page-emp-paystubs" class="page">
         <div class="card">
-            <h2>My Paystubs</h2>
+            <div class="flex-between" style="margin-bottom:1rem;">
+                <h2 style="margin:0;">My Paystubs</h2>
+                <div style="display:flex;gap:0.4rem;">
+                    <button class="btn btn-sm btn-outline" onclick="downloadPaystubs()">Download</button>
+                    <button class="btn btn-sm btn-outline" onclick="sharePaystubs()">Share</button>
+                    <button class="btn btn-sm btn-outline" onclick="printPaystubs()">Print</button>
+                </div>
+            </div>
+            <div class="form-row" style="margin-bottom:1rem;">
+                <div class="form-group" style="margin:0;">
+                    <label>From</label>
+                    <input type="date" id="emp-ps-from" onchange="empLoadPaystubs()">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>To</label>
+                    <input type="date" id="emp-ps-to" onchange="empLoadPaystubs()">
+                </div>
+            </div>
             <div id="emp-paystubs-container"></div>
-        </div>
-    </div>
-
-    <div id="page-emp-clock" class="page">
-        <div class="card" style="text-align:center;padding:3rem 1rem;">
-            <h2>Time Clock</h2>
-            <p style="color:#64748b;margin-bottom:2rem;" id="emp-clock-name"></p>
-            <button id="emp-clock-btn" class="btn btn-primary" onclick="empDoClock()" style="font-size:2rem;padding:2rem 4rem;border-radius:16px;">Clock In</button>
-            <div id="emp-clock-status" style="margin-top:1.5rem;font-size:1.2rem;"></div>
-            <div id="emp-clock-today" style="margin-top:1rem;"></div>
         </div>
     </div>
 
@@ -635,6 +646,10 @@
                     <div class="form-group" style="flex:1;">
                         <label>Employee ID</label>
                         <input type="text" id="emp-id-display" readonly style="background:#f1f5f9;color:#64748b;cursor:default;">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Username</label>
+                        <input type="text" id="emp-username-display" readonly style="background:#f1f5f9;color:#64748b;cursor:default;font-family:monospace;">
                     </div>
                     <div class="form-group">
                         <label>Pay Type</label>
@@ -738,6 +753,18 @@
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Template Manager Modal -->
+    <div id="template-manager-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manage Templates</h2>
+                <button class="close" onclick="closeTemplateManager()">&times;</button>
+            </div>
+            <div id="template-manager-list" style="min-height:100px;"></div>
+            <div id="template-manager-status" style="margin-top:0.75rem;font-size:0.9rem;color:#64748b;"></div>
         </div>
     </div>
 
@@ -898,13 +925,14 @@
             }
             let html = `<table>
                 <thead><tr>
-                    <th>Name</th><th>Pay</th><th>Status</th><th>State</th>
+                    <th>Name</th><th>Username</th><th>Pay</th><th>Status</th><th>State</th>
                     <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>PIN</th><th>Actions</th>
                 </tr></thead><tbody>`;
             employees.forEach(emp => {
                 const stateClass = `badge-${emp.state.toLowerCase()}`;
                 html += `<tr>
                     <td><strong>${emp.name}</strong></td>
+                    <td style="font-family:monospace;color:#64748b;font-size:0.85rem;">${emp.username || '—'}</td>
                     <td>${emp.pay_type === 'salary' ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td>${emp.filing_status.replace('_', ' ')}</td>
                     <td><span class="badge ${stateClass}">${emp.state}</span></td>
@@ -932,6 +960,7 @@
                 document.getElementById('edit-emp-id').value = '';
                 document.getElementById('employee-form').reset();
                 document.getElementById('emp-id-display').value = '(auto-generated)';
+                document.getElementById('emp-username-display').value = '(auto-generated)';
                 document.getElementById('emp-pay-type').value = 'hourly';
                 onPayTypeChange();
                 modal.classList.add('active');
@@ -950,6 +979,7 @@
                 document.getElementById('modal-title').textContent = 'Edit Employee';
                 document.getElementById('edit-emp-id').value = emp.id;
                 document.getElementById('emp-id-display').value = emp.id;
+                document.getElementById('emp-username-display').value = emp.username || '';
                 document.getElementById('emp-name').value = emp.name;
                 document.getElementById('emp-pay-type').value = emp.pay_type || 'hourly';
                 onPayTypeChange();
@@ -1591,6 +1621,7 @@
             if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
             if (page === 'timeclock') initTimeClock();
             if (page === 'timesheet') renderTimesheet();
+            if (page === 'admin-timeoff') adminLoadTimeOff();
         }
 
         // ─── Schedule ─────────────────────────────────────
@@ -1622,14 +1653,13 @@
             document.getElementById('sched-week-display').textContent = wi.week_label;
             const dates = getWeekDates(wi.week_start);
 
-            const [schedRes, empRes, availRes] = await Promise.all([
-                fetch('/api/schedules'), fetch('/api/employees'), fetch('/api/availability')
+            const [schedRes, empRes] = await Promise.all([
+                fetch('/api/schedules'), fetch('/api/employees')
             ]);
             scheduleData = await schedRes.json();
             if (!scheduleData.shifts) scheduleData.shifts = {};
             if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
             const emps = await empRes.json();
-            const availability = await availRes.json();
 
             const isPub = scheduleData.status === 'published';
             const pubBtn = document.getElementById('publish-btn');
@@ -1660,33 +1690,27 @@
 
             emps.forEach(emp => {
                 const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({}));
-                const empAvail = availability[emp.id] || [];
                 html += `<tr><td class="emp-label">${emp.name}</td>`;
                 dates.forEach((d, i) => {
                     const s = shifts[i] || {};
-                    const isAvail = empAvail.some(a => a.weekday === i);
                     const hasShift = s.start && s.end;
-                    const conflict = !isAvail && hasShift;
                     const isToday = d.iso === todayStr;
                     const isWeekend = d.weekday === 0 || d.weekday === 6;
 
                     let cellClass = 'day-cell';
                     if (isToday) cellClass += ' today-cell';
                     if (isWeekend) cellClass += ' weekend';
-                    if (conflict) cellClass += ' conflict';
 
                     html += `<td class="${cellClass}" onclick="openShiftEditor('${emp.id}', ${i})">`;
                     if (hasShift) {
-                        html += `<div class="shift-block ${conflict ? 'conflict-shift' : ''}">
+                        html += `<div class="shift-block">
                             <span class="shift-time">${s.start}-${s.end}</span>`;
                         if (s.notes) html += `<span class="shift-notes-icon" title="${s.notes.replace(/"/g,'&quot;')}">📝</span>`;
                         if (!isPub) html += `<span class="shift-remove" onclick="event.stopPropagation();clearShiftQuick('${emp.id}',${i})">✕</span>`;
                         html += `</div>`;
-                        if (conflict) html += `<span class="avail-mini">unavailable</span>`;
                     } else {
                         html += `<span class="empty-cell">${isPub ? '—' : '+'}</span>`;
                     }
-                    if (conflict && !hasShift) html += `<div class="conflict-badge">!</div>`;
                     html += `</td>`;
                 });
                 html += '</tr>';
@@ -1815,13 +1839,6 @@
             await renderSchedule();
         }
 
-        function toggleAvailPanel() {
-            const panel = document.getElementById('avail-panel');
-            const vis = panel.style.display === 'block';
-            panel.style.display = vis ? 'none' : 'block';
-            if (!vis) renderAvailEditor();
-        }
-
         async function renderSchedule() {
             const picker = document.getElementById('sched-week-picker');
             if (!picker.value) {
@@ -1831,16 +1848,14 @@
             const wi = getSchedWeekInfo(picker.value);
             document.getElementById('sched-week-display').textContent = wi.week_label;
 
-            const [schedRes, empRes, availRes] = await Promise.all([
+            const [schedRes, empRes] = await Promise.all([
                 fetch('/api/schedules'),
                 fetch('/api/employees'),
-                fetch('/api/availability')
             ]);
             scheduleData = await schedRes.json();
             if (!scheduleData.shifts) scheduleData.shifts = {};
             if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
             const emps = await empRes.json();
-            const availability = await availRes.json();
 
             const container = document.getElementById('schedule-container');
             const isPub = scheduleData.status === 'published';
@@ -1857,14 +1872,10 @@
 
             emps.forEach(emp => {
                 const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({start:'', end:'', notes:''}));
-                const empAvail = availability[emp.id] || [];
                 html += `<tr><td><strong>${emp.name}</strong></td>`;
                 shifts.forEach((s, i) => {
-                    const isAvail = empAvail.some(a => a.weekday === i);
-                    const conflict = !isAvail && (s.start || s.end);
-                    html += `<td style="padding:0.35rem;text-align:center;${conflict ? 'background:#fef2f2;' : ''}">
+                    html += `<td style="padding:0.35rem;text-align:center;">
                         <div style="display:flex;gap:2px;justify-content:center;align-items:center;">
-                            ${!isAvail && s.start ? '<span title="Unavailable" style="color:#dc2626;font-size:0.9rem;">⚠️</span>' : ''}
                             <input type="time" id="sched-${emp.id}-${i}-start" value="${s.start||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
                             <span style="font-size:0.75rem;color:#94a3b8;">-</span>
                             <input type="time" id="sched-${emp.id}-${i}-end" value="${s.end||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
@@ -1998,6 +2009,160 @@
             }
         }
 
+        // ─── Template Management ──────────────────────────
+        let templateManagerTemplates = [];
+
+        function openTemplateManager() {
+            document.getElementById('template-manager-modal').classList.add('active');
+            loadTemplateManagerList();
+        }
+
+        function closeTemplateManager() {
+            document.getElementById('template-manager-modal').classList.remove('active');
+        }
+
+        async function loadTemplateManagerList() {
+            const res = await fetch('/api/schedule-templates');
+            templateManagerTemplates = await res.json();
+            const container = document.getElementById('template-manager-list');
+            const status = document.getElementById('template-manager-status');
+            if (!templateManagerTemplates.length) {
+                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No saved templates.</p>';
+                status.textContent = '';
+                return;
+            }
+            let html = '';
+            templateManagerTemplates.forEach(t => {
+                const date = t.created_at ? new Date(t.created_at).toLocaleDateString() : '';
+                html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid #e2e8f0;">
+                    <div>
+                        <strong>${t.name}</strong>
+                        ${date ? `<span style="color:#94a3b8;font-size:0.8rem;margin-left:0.5rem;">${date}</span>` : ''}
+                    </div>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="btn btn-sm btn-outline" onclick="renameTemplate('${t.id}')">Rename</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteTemplate('${t.id}')">Delete</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+            status.textContent = `${templateManagerTemplates.length} template(s)`;
+        }
+
+        async function renameTemplate(templateId) {
+            const t = templateManagerTemplates.find(t => t.id === templateId);
+            if (!t) return;
+            const name = prompt('Rename template:', t.name);
+            if (!name || name === t.name) return;
+            const res = await fetch(`/api/schedule-templates/${templateId}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name}),
+            });
+            if (res.ok) {
+                loadTemplateManagerList();
+                loadTemplateDropdown();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error renaming template');
+            }
+        }
+
+        async function deleteTemplate(templateId) {
+            const t = templateManagerTemplates.find(t => t.id === templateId);
+            if (!t) return;
+            if (!confirm(`Delete template "${t.name}"?`)) return;
+            await fetch(`/api/schedule-templates/${templateId}`, {method: 'DELETE'});
+            loadTemplateManagerList();
+            loadTemplateDropdown();
+        }
+
+        // ─── Notifications ────────────────────────────────
+        let notifDropdownOpen = false;
+        let notifPollTimer = null;
+
+        function toggleNotifDropdown() {
+            notifDropdownOpen = !notifDropdownOpen;
+            document.getElementById('notif-dropdown').classList.toggle('active', notifDropdownOpen);
+            if (notifDropdownOpen) loadNotifList();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (notifDropdownOpen && !e.target.closest('.notif-bell') && !e.target.closest('.notif-dropdown')) {
+                notifDropdownOpen = false;
+                document.getElementById('notif-dropdown').classList.remove('active');
+            }
+        });
+
+        async function loadNotifBadge() {
+            try {
+                const res = await fetch('/api/notifications');
+                const notifs = await res.json();
+                const unread = notifs.filter(n => !n.is_read).length;
+                const badge = document.getElementById('notif-badge');
+                if (unread > 0) {
+                    badge.textContent = unread;
+                    badge.classList.add('show');
+                } else {
+                    badge.classList.remove('show');
+                }
+            } catch (e) {}
+        }
+
+        async function loadNotifList() {
+            try {
+                const res = await fetch('/api/notifications');
+                const notifs = await res.json();
+                const list = document.getElementById('notif-list');
+                if (!notifs.length) {
+                    list.innerHTML = '<div class="notif-empty">No notifications</div>';
+                    return;
+                }
+                let html = '';
+                notifs.forEach(n => {
+                    const time = new Date(n.created_at).toLocaleString();
+                    const cls = n.is_read ? '' : 'unread';
+                    html += `<div class="notif-item ${cls}" onclick="markNotifRead(${n.id})">
+                        <div>${n.message}</div>
+                        <div class="notif-time">${time}</div>
+                    </div>`;
+                });
+                list.innerHTML = html;
+            } catch (e) {}
+        }
+
+        async function markNotifRead(nid) {
+            await fetch('/api/notifications/read', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: nid}),
+            });
+            loadNotifBadge();
+            if (notifDropdownOpen) loadNotifList();
+        }
+
+        async function markAllNotifRead() {
+            const res = await fetch('/api/notifications');
+            const notifs = await res.json();
+            for (const n of notifs) {
+                if (!n.is_read) {
+                    await fetch('/api/notifications/read', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({id: n.id}),
+                    });
+                }
+            }
+            loadNotifBadge();
+            if (notifDropdownOpen) loadNotifList();
+        }
+
+        function startNotifPoll() {
+            loadNotifBadge();
+            if (notifPollTimer) clearInterval(notifPollTimer);
+            notifPollTimer = setInterval(loadNotifBadge, 30000);
+        }
+
         // ─── Admin Swap Management ────────────────────────
         async function adminLoadSwaps() {
             const res = await fetch('/api/shift-swaps');
@@ -2073,67 +2238,58 @@
             }
         }
 
-        // ─── Availability (Admin) ─────────────────────────
-        let availVisible = false;
-        function toggleAvailPanel() {
-            availVisible = !availVisible;
-            document.getElementById('avail-panel').style.display = availVisible ? 'block' : 'none';
-            if (availVisible) renderAvailEditor();
-        }
 
-        async function renderAvailEditor() {
-            const [empRes, availRes] = await Promise.all([
+        // ─── Admin Time Off ────────────────────────────────
+        async function adminLoadTimeOff() {
+            const [res, empRes] = await Promise.all([
+                fetch('/api/timeoff'),
                 fetch('/api/employees'),
-                fetch('/api/availability')
             ]);
+            const data = await res.json();
             const emps = await empRes.json();
-            const availability = await availRes.json();
-            const container = document.getElementById('avail-editor');
-            let html = '<div style="overflow-x:auto;"><table style="min-width:700px;"><thead><tr><th>Employee</th>';
-            SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;">${d.slice(0,3)}</th>`; });
-            html += '</tr></thead><tbody>';
-            emps.forEach(emp => {
-                const avail = availability[emp.id] || [];
-                html += `<tr><td><strong>${emp.name}</strong></td>`;
-                SCHED_DAYS.forEach((d, i) => {
-                    const a = avail.find(x => x.weekday === i);
-                    html += `<td style="text-align:center;">
-                        <input type="time" id="avail-${emp.id}-${i}-start" value="${a ? a.start : ''}" style="width:60px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.8rem;">
-                        <span style="font-size:0.75rem;color:#94a3b8;">-</span>
-                        <input type="time" id="avail-${emp.id}-${i}-end" value="${a ? a.end : ''}" style="width:60px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.8rem;">
-                    </td>`;
-                });
-                html += `</tr>`;
+            const nameMap = {};
+            emps.forEach(e => { nameMap[e.id] = e.name; });
+            const container = document.getElementById('admin-timeoff-container');
+            const status = document.getElementById('admin-timeoff-status');
+            const requests = data.requests || [];
+            if (!requests.length) {
+                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No time off requests.</p>';
+                status.textContent = '';
+                return;
+            }
+            let html = '<table><thead><tr><th>Employee</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>';
+            requests.forEach(r => {
+                const isPending = r.status === 'pending';
+                const name = nameMap[r.employee_id] || r.employee_id;
+                html += `<tr>
+                    <td><strong>${name}</strong></td>
+                    <td>${r.start_date}</td>
+                    <td>${r.end_date}</td>
+                    <td style="color:#64748b;font-size:0.85rem;">${r.reason || ''}</td>
+                    <td><span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;background:${isPending?'#fef3c7':r.status==='approved'?'#dcfce7':'#f1f5f9'};color:${isPending?'#92400e':r.status==='approved'?'#166534':'#64748b'};">${r.status}</span></td>
+                    <td>${isPending ? `<button class="btn btn-sm btn-success" onclick="adminRespondTimeOff(${r.id},'approved')" style="margin-right:0.25rem;">Approve</button><button class="btn btn-sm btn-danger" onclick="adminRespondTimeOff(${r.id},'denied')">Deny</button>` : ''}</td>
+                </tr>`;
             });
-            html += '</tbody></table></div>';
-            html += `<button class="btn btn-primary btn-sm" onclick="saveAllAvail()">Save All Availability</button>`;
-            html += ` <span id="avail-status" style="font-size:0.85rem;color:#64748b;"></span>`;
+            html += '</tbody></table>';
             container.innerHTML = html;
+            status.textContent = `${requests.length} request(s)`;
         }
 
-        async function saveAllAvail() {
-            const res = await fetch('/api/employees');
-            const emps = await res.json();
-            const data = {};
-            emps.forEach(emp => {
-                const days = [];
-                SCHED_DAYS.forEach((d, i) => {
-                    const start = document.getElementById(`avail-${emp.id}-${i}-start`)?.value;
-                    const end = document.getElementById(`avail-${emp.id}-${i}-end`)?.value;
-                    if (start && end) days.push({weekday: i, start, end});
-                });
-                data[emp.id] = days;
-            });
-            await fetch('/api/availability', {
-                method: 'PUT',
+        async function adminRespondTimeOff(reqId, newStatus) {
+            const res = await fetch('/api/timeoff/respond', {
+                method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data),
+                body: JSON.stringify({id: reqId, status: newStatus}),
             });
-            document.getElementById('avail-status').textContent = 'Availability saved';
-            renderSchedule();
+            if (res.ok) {
+                adminLoadTimeOff();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error');
+            }
         }
 
-        // ─── Employee Schedule & Availability ─────────────
+        // ─── Employee Schedule ─────────────────────────────
         function toggleCollapse(id, headerEl) {
             const body = document.getElementById(id);
             if (!body) return;
@@ -2145,63 +2301,6 @@
             }
         }
 
-        async function empLoadSchedule() {
-            const res = await fetch(`/api/employee/schedule?employee_id=${empSession.id}`);
-            const data = await res.json();
-            const container = document.getElementById('emp-schedule-container');
-            const shifts = data.shifts || [];
-            const status = data.status || 'draft';
-            const badge = document.getElementById('sched-status-badge-emp');
-            badge.innerHTML = status === 'published'
-                ? '<span style="padding:0.2rem 0.5rem;background:#dcfce7;color:#166534;border-radius:4px;font-size:0.8rem;font-weight:600;">Published</span>'
-                : '<span style="padding:0.2rem 0.5rem;background:#fef3c7;color:#92400e;border-radius:4px;font-size:0.8rem;font-weight:600;">Draft — not yet finalized</span>';
-            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Notes</th></tr></thead><tbody>';
-            let hasAny = false;
-            SCHED_DAYS.forEach((d, i) => {
-                const s = shifts[i] || {};
-                if (s.start && s.end) {
-                    hasAny = true;
-                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td><td style="color:#64748b;font-size:0.85rem;">${s.notes || ''}</td></tr>`;
-                }
-            });
-            html += '</tbody></table>';
-            html += !hasAny ? '<p style="color:#64748b;">No schedule set for this week.</p>' : '';
-            container.innerHTML = html;
-            empLoadAvailability();
-        }
-
-        async function empLoadAvailability() {
-            const res = await fetch(`/api/employee/availability?employee_id=${empSession.id}`);
-            const avail = await res.json();
-            const container = document.getElementById('emp-avail-editor');
-            let html = '<div style="overflow-x:auto;"><table style="min-width:400px;"><thead><tr><th>Day</th><th>Start</th><th>End</th></tr></thead><tbody>';
-            SCHED_DAYS.forEach((d, i) => {
-                const a = avail.find(x => x.weekday === i);
-                html += `<tr>
-                    <td>${d}</td>
-                    <td><input type="time" id="eavail-${i}-start" value="${a ? a.start : ''}" style="width:80px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;"></td>
-                    <td><input type="time" id="eavail-${i}-end" value="${a ? a.end : ''}" style="width:80px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;"></td>
-                </tr>`;
-            });
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-
-        async function empSaveAvailability() {
-            const avail = [];
-            SCHED_DAYS.forEach((d, i) => {
-                const start = document.getElementById(`eavail-${i}-start`)?.value;
-                const end = document.getElementById(`eavail-${i}-end`)?.value;
-                if (start && end) avail.push({weekday: i, start, end});
-            });
-            const res = await fetch(`/api/employee/availability?employee_id=${empSession.id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(avail),
-            });
-            document.getElementById('emp-avail-status').textContent = res.ok ? 'Availability saved' : 'Error saving';
-            document.getElementById('emp-avail-status').style.color = res.ok ? '#059669' : '#dc2626';
-        }
 
         // ─── Time Clock ────────────────────────────────────
         let timeClockTimer = null;
@@ -2875,26 +2974,34 @@
 
 
         async function doLogin() {
-            const username = document.getElementById('login-username').value;
+            const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value;
             const remember = document.getElementById('login-remember').checked;
             const errEl = document.getElementById('login-error');
+            errEl.style.display = 'none';
             try {
-                const res = await fetch('/api/login', {
+                // Try admin login first
+                const adminRes = await fetch('/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({username, password, remember}),
                 });
-                if (res.ok) {
+                if (adminRes.ok) {
                     document.getElementById('login-page').style.display = 'none';
                     document.getElementById('app-content').classList.add('visible');
                     document.getElementById('user-label').textContent = username;
+                    document.getElementById('emp-logout-btn').style.display = 'none';
                     fetchEmployees();
                     loadWeekPicker();
-                } else {
-                    errEl.textContent = 'Invalid credentials';
-                    errEl.style.display = 'block';
+                    startNotifPoll();
+                    return;
                 }
+                // Try employee login
+                const empOk = await empLogin(username.toLowerCase(), password);
+                if (empOk) return;
+                // Both failed
+                errEl.textContent = 'Invalid credentials';
+                errEl.style.display = 'block';
             } catch (e) {
                 errEl.textContent = 'Error: ' + e.message;
                 errEl.style.display = 'block';
@@ -3008,45 +3115,28 @@
                 document.getElementById('login-username').value = '';
                 document.getElementById('login-password').value = '';
                 document.getElementById('login-error').style.display = 'none';
-                // Show employee login hint on the login page
-                document.getElementById('forgot-pw').style.display = 'none';
-                const empLoginSection = document.getElementById('emp-login-section');
-                if (empLoginSection) empLoginSection.style.display = 'block';
-            }
-        }
-
-        async function doEmpLogin() {
-            const empId = document.getElementById('emp-login-id').value.trim().toUpperCase();
-            const pin = document.getElementById('emp-login-pin').value;
-            const errEl = document.getElementById('emp-login-error');
-            errEl.style.display = 'none';
-            if (!empId || !pin) { errEl.textContent = 'Enter ID and PIN'; errEl.style.display = 'block'; return; }
-            const ok = await empLogin(empId, pin);
-            if (!ok) {
-                errEl.textContent = 'Invalid ID or PIN';
-                errEl.style.display = 'block';
             }
         }
 
         function showEmpPage(page) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('#emp-nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById(page).classList.add('active');
+            const el = document.getElementById(`page-${page}`);
+            if (el) el.classList.add('active');
             const btn = document.querySelector(`#emp-nav button[onclick*="'${page}'"]`);
             if (btn) btn.classList.add('active');
 
             if (page === 'emp-schedule') empLoadSchedule();
             if (page === 'emp-timeoff') empLoadTimeOff();
             if (page === 'emp-paystubs') empLoadPaystubs();
-            if (page === 'emp-clock') empInitClock();
         }
 
-        async function empLogin(empId, pin) {
+        async function empLogin(username, pin) {
             try {
                 const res = await fetch('/api/employee/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({employee_id: empId, pin}),
+                    body: JSON.stringify({username, pin}),
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -3056,11 +3146,13 @@
                     document.getElementById('admin-nav').style.display = 'none';
                     document.getElementById('emp-nav').style.display = 'flex';
                     document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('emp-logout-btn').style.display = 'inline-block';
                     document.getElementById('portal-toggle').textContent = 'Admin Portal';
                     // Load employees list for swap dialog
                     const empRes = await fetch('/api/employees');
                     if (empRes.ok) employees = await empRes.json();
                     showEmpPage('emp-schedule');
+                    startNotifPoll();
                     return true;
                 }
             } catch (e) {}
@@ -3069,16 +3161,23 @@
 
         function empLogout() {
             empSession = null;
-            document.getElementById('admin-nav').style.display = 'flex';
+            document.getElementById('emp-logout-btn').style.display = 'none';
             document.getElementById('emp-nav').style.display = 'none';
+            document.getElementById('admin-nav').style.display = 'flex';
             document.getElementById('emp-label').textContent = '';
             document.getElementById('portal-toggle').textContent = 'Employee Portal';
             fetch('/api/employee/logout', {method: 'POST'});
-            showPage('timesheet');
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('app-content').classList.remove('visible');
         }
 
         async function empLoadSchedule() {
-            const res = await fetch(`/api/employee/schedule?employee_id=${empSession.id}`);
+            const picker = document.getElementById('emp-sched-week-picker');
+            if (!picker.value) { picker.value = new Date().toISOString().split('T')[0]; }
+            const wi = getSchedWeekInfo(picker.value);
+            document.getElementById('emp-sched-week-display').textContent = wi.week_label;
+
+            const res = await fetch(`/api/employee/schedule?employee_id=${empSession.id}&week_start=${wi.week_start}`);
             const data = await res.json();
             const container = document.getElementById('emp-schedule-container');
             const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
@@ -3089,14 +3188,15 @@
                 ? '<span style="padding:0.2rem 0.5rem;background:#dcfce7;color:#166534;border-radius:4px;font-size:0.8rem;font-weight:600;">Published</span>'
                 : '<span style="padding:0.2rem 0.5rem;background:#fef3c7;color:#92400e;border-radius:4px;font-size:0.8rem;font-weight:600;">Draft — not yet finalized</span>';
 
-            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Notes</th><th></th></tr></thead><tbody>';
+            function to12h(t) { if (!t) return ''; const [h,m]=t.split(':'); const hh=parseInt(h,10); const ampm=hh>=12?'PM':'AM'; const h12=hh%12||12; return h12+':'+m+' '+ampm; }
+
+            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th></th></tr></thead><tbody>';
             let hasAny = false;
             DAYS.forEach((d, i) => {
                 const s = shifts[i] || {};
                 if (s.start && s.end) {
                     hasAny = true;
-                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td>
-                        <td style="color:#64748b;font-size:0.85rem;">${s.notes || ''}</td>
+                    html += `<tr><td>${d}</td><td>${to12h(s.start)}</td><td>${to12h(s.end)}</td>
                         <td>${isPub ? `<button class="btn btn-sm btn-outline" onclick="empOpenSwapDialog(${i})" style="font-size:0.7rem;padding:0.2rem 0.5rem;">Swap</button>` : ''}</td></tr>`;
                 }
             });
@@ -3104,7 +3204,6 @@
             container.innerHTML = hasAny ? html : '<p style="color:#64748b;">No schedule set for this week.</p>';
             empLoadOpenShifts();
             empLoadSwapRequests();
-            empLoadAvailability();
         }
 
         async function submitTimeOff() {
@@ -3150,11 +3249,17 @@
         }
 
         async function empLoadPaystubs() {
-            const res = await fetch(`/api/employee/paystubs?employee_id=${empSession.id}`);
+            const from = document.getElementById('emp-ps-from').value;
+            const to = document.getElementById('emp-ps-to').value;
+            let url = `/api/employee/paystubs?employee_id=${empSession.id}`;
+            if (from) url += `&start=${from}`;
+            if (to) url += `&end=${to}`;
+            const res = await fetch(url);
             const data = await res.json();
             const container = document.getElementById('emp-paystubs-container');
+            window._empPaystubs = data;
             if (!data.length) {
-                container.innerHTML = '<p style="color:#64748b;">No paystubs yet.</p>';
+                container.innerHTML = '<p style="color:#64748b;">No paystubs found.</p>';
                 return;
             }
             let html = '';
@@ -3176,59 +3281,66 @@
             container.innerHTML = html;
         }
 
-        async function empInitClock() {
-            const nameEl = document.getElementById('emp-clock-name');
-            const btn = document.getElementById('emp-clock-btn');
-            nameEl.textContent = empSession.name;
-            const res = await fetch('/api/timeclock/now');
-            const data = await res.json();
-            const active = data.active.find(e => e.employee_id === empSession.id);
-            if (active) {
-                btn.textContent = 'Clock Out';
-                btn.style.background = '#dc2626';
-                document.getElementById('emp-clock-status').innerHTML =
-                    `<span style="color:#059669;">Clocked in since ${new Date(active.clock_in).toLocaleTimeString()}</span>`;
-            } else {
-                btn.textContent = 'Clock In';
-                btn.style.background = '#059669';
-                document.getElementById('emp-clock-status').textContent = '';
-            }
-            empClockToday();
-        }
-
-        async function empClockToday() {
-            const res = await fetch('/api/timeclock/now');
-            const data = await res.json();
-            const mine = data.today_entries.filter(e => e.employee_id === empSession.id);
-            const el = document.getElementById('emp-clock-today');
-            if (mine.length) {
-                let html = '<h3>Today</h3><table><thead><tr><th>In</th><th>Out</th><th>Hours</th></tr></thead><tbody>';
-                mine.forEach(e => {
-                    html += `<tr><td>${new Date(e.clock_in).toLocaleTimeString()}</td>
-                        <td>${e.clock_out ? new Date(e.clock_out).toLocaleTimeString() : '—'}</td>
-                        <td>${e.hours ? e.hours.toFixed(2) : '—'}</td></tr>`;
-                });
-                html += '</tbody></table>';
-                el.innerHTML = html;
-            } else {
-                el.innerHTML = '';
-            }
-        }
-
-        async function empDoClock() {
-            const res = await fetch('/api/timeclock/clock', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({employee_id: empSession.id, pin: 'admin'}),
+        function buildPaystubsHtml(data) {
+            if (!data || !data.length) return '<p>No paystubs</p>';
+            let html = '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;">';
+            data.forEach(r => {
+                html += `<div style="border:1px solid #ccc;border-radius:8px;padding:1rem;margin-bottom:1rem;">
+                    <h2>${r.employee_name}</h2>
+                    <p><strong>${r.week_label}</strong> (${r.week_start} - ${r.week_end})</p>
+                    <table style="width:100%;border-collapse:collapse;">
+                        <tr><td style="padding:0.25rem 0;">Gross Pay</td><td style="text-align:right;font-weight:600;">$${(r.gross_pay||0).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0;">Federal Tax</td><td style="text-align:right;">-$${(r.federal_tax||0).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0;">State Tax</td><td style="text-align:right;">-$${(r.state_tax||0).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0;">Social Security</td><td style="text-align:right;">-$${(r.social_security||0).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0;">Medicare</td><td style="text-align:right;">-$${(r.medicare||0).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0;border-top:1px solid #ccc;font-weight:600;">Net Pay</td><td style="text-align:right;border-top:1px solid #ccc;font-weight:600;color:#059669;">$${(r.net_pay||0).toFixed(2)}</td></tr>
+                    </table>
+                </div>`;
             });
-            const data = await res.json();
-            if (res.ok) {
-                empInitClock();
+            html += '</div>';
+            return html;
+        }
+
+        function downloadPaystubs() {
+            const data = window._empPaystubs;
+            if (!data || !data.length) return;
+            const html = buildPaystubsHtml(data);
+            const blob = new Blob([html], {type: 'text/html'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `paystubs-${empSession.name.replace(/\s+/g, '_')}.html`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function sharePaystubs() {
+            const data = window._empPaystubs;
+            if (!data || !data.length) return;
+            let text = `Paystubs — ${empSession.name}\n\n`;
+            data.forEach(r => {
+                text += `${r.week_label}: Gross $${(r.gross_pay||0).toFixed(2)}, Net $${(r.net_pay||0).toFixed(2)}\n`;
+            });
+            if (navigator.share) {
+                navigator.share({title: 'My Paystubs', text}).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard'));
             } else {
-                document.getElementById('emp-clock-status').innerHTML =
-                    `<span style="color:#dc2626;">${data.error || 'Error'}</span>`;
+                alert(text);
             }
         }
+
+        function printPaystubs() {
+            const data = window._empPaystubs;
+            if (!data || !data.length) return;
+            const html = buildPaystubsHtml(data);
+            const win = window.open('', '_blank');
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => win.print(), 250);
+        }
+
 
         // ─── Open Shift Claiming ──────────────────────────
         async function empLoadOpenShifts() {
@@ -3386,8 +3498,10 @@
                     document.getElementById('admin-nav').style.display = 'none';
                     document.getElementById('emp-nav').style.display = 'flex';
                     document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('emp-logout-btn').style.display = 'inline-block';
                     document.getElementById('portal-toggle').textContent = 'Admin Portal';
                     showEmpPage('emp-schedule');
+                    startNotifPoll();
                 } else {
                     // Check admin session
                     fetch('/api/session').then(r => r.json()).then(s => {
@@ -3397,6 +3511,7 @@
                             document.getElementById('user-label').textContent = s.user;
                             fetchEmployees();
                             loadWeekPicker();
+                            startNotifPoll();
                         }
                     });
                 }

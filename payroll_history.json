@@ -700,5 +700,80 @@
       "total_gross": 1220.0,
       "total_net": 1107.67
     }
+  },
+  "May 03 - May 09, 2026": {
+    "week_start": "2026-05-03",
+    "week_end": "2026-05-09",
+    "week_label": "May 03 - May 09, 2026",
+    "hours": {
+      "EMP004": 0.32,
+      "EMP005": 0,
+      "EMP006": 0
+    },
+    "results": [
+      {
+        "employee_id": "EMP004",
+        "employee_name": "Mitchel Simmons",
+        "hours_worked": 0.32,
+        "hourly_rate": 14.0,
+        "overtime_pay": 0.0,
+        "gross_pay": 4.48,
+        "federal_tax": 0,
+        "state_tax": 0,
+        "state": "NC",
+        "social_security": 0.28,
+        "medicare": 0.06,
+        "additional_medicare": 0.0,
+        "total_tax": 0.34,
+        "total_deductions": 0.34,
+        "net_pay": 4.14,
+        "employer_paid": 4.48
+      },
+      {
+        "employee_id": "EMP005",
+        "employee_name": "allison Dorman",
+        "hours_worked": 0.0,
+        "hourly_rate": 3.8,
+        "overtime_pay": 0.0,
+        "gross_pay": 0.0,
+        "federal_tax": 0,
+        "state_tax": 0,
+        "state": "NC",
+        "social_security": 0.0,
+        "medicare": 0.0,
+        "additional_medicare": 0.0,
+        "total_tax": 0.0,
+        "total_deductions": 0.0,
+        "net_pay": 0.0,
+        "employer_paid": 0.0,
+        "tipped": true,
+        "tips": 0.0,
+        "expected_tips": 0,
+        "makeup": 0,
+        "regular_pay": 0.0
+      },
+      {
+        "employee_id": "EMP006",
+        "employee_name": "Justin White",
+        "hours_worked": 0.0,
+        "hourly_rate": 0.0,
+        "overtime_pay": 0.0,
+        "gross_pay": 240.0,
+        "federal_tax": 17.0,
+        "state_tax": 2.0,
+        "state": "NC",
+        "social_security": 14.88,
+        "medicare": 3.48,
+        "additional_medicare": 0.0,
+        "total_tax": 37.36,
+        "total_deductions": 37.36,
+        "net_pay": 202.64,
+        "employer_paid": 240.0
+      }
+    ],
+    "summary": {
+      "total_gross": 244.48,
+      "total_net": 206.78
+    }
   }
 }
