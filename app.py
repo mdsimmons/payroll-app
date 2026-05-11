@@ -46,6 +46,7 @@ SCHEDULES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sched
 AVAILABILITY_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "availability.json")
 TIMECLOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "timeclock.json")
 TIMEOFF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "time_off.json")
+SHIFT_SWAPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "shift_swaps.json")
 
 
 def load_json(path, default=None):
@@ -172,6 +173,15 @@ def add_employee():
         new_emp["fed_add_withholding_value"] = float(new_emp.get("fed_add_withholding_value", 0))
         new_emp["state_add_withholding_type"] = new_emp.get("state_add_withholding_type", "amount")
         new_emp["state_add_withholding_value"] = float(new_emp.get("state_add_withholding_value", 0))
+
+        # Auto-generate unique 4-digit PIN
+        import random
+        existing_pins = {e.get("pin") for e in data["employees"]}
+        while True:
+            pin = f"{random.randint(0,9999):04d}"
+            if pin not in existing_pins:
+                break
+        new_emp["pin"] = pin
 
         data["employees"].append(new_emp)
 
@@ -419,6 +429,109 @@ def copy_schedule():
     return jsonify({"message": "Schedule copied"})
 
 
+# ─── Schedule Templates ─────────────────────────────────────
+SCHEDULE_TEMPLATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedule_templates.json")
+
+
+def load_templates():
+    return load_json(SCHEDULE_TEMPLATES_FILE, {"templates": []})
+
+
+def save_templates(data):
+    save_json(SCHEDULE_TEMPLATES_FILE, data)
+
+
+@app.route("/api/schedule-templates", methods=["GET"])
+@require_login
+def get_schedule_templates():
+    data = load_templates()
+    # Return lightweight list (no shifts data for listing)
+    result = [{"id": t["id"], "name": t["name"], "created_at": t.get("created_at", "")} for t in data["templates"]]
+    return jsonify(result)
+
+
+@app.route("/api/schedule-templates/<template_id>", methods=["GET"])
+@require_login
+def get_schedule_template(template_id):
+    data = load_templates()
+    for t in data["templates"]:
+        if t["id"] == template_id:
+            return jsonify(t)
+    return jsonify({"error": "Template not found"}), 404
+
+
+@app.route("/api/schedule-templates", methods=["POST"])
+@require_login
+def create_schedule_template():
+    try:
+        name = request.json.get("name", "").strip()
+        if not name:
+            return jsonify({"error": "Template name required"}), 400
+        current = load_json(SCHEDULES_FILE, {"shifts": {}, "open_shifts": []})
+        templates = load_templates()
+        tid = f"T{len(templates['templates']) + 1:03d}"
+        templates["templates"].append({
+            "id": tid,
+            "name": name,
+            "shifts": current.get("shifts", {}),
+            "open_shifts": current.get("open_shifts", []),
+            "created_at": datetime.now().isoformat(),
+        })
+        save_templates(templates)
+        return jsonify({"id": tid, "name": name}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/schedule-templates/<template_id>", methods=["PUT"])
+@require_login
+def update_schedule_template(template_id):
+    try:
+        name = request.json.get("name", "").strip()
+        if not name:
+            return jsonify({"error": "Template name required"}), 400
+        templates = load_templates()
+        for t in templates["templates"]:
+            if t["id"] == template_id:
+                t["name"] = name
+                save_templates(templates)
+                return jsonify({"message": "Template updated"})
+        return jsonify({"error": "Template not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/schedule-templates/<template_id>", methods=["DELETE"])
+@require_login
+def delete_schedule_template(template_id):
+    templates = load_templates()
+    templates["templates"] = [t for t in templates["templates"] if t["id"] != template_id]
+    save_templates(templates)
+    return jsonify({"message": "Template deleted"})
+
+
+@app.route("/api/schedule-templates/<template_id>/apply", methods=["POST"])
+@require_login
+def apply_schedule_template(template_id):
+    try:
+        templates = load_templates()
+        template = None
+        for t in templates["templates"]:
+            if t["id"] == template_id:
+                template = t
+                break
+        if not template:
+            return jsonify({"error": "Template not found"}), 404
+        current = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""})
+        current["shifts"] = {k: [dict(s) for s in v] for k, v in template.get("shifts", {}).items()}
+        current["open_shifts"] = [dict(o) for o in template.get("open_shifts", [])]
+        current["status"] = "draft"
+        save_json(SCHEDULES_FILE, current)
+        return jsonify({"message": f"Template '{template['name']}' applied"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ─── Availability ──────────────────────────────────────────
 @app.route("/api/availability", methods=["GET", "PUT"])
 @require_login
@@ -468,18 +581,26 @@ def get_timeclock_now():
 
 @app.route("/api/timeclock/clock", methods=["POST"])
 def clock_in_out():
-    """Clock in or out. Body: {employee_id, pin}. Public for tablet use."""
+    """Clock in or out. Body: {pin} (PIN identifies employee). Public for tablet use."""
     try:
         data = request.json
         emp_id = data.get("employee_id")
-        pin = data.get("pin")
+        pin = str(data.get("pin", "")).strip()
         employees = load_employees(EMPLOYEES_FILE)
-        emp = next((e for e in employees if e["id"] == emp_id), None)
-        if not emp:
-            return jsonify({"error": "Employee not found"}), 404
-        if str(emp.get("pin", "")).strip() != str(pin).strip() if pin else emp.get("pin"):
-            if pin != "admin":  # admin bypass
+
+        # If no employee_id, look up by PIN
+        if not emp_id:
+            emp = next((e for e in employees if str(e.get("pin", "")).strip() == pin), None)
+            if not emp:
                 return jsonify({"error": "Invalid PIN"}), 403
+            emp_id = emp["id"]
+        else:
+            emp = next((e for e in employees if e["id"] == emp_id), None)
+            if not emp:
+                return jsonify({"error": "Employee not found"}), 404
+            if str(emp.get("pin", "")).strip() != pin:
+                if pin != "admin":  # admin bypass
+                    return jsonify({"error": "Invalid PIN"}), 403
 
         clock = load_json(TIMECLOCK_FILE, {"entries": []})
         now = datetime.now()
@@ -537,6 +658,76 @@ def delete_timeclock_entry():
             save_json(TIMECLOCK_FILE, data)
             return jsonify({"message": "Entry deleted"})
         return jsonify({"error": "Invalid index"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/timeclock/entry/<int:idx>", methods=["PUT"])
+@require_login
+def update_timeclock_entry(idx):
+    try:
+        data = load_json(TIMECLOCK_FILE, {"entries": []})
+        if idx < 0 or idx >= len(data["entries"]):
+            return jsonify({"error": "Invalid index"}), 400
+        entry = data["entries"][idx]
+        body = request.json
+        if "date" in body:
+            entry["date"] = body["date"]
+        if "clock_in" in body:
+            entry["clock_in"] = body["clock_in"]
+        if "clock_out" in body:
+            entry["clock_out"] = body["clock_out"]
+        # Recalculate hours
+        if entry.get("clock_in") and entry.get("clock_out"):
+            try:
+                cin = datetime.fromisoformat(entry["clock_in"])
+                cout = datetime.fromisoformat(entry["clock_out"])
+                entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
+                entry["status"] = "completed"
+            except Exception:
+                pass
+        elif entry.get("clock_in") and not entry.get("clock_out"):
+            entry["hours"] = None
+            entry["status"] = "active"
+        save_json(TIMECLOCK_FILE, data)
+        return jsonify({"message": "Entry updated", "entry": entry})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/timeclock/add", methods=["POST"])
+@require_login
+def add_timeclock_entry():
+    try:
+        body = request.json
+        emp_id = body.get("employee_id")
+        date = body.get("date")
+        clock_in = body.get("clock_in")
+        clock_out = body.get("clock_out")
+        if not emp_id or not date or not clock_in:
+            return jsonify({"error": "employee_id, date, and clock_in required"}), 400
+        employees = load_employees(EMPLOYEES_FILE)
+        emp = next((e for e in employees if e["id"] == emp_id), None)
+        entry = {
+            "employee_id": emp_id,
+            "employee_name": emp["name"] if emp else emp_id,
+            "date": date,
+            "clock_in": clock_in,
+            "clock_out": clock_out or None,
+            "hours": None,
+            "status": "completed" if clock_out else "active",
+        }
+        if clock_in and clock_out:
+            try:
+                cin = datetime.fromisoformat(clock_in)
+                cout = datetime.fromisoformat(clock_out)
+                entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
+            except Exception:
+                pass
+        data = load_json(TIMECLOCK_FILE, {"entries": []})
+        data["entries"].append(entry)
+        save_json(TIMECLOCK_FILE, data)
+        return jsonify({"message": "Entry added", "entry": entry}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -677,6 +868,186 @@ def employee_my_timeoff():
     data = load_json(TIMEOFF_FILE, {"requests": []})
     mine = [r for r in data["requests"] if r.get("employee_id") == eid]
     return jsonify(mine)
+
+
+# ─── Shift Claiming & Swapping ─────────────────────────────
+@app.route("/api/employee/open-shifts", methods=["GET"])
+def get_open_shifts():
+    data = load_json(SCHEDULES_FILE, {"shifts": {}, "open_shifts": []})
+    return jsonify(data.get("open_shifts", []))
+
+
+@app.route("/api/employee/claim-shift", methods=["POST"])
+def claim_open_shift():
+    try:
+        eid = request.json.get("employee_id") or session.get("employee_id")
+        if not eid:
+            return jsonify({"error": "Unauthorized"}), 401
+        weekday = request.json.get("weekday")
+        if weekday is None:
+            return jsonify({"error": "weekday required"}), 400
+
+        data = load_json(SCHEDULES_FILE, {"shifts": {}, "open_shifts": []})
+        open_shifts = data.get("open_shifts", [])
+        shift_idx = None
+        for i, o in enumerate(open_shifts):
+            if o.get("weekday") == weekday:
+                shift_idx = i
+                break
+        if shift_idx is None:
+            return jsonify({"error": "No open shift for that day"}), 404
+
+        claimed = open_shifts.pop(shift_idx)
+        if eid not in data["shifts"]:
+            data["shifts"][eid] = [{} for _ in range(7)]
+        data["shifts"][eid][weekday] = {
+            "start": claimed.get("start", ""),
+            "end": claimed.get("end", ""),
+            "notes": claimed.get("notes", ""),
+        }
+        data["open_shifts"] = open_shifts
+        save_json(SCHEDULES_FILE, data)
+        return jsonify({"message": "Shift claimed"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/employee/swap-request", methods=["POST"])
+def create_swap_request():
+    try:
+        from_eid = request.json.get("employee_id") or session.get("employee_id")
+        if not from_eid:
+            return jsonify({"error": "Unauthorized"}), 401
+        to_eid = request.json.get("to_employee_id")
+        weekday = request.json.get("weekday")
+        if not to_eid or weekday is None:
+            return jsonify({"error": "to_employee_id and weekday required"}), 400
+
+        schedules = load_json(SCHEDULES_FILE, {"shifts": {}, "week_start": ""})
+        week_start = schedules.get("week_start", "")
+
+        swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+        swaps["swaps"].append({
+            "id": len(swaps["swaps"]) + 1,
+            "from_employee_id": from_eid,
+            "to_employee_id": to_eid,
+            "weekday": weekday,
+            "week_start": week_start,
+            "status": "pending",
+            "created_at": datetime.now().isoformat(),
+        })
+        save_json(SHIFT_SWAPS_FILE, swaps)
+        return jsonify({"message": "Swap request sent"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/employee/swap-requests", methods=["GET"])
+def get_swap_requests():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+    mine = [s for s in swaps["swaps"] if s["from_employee_id"] == eid or s["to_employee_id"] == eid]
+    employees = load_employees(EMPLOYEES_FILE)
+    emp_map = {e["id"]: e["name"] for e in employees}
+    for s in mine:
+        s["from_name"] = emp_map.get(s["from_employee_id"], s["from_employee_id"])
+        s["to_name"] = emp_map.get(s["to_employee_id"], s["to_employee_id"])
+    return jsonify(mine)
+
+
+@app.route("/api/employee/swap-respond", methods=["POST"])
+def respond_swap_request():
+    try:
+        eid = request.json.get("employee_id") or session.get("employee_id")
+        if not eid:
+            return jsonify({"error": "Unauthorized"}), 401
+        swap_id = request.json.get("id")
+        action = request.json.get("action")
+        if action not in ("approved", "declined"):
+            return jsonify({"error": "Invalid action"}), 400
+
+        swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+        schedules = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft"})
+        for s in swaps["swaps"]:
+            if s["id"] == swap_id and s["to_employee_id"] == eid:
+                if action == "approved":
+                    # Swap the shifts in schedules
+                    wk = s["weekday"]
+                    from_shifts = schedules["shifts"].get(s["from_employee_id"], [{} for _ in range(7)])
+                    to_shifts = schedules["shifts"].get(s["to_employee_id"], [{} for _ in range(7)])
+                    from_shift = dict(from_shifts[wk]) if wk < len(from_shifts) else {}
+                    to_shift = dict(to_shifts[wk]) if wk < len(to_shifts) else {}
+                    if s["from_employee_id"] not in schedules["shifts"]:
+                        schedules["shifts"][s["from_employee_id"]] = [{} for _ in range(7)]
+                    if s["to_employee_id"] not in schedules["shifts"]:
+                        schedules["shifts"][s["to_employee_id"]] = [{} for _ in range(7)]
+                    schedules["shifts"][s["from_employee_id"]][wk] = to_shift
+                    schedules["shifts"][s["to_employee_id"]][wk] = from_shift
+                    save_json(SCHEDULES_FILE, schedules)
+                    s["status"] = "approved"
+                else:
+                    s["status"] = "declined"
+                save_json(SHIFT_SWAPS_FILE, swaps)
+                return jsonify({"message": f"Swap {action}"})
+        return jsonify({"error": "Swap request not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/shift-swaps", methods=["GET"])
+@require_login
+def admin_get_swap_requests():
+    swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+    employees = load_employees(EMPLOYEES_FILE)
+    emp_map = {e["id"]: e["name"] for e in employees}
+    for s in swaps["swaps"]:
+        s["from_name"] = emp_map.get(s["from_employee_id"], s["from_employee_id"])
+        s["to_name"] = emp_map.get(s["to_employee_id"], s["to_employee_id"])
+    return jsonify(swaps["swaps"])
+
+
+@app.route("/api/shift-swaps/approve", methods=["POST"])
+@require_login
+def admin_approve_swap():
+    try:
+        swap_id = request.json.get("id")
+        swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+        schedules = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft"})
+        for s in swaps["swaps"]:
+            if s["id"] == swap_id:
+                wk = s["weekday"]
+                from_shifts = schedules["shifts"].get(s["from_employee_id"], [{} for _ in range(7)])
+                to_shifts = schedules["shifts"].get(s["to_employee_id"], [{} for _ in range(7)])
+                from_shift = dict(from_shifts[wk]) if wk < len(from_shifts) else {}
+                to_shift = dict(to_shifts[wk]) if wk < len(to_shifts) else {}
+                if s["from_employee_id"] not in schedules["shifts"]:
+                    schedules["shifts"][s["from_employee_id"]] = [{} for _ in range(7)]
+                if s["to_employee_id"] not in schedules["shifts"]:
+                    schedules["shifts"][s["to_employee_id"]] = [{} for _ in range(7)]
+                schedules["shifts"][s["from_employee_id"]][wk] = to_shift
+                schedules["shifts"][s["to_employee_id"]][wk] = from_shift
+                save_json(SCHEDULES_FILE, schedules)
+                s["status"] = "approved"
+                save_json(SHIFT_SWAPS_FILE, swaps)
+                return jsonify({"message": "Swap approved"})
+        return jsonify({"error": "Swap not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/shift-swaps/delete", methods=["POST"])
+@require_login
+def admin_delete_swap():
+    try:
+        swap_id = request.json.get("id")
+        swaps = load_json(SHIFT_SWAPS_FILE, {"swaps": []})
+        swaps["swaps"] = [s for s in swaps["swaps"] if s["id"] != swap_id]
+        save_json(SHIFT_SWAPS_FILE, swaps)
+        return jsonify({"message": "Swap deleted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/payroll", methods=["POST"])

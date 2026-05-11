@@ -90,6 +90,77 @@
         .btn-outline { background: transparent; color: #1e3a5f; border: 1px solid #1e3a5f; }
         .btn-outline:hover { background: #1e3a5f; color: white; }
 
+        /* ─── Schedule Grid ───────────────────────────── */
+        .sched-grid { border-collapse: separate; border-spacing: 3px; min-width: 800px; }
+        .sched-grid th { background: transparent; padding: 0.5rem 0.35rem; text-align: center; font-size: 0.75rem; text-transform: none; letter-spacing: 0.02em; border-bottom: 2px solid #e2e8f0; }
+        .sched-grid th .day-name { display: block; font-weight: 600; color: #1e293b; }
+        .sched-grid th .day-date { display: block; font-weight: 400; color: #94a3b8; font-size: 0.7rem; margin-top: 2px; }
+        .sched-grid th.weekend { color: #94a3b8; }
+        .sched-grid th.today { border-bottom-color: #1e3a5f; }
+        .sched-grid th.today .day-name { color: #1e3a5f; }
+        .sched-grid .emp-label { padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; color: #1e293b; white-space: nowrap; border-bottom: none; vertical-align: middle; }
+        .sched-grid .day-cell { padding: 3px; vertical-align: middle; border-bottom: none; background: #f8fafc; border-radius: 6px; transition: background 0.15s; position: relative; min-width: 90px; height: 52px; cursor: pointer; }
+        .sched-grid .day-cell:hover { background: #eef2f6; }
+        .sched-grid .day-cell.weekend { background: #f1f5f9; }
+        .sched-grid .day-cell.today-cell { background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
+        .sched-grid .day-cell.conflict { background: #fef2f2; box-shadow: inset 0 0 0 1px #fecaca; }
+        .shift-block { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; line-height: 1.3; white-space: nowrap; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; transition: all 0.15s; }
+        .shift-block:hover { background: #bfdbfe; }
+        .shift-block.open-shift { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .shift-block.conflict-shift { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+        .shift-block .shift-time { font-weight: 600; }
+        .shift-block .shift-notes-icon { opacity: 0.5; font-size: 0.65rem; }
+        .shift-block .shift-remove { cursor: pointer; opacity: 0.4; font-size: 0.7rem; margin-left: 2px; }
+        .shift-block .shift-remove:hover { opacity: 1; }
+        .day-cell .empty-cell { color: #cbd5e1; font-size: 0.7rem; text-align: center; width: 100%; display: block; }
+        .day-cell .conflict-badge { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; background: #dc2626; border-radius: 50%; color: white; font-size: 0.55rem; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+        .open-shifts-row .emp-label { color: #92400e; font-style: italic; }
+        .open-shifts-row .day-cell { background: #fffbeb; }
+        .open-shifts-row .day-cell:hover { background: #fef3c7; }
+
+        .sched-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .sched-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+        .sched-status-dot.published { background: #059669; }
+        .sched-status-dot.draft { background: #d97706; }
+
+        .avail-mini { display: block; font-size: 0.65rem; color: #94a3b8; margin-top: 1px; }
+
+        /* Schedule animation */
+        .sched-grid tbody tr { animation: fadeSlideIn 0.3s ease both; }
+        .sched-grid tbody tr:nth-child(1) { animation-delay: 0.02s; }
+        .sched-grid tbody tr:nth-child(2) { animation-delay: 0.04s; }
+        .sched-grid tbody tr:nth-child(3) { animation-delay: 0.06s; }
+        .sched-grid tbody tr:nth-child(4) { animation-delay: 0.08s; }
+        .sched-grid tbody tr:nth-child(5) { animation-delay: 0.1s; }
+        .sched-grid tbody tr:nth-child(6) { animation-delay: 0.12s; }
+        .sched-grid tbody tr:nth-child(7) { animation-delay: 0.14s; }
+        .sched-grid tbody tr:nth-child(8) { animation-delay: 0.16s; }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .shift-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+        .shift-modal-overlay.active { display: flex; }
+        .shift-modal { background: white; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.2s ease; }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .shift-modal h3 { font-size: 1rem; margin-bottom: 1rem; color: #1e293b; }
+        .shift-modal .form-group { margin-bottom: 0.75rem; }
+        .shift-modal .form-group label { font-size: 0.8rem; color: #64748b; }
+        .shift-modal .form-group input[type="time"],
+        .shift-modal .form-group input[type="text"] { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; }
+        .shift-modal .form-group input:focus { border-color: #1e3a5f; outline: none; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
+        .shift-modal .btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+        .shift-modal .clear-btn { background: none; border: none; color: #dc2626; font-size: 0.8rem; cursor: pointer; padding: 0.5rem; }
+
+        .emp-schedule-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .emp-schedule-day { background: #f8fafc; border-radius: 8px; padding: 0.75rem; text-align: center; }
+        .emp-schedule-day .day-header { font-weight: 600; font-size: 0.75rem; color: #64748b; margin-bottom: 0.35rem; }
+        .emp-schedule-day .day-header .day-date { display: block; font-weight: 400; color: #94a3b8; font-size: 0.7rem; }
+        .emp-schedule-day .shift-time-block { display: inline-block; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: #dbeafe; color: #1e40af; }
+        .emp-schedule-day.no-shift { color: #cbd5e1; font-size: 0.75rem; padding-top: 1.25rem; }
+        .emp-schedule-day.today { background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
+        .emp-schedule-day.weekend { background: #f1f5f9; }
+        .emp-schedule-day .shift-note { font-size: 0.7rem; color: #94a3b8; margin-top: 0.25rem; }
+
         #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         #login-page .card { max-width: 400px; width: 100%; text-align: center; }
         #login-page .card h2 { margin-bottom: 1.5rem; }
@@ -158,6 +229,17 @@
                 Default credentials: <strong>admin</strong> / <strong>admin</strong>.<br>
                 If credentials were changed, check the <code>users.json</code> file or set <code>ADMIN_USER</code>/<code>ADMIN_PASS</code> env vars.
             </div>
+            <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;">
+                <button class="btn btn-outline" onclick="showKioskPrompt()" style="width:100%;">Open Time Clock (Kiosk)</button>
+                <div id="kiosk-prompt" style="display:none;margin-top:0.75rem;">
+                    <div class="form-group">
+                        <label>Kiosk Code</label>
+                        <input type="password" id="kiosk-code" maxlength="6" placeholder="Enter kiosk code" onkeydown="if(event.key==='Enter') doKioskLogin()" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;text-align:center;">
+                    </div>
+                    <button class="btn btn-primary" onclick="doKioskLogin()" style="width:100%;">Enter Time Clock</button>
+                    <div id="kiosk-error" style="color:#dc2626;font-size:0.85rem;margin-top:0.5rem;display:none;"></div>
+                </div>
+            </div>
             <div id="emp-login-section" style="display:none;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;">
                 <h3 style="margin-bottom:1rem;font-size:1rem;">Employee Login</h3>
                 <div class="form-group">
@@ -181,7 +263,7 @@
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
             <div class="nav" id="admin-nav">
                 <button onclick="showPage('employees')">Employees</button>
-                <button class="active" onclick="showPage('hours')">Enter Hours</button>
+                <button onclick="showPage('timesheet')">Timesheet</button>
                 <button onclick="showPage('payroll')">Payroll Results</button>
                 <button onclick="showPage('schedule')">Schedule</button>
                 <button onclick="showPage('timeclock')">Time Clock</button>
@@ -211,20 +293,22 @@
             </div>
         </div>
 
-        <div id="page-hours" class="page active">
+        <div id="page-timesheet" class="page active">
             <div class="card">
-                <h2>Enter Hours Worked</h2>
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">Timesheet</h2>
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <button class="btn btn-success" onclick="calculatePayrollFromTimesheet()">Calculate Payroll</button>
+                    </div>
+                </div>
                 <div class="week-selector">
-                    <label>Select Pay Week:</label>
-                    <input type="date" id="week-picker" onchange="onWeekChange()">
-                    <span id="week-display" class="week-label"></span>
+                    <label>Select Week:</label>
+                    <input type="date" id="ts-week-picker" onchange="renderTimesheet()">
+                    <span id="ts-week-display" class="week-label"></span>
                 </div>
-                <p style="color: #64748b; margin-bottom: 1rem;" id="hours-description">Enter the hours worked for each employee for this pay week.</p>
-                <div id="hours-form-container"></div>
-                <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                    <button class="btn btn-secondary" onclick="saveHours()">Save Hours</button>
-                    <button class="btn btn-success" onclick="calculatePayroll()">Calculate Payroll</button>
-                </div>
+                <div id="ts-summary-container"></div>
+                <div id="ts-detail-container" style="display:none;"></div>
+                <div id="ts-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
             </div>
         </div>
 
@@ -239,6 +323,10 @@
                     <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                         <button class="btn btn-secondary btn-sm" onclick="toggleAvailPanel()">Availability</button>
                         <button class="btn btn-secondary btn-sm" onclick="copyPrevWeek()">Copy Prev</button>
+                        <button class="btn btn-secondary btn-sm" onclick="saveAsTemplate()">Save as Template</button>
+                        <select id="template-select" onchange="applyTemplate(this.value)" style="padding:0.35rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;">
+                            <option value="">Load Template</option>
+                        </select>
                         <button class="btn btn-primary btn-sm" onclick="saveSchedules()">Save</button>
                         <button class="btn btn-success btn-sm" id="publish-btn" onclick="publishSchedule()">Publish</button>
                     </div>
@@ -256,31 +344,80 @@
                 <p style="color:#64748b;margin-bottom:0.75rem;font-size:0.85rem;">⚠️ = unavailable  •  Click notes to add shift instructions</p>
                 <div id="schedule-container"></div>
             </div>
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('admin-swaps-body', this)">
+                    <h2 style="margin:0;font-size:1rem;">Shift Swap Requests</h2>
+                    <span style="color:#64748b;font-size:1.2rem;">▸</span>
+                </div>
+                <div id="admin-swaps-body" style="display:none;">
+                    <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Approve or delete pending swap requests between employees.</p>
+                    <div id="admin-swaps-container"></div>
+                </div>
+            </div>
         </div>
 
         <div id="page-timeclock" class="page">
-            <div class="card" style="text-align:center;">
-                <h2>Time Clock</h2>
-                <p style="color:#64748b;margin-bottom:1.5rem;">Select employee and enter PIN to clock in/out</p>
-                <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem;">
-                    <select id="tc-employee" style="padding:0.75rem;font-size:1.1rem;border:1px solid #cbd5e1;border-radius:8px;min-width:200px;">
-                        <option value="">— Select Employee —</option>
-                    </select>
-                    <input type="password" id="tc-pin" placeholder="PIN" maxlength="6" style="width:100px;padding:0.75rem;font-size:1.1rem;border:1px solid #cbd5e1;border-radius:8px;text-align:center;" onkeydown="if(event.key==='Enter') doClock()">
-                    <button class="btn btn-primary" onclick="doClock()" style="font-size:1.1rem;padding:0.75rem 2rem;">Clock In / Out</button>
+            <div id="tc-fullscreen">
+                <div id="tc-back-btn" onclick="exitTimeClock()">← Back</div>
+                <div id="tc-center">
+                    <h2 id="tc-title">Clock In / Out</h2>
+                    <p id="tc-subtitle">Enter your PIN</p>
+                    <div id="tc-pin-dots">
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                        <span class="pin-dot"></span>
+                    </div>
+                    <div id="tc-keypad">
+                        <button class="kp-btn" onclick="kpPress('1')">1</button>
+                        <button class="kp-btn" onclick="kpPress('2')">2</button>
+                        <button class="kp-btn" onclick="kpPress('3')">3</button>
+                        <button class="kp-btn" onclick="kpPress('4')">4</button>
+                        <button class="kp-btn" onclick="kpPress('5')">5</button>
+                        <button class="kp-btn" onclick="kpPress('6')">6</button>
+                        <button class="kp-btn" onclick="kpPress('7')">7</button>
+                        <button class="kp-btn" onclick="kpPress('8')">8</button>
+                        <button class="kp-btn" onclick="kpPress('9')">9</button>
+                        <button class="kp-btn kp-clear" onclick="kpClear()">Clear</button>
+                        <button class="kp-btn" onclick="kpPress('0')">0</button>
+                        <button class="kp-btn kp-clear" onclick="kpBackspace()">⌫</button>
+                    </div>
+                    <button id="kp-submit" onclick="kpSubmit()">Clock In / Out</button>
+                    <div id="tc-status"></div>
+                    <div id="tc-active"></div>
                 </div>
-                <div id="tc-status" style="font-size:1.1rem;margin-bottom:0.5rem;"></div>
-                <div id="tc-active" style="margin-bottom:1rem;"></div>
-                <div id="tc-today"></div>
-            </div>
-            <div class="card">
-                <div class="flex-between" style="margin-bottom:1rem;">
-                    <h2 style="margin:0;">All Clock Entries</h2>
-                    <button class="btn btn-sm btn-secondary" onclick="refreshTimeClock()">Refresh</button>
+                <div id="tc-today-section">
+                    <div class="flex-between" style="margin-bottom:0.5rem;">
+                        <strong>Today's Entries</strong>
+                        <button class="btn btn-sm btn-secondary" onclick="refreshTimeClock()">Refresh</button>
+                    </div>
+                    <div id="tc-today"></div>
                 </div>
-                <div id="tc-history-container"></div>
             </div>
         </div>
+
+        <style>
+            #tc-fullscreen { position:fixed; inset:0; background:#f8fafc; display:none; flex-direction:column; align-items:center; z-index:100; overflow-y:auto; }
+            #tc-back-btn { position:fixed; top:0.75rem; left:0.75rem; z-index:101; padding:0.5rem 1rem; background:#fff; border:1px solid #cbd5e1; border-radius:8px; cursor:pointer; font-size:0.9rem; color:#475569; }
+            #tc-back-btn:hover { background:#f1f5f9; }
+            #tc-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1rem; max-width:400px; width:100%; }
+            #tc-title { font-size:1.8rem; margin-bottom:0.25rem; color:#0f172a; }
+            #tc-subtitle { color:#64748b; margin-bottom:1.5rem; font-size:1.05rem; }
+            #tc-pin-dots { display:flex; gap:1rem; margin-bottom:2rem; min-height:56px; align-items:center; }
+            .pin-dot { display:inline-block; width:20px; height:20px; border-radius:50%; background:#e2e8f0; border:2px solid #94a3b8; transition:background 0.15s; }
+            .pin-dot.filled { background:#1e3a5f; border-color:#1e3a5f; }
+            #tc-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; width:100%; max-width:320px; margin-bottom:1.5rem; }
+            .kp-btn { padding:1.25rem; font-size:1.8rem; border:1px solid #cbd5e1; border-radius:12px; background:#fff; cursor:pointer; user-select:none; -webkit-user-select:none; touch-action:manipulation; transition:background 0.1s, transform 0.05s; font-weight:600; color:#1e293b; min-height:70px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+            .kp-btn:active { background:#e2e8f0; transform:scale(0.95); }
+            .kp-clear { font-size:1rem; color:#64748b; background:#f1f5f9; }
+            #kp-submit { width:100%; max-width:320px; padding:1rem; font-size:1.3rem; font-weight:600; background:#1e3a5f; color:#fff; border:none; border-radius:12px; cursor:pointer; touch-action:manipulation; transition:background 0.1s; margin-bottom:1rem; }
+            #kp-submit:active { background:#152c45; }
+            #tc-status { font-size:1.1rem; min-height:1.5em; margin-bottom:0.5rem; }
+            #tc-active { font-size:0.95rem; margin-bottom:0.5rem; text-align:center; }
+            #tc-today-section { width:100%; max-width:600px; padding:1rem 1rem 2rem; }
+            #clock-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(80px); background:#059669; color:#fff; padding:1rem 2rem; border-radius:12px; font-size:1.2rem; font-weight:600; opacity:0; transition:all 0.4s ease; pointer-events:none; z-index:200; white-space:nowrap; box-shadow:0 4px 12px rgba(5,150,105,0.3); }
+            #clock-toast.toast-show { opacity:1; transform:translateX(-50%) translateY(0); }
+        </style>
 
         <div id="page-history" class="page">
             <div class="card">
@@ -398,6 +535,33 @@
             <h2>My Schedule</h2>
             <div id="sched-status-badge-emp" style="margin-bottom:0.75rem;"></div>
             <div id="emp-schedule-container"></div>
+        </div>
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('emp-open-shifts-body', this)">
+                <h2 style="margin:0;font-size:1rem;">Available Open Shifts</h2>
+                <span style="color:#64748b;font-size:1.2rem;">▸</span>
+            </div>
+            <div id="emp-open-shifts-body" style="display:none;">
+                <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Claim an open shift to add it to your schedule.</p>
+                <div id="emp-open-shifts-container"></div>
+                <div id="emp-open-shifts-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('emp-swaps-body', this)">
+                <h2 style="margin:0;font-size:1rem;">Shift Swap Requests</h2>
+                <span style="color:#64748b;font-size:1.2rem;">▸</span>
+            </div>
+            <div id="emp-swaps-body" style="display:none;">
+                <div style="margin-bottom:0.75rem;">
+                    <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Incoming Requests</h3>
+                    <div id="emp-swaps-incoming"></div>
+                </div>
+                <div>
+                    <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Outgoing Requests</h3>
+                    <div id="emp-swaps-outgoing"></div>
+                </div>
+            </div>
         </div>
         <div class="card" style="margin-top:1rem;">
             <div class="flex-between" style="margin-bottom:0.75rem;cursor:pointer;" onclick="toggleCollapse('emp-avail-body', this)">
@@ -543,7 +707,7 @@
                     </div>
                     <div class="form-group">
                         <label>Time Clock PIN</label>
-                        <input type="text" id="emp-pin" maxlength="6" placeholder="4-6 digit PIN" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                        <input type="text" id="emp-pin" maxlength="6" placeholder="4-digit PIN" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;font-family:monospace;font-weight:600;">
                     </div>
                 </div>
                 <div style="border-top:1px solid #e2e8f0; margin:0.75rem 0;"></div>
@@ -577,6 +741,51 @@
         </div>
     </div>
 
+    <!-- Swap Shift Dialog -->
+    <div id="swap-dialog-overlay" class="shift-modal-overlay" onclick="closeSwapDialog(event)">
+        <div class="shift-modal" onclick="event.stopPropagation()">
+            <h3 id="swap-dialog-title">Swap Shift</h3>
+            <input type="hidden" id="swap-dialog-day">
+            <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Select a coworker to swap this shift with.</p>
+            <div class="form-group">
+                <label>Swap with</label>
+                <select id="swap-dialog-employee" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;"></select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary btn-sm" onclick="closeSwapDialog()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="sendSwapRequest()">Send Request</button>
+            </div>
+            <div id="swap-dialog-status" style="margin-top:0.5rem;font-size:0.85rem;color:#059669;"></div>
+        </div>
+    </div>
+
+    <!-- Shift Edit Modal -->
+    <div id="shift-modal-overlay" class="shift-modal-overlay" onclick="closeShiftModal(event)">
+        <div class="shift-modal" onclick="event.stopPropagation()">
+            <h3 id="shift-modal-title">Edit Shift</h3>
+            <input type="hidden" id="shift-edit-emp">
+            <input type="hidden" id="shift-edit-day">
+            <div class="form-group">
+                <label>Start Time</label>
+                <input type="time" id="shift-edit-start">
+            </div>
+            <div class="form-group">
+                <label>End Time</label>
+                <input type="time" id="shift-edit-end">
+            </div>
+            <div class="form-group">
+                <label>Notes <span style="color:#94a3b8;font-size:0.75rem;">(optional)</span></label>
+                <input type="text" id="shift-edit-notes" placeholder="e.g. training, cashier duty">
+            </div>
+            <div class="btn-row">
+                <button class="clear-btn" onclick="clearShift()">Remove Shift</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeShiftModal()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="saveShift()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="clock-toast"></div>
     <script>
         let employees = [];
         let currentWeek = null;
@@ -690,7 +899,7 @@
             let html = `<table>
                 <thead><tr>
                     <th>Name</th><th>Pay</th><th>Status</th><th>State</th>
-                    <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>Actions</th>
+                    <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>PIN</th><th>Actions</th>
                 </tr></thead><tbody>`;
             employees.forEach(emp => {
                 const stateClass = `badge-${emp.state.toLowerCase()}`;
@@ -702,6 +911,7 @@
                     <td>${emp.federal_allowances}</td>
                     <td>${emp.state_allowances}</td>
                     <td>${emp.tipped ? '<span class="badge" style="background:#fef3c7;color:#92400e;">Yes</span>' : 'No'}</td>
+                    <td style="font-family:monospace;font-weight:600;">${emp.pin || '—'}</td>
                     <td>
                         <div class="flex-gap">
                             <button class="btn btn-primary btn-sm" onclick="openEditModal('${emp.id}')">Edit</button>
@@ -814,6 +1024,10 @@
             });
 
             if (res.ok) {
+                const saved = await res.json();
+                if (!editId && saved.pin) {
+                    alert(`Employee created! Their PIN is: ${saved.pin}\nPlease share this with the employee.`);
+                }
                 closeModal();
                 fetchEmployees();
             }
@@ -922,6 +1136,299 @@
                 document.querySelectorAll('.nav button')[2].classList.add('active');
             } else if (res.status === 409) {
                 alert('Payroll already exists for this week. Delete it from History first to re-run.');
+            }
+        }
+
+        // ─── Timesheet ──────────────────────────────────────
+        let timesheetWeek = null;
+        let tsClockEntries = [];
+        let tsEmployees = [];
+        let tsDetailEmpId = null;
+
+        async function renderTimesheet() {
+            const picker = document.getElementById('ts-week-picker');
+            if (!picker.value) {
+                const today = new Date();
+                picker.value = today.toISOString().split('T')[0];
+            }
+            timesheetWeek = getWeekInfo(picker.value, weekStartDay);
+            document.getElementById('ts-week-display').textContent = timesheetWeek.week_label;
+
+            const [empRes, clockRes] = await Promise.all([
+                fetch('/api/employees'),
+                fetch(`/api/timeclock/history?start=${timesheetWeek.week_start}&end=${timesheetWeek.week_end}`),
+            ]);
+            tsEmployees = await empRes.json();
+            tsClockEntries = await clockRes.json();
+
+            document.getElementById('ts-detail-container').style.display = 'none';
+            renderTsSummary();
+        }
+
+        function renderTsSummary() {
+            const container = document.getElementById('ts-summary-container');
+            const clockedTotals = {};
+            tsClockEntries.forEach(e => {
+                if (e.hours) clockedTotals[e.employee_id] = (clockedTotals[e.employee_id] || 0) + e.hours;
+            });
+
+            let html = '<table><thead><tr><th>Employee</th><th>Rate</th><th>Clocked Hours</th><th></th></tr></thead><tbody>';
+            tsEmployees.forEach(emp => {
+                const clocked = clockedTotals[emp.id] || 0;
+                const isSalary = emp.pay_type === 'salary';
+                const isSelected = tsDetailEmpId === emp.id;
+                html += `<tr style="cursor:pointer;${isSelected ? 'background:#eff6ff;' : ''}" onclick="tsOpenDetail('${emp.id}')">
+                    <td><strong>${emp.name}</strong></td>
+                    <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
+                    <td>${clocked > 0 ? clocked.toFixed(1) : '<span style="color:#94a3b8;">0</span>'}</td>
+                    <td><span style="color:#1e3a5f;font-size:0.85rem;">${isSelected ? '▼ Viewing' : 'View →'}</span></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function tsOpenDetail(empId) {
+            tsDetailEmpId = empId;
+            renderTsSummary();
+            const emp = tsEmployees.find(e => e.id === empId);
+            if (!emp) return;
+
+            const empEntries = tsClockEntries.filter(e => e.employee_id === emp.id);
+            const dates = tsGetDates();
+            const container = document.getElementById('ts-detail-container');
+            let totalHours = 0;
+
+            let html = `<div class="flex-between" style="margin-bottom:0.75rem;padding:0.75rem;background:#f8fafc;border-radius:8px;">
+                <div>
+                    <h3 style="font-size:1.05rem;margin:0;">${emp.name}</h3>
+                    <span style="color:#64748b;font-size:0.85rem;">${timesheetWeek.week_label}</span>
+                </div>
+                <div class="flex-gap">
+                    <button class="btn btn-primary btn-sm" onclick="tsSaveAllEntries()">Save All</button>
+                    <button class="btn btn-secondary btn-sm" onclick="tsCloseDetail()">Close</button>
+                </div>
+            </div>
+            <div style="overflow-x:auto;"><table>
+            <thead><tr><th>Day</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th></th></tr></thead><tbody>`;
+
+            dates.forEach(d => {
+                const dayEntries = empEntries.filter(e => e.date === d.iso);
+                if (dayEntries.length === 0) {
+                    html += `<tr style="background:#fafafa;">
+                        <td>${d.label}</td>
+                        <td style="color:#94a3b8;">${d.iso}</td>
+                        <td colspan="3" style="color:#94a3b8;text-align:center;">No entries</td>
+                        <td><button class="btn btn-sm btn-secondary" onclick="tsAddEntry('${d.iso}')">+ Add</button></td>
+                    </tr>`;
+                } else {
+                    dayEntries.forEach((entry, ei) => {
+                        const idx = tsClockEntries.indexOf(entry);
+                        const cin = entry.clock_in ? entry.clock_in.slice(11, 16) : '';
+                        const cout = entry.clock_out ? entry.clock_out.slice(11, 16) : '';
+                        const hrs = entry.hours || 0;
+                        totalHours += hrs;
+                        html += `<tr>
+                            <td>${ei === 0 ? d.label : ''}</td>
+                            <td>${ei === 0 ? d.iso : ''}</td>
+                            <td><input type="time" id="ts-cin-${idx}" value="${cin}" style="width:90px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;" onchange="tsPreviewHours(${idx})"></td>
+                            <td><input type="time" id="ts-cout-${idx}" value="${cout}" style="width:90px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;" onchange="tsPreviewHours(${idx})"></td>
+                            <td><span id="ts-hrs-${idx}">${hrs.toFixed(2)}</span></td>
+                            <td><button class="btn btn-sm btn-danger" onclick="tsDeleteEntry(${idx})" style="font-size:0.7rem;">✕</button></td>
+                        </tr>`;
+                    });
+                }
+            });
+
+            html += `</tbody></table></div>
+                <div style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-weight:600;">Total Hours: <span id="ts-grand-total">${totalHours.toFixed(1)}</span></span>
+                    <button class="btn btn-secondary btn-sm" onclick="tsAddEntry('')">+ Add Entry</button>
+                </div>`;
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+
+        function tsCloseDetail() {
+            tsDetailEmpId = null;
+            document.getElementById('ts-detail-container').style.display = 'none';
+            renderTsSummary();
+        }
+
+        function tsGetDates() {
+            const start = new Date(timesheetWeek.week_start + 'T00:00:00');
+            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            return days.map((d, i) => {
+                const dt = new Date(start);
+                dt.setDate(start.getDate() + i);
+                return { label: d, iso: dt.toISOString().split('T')[0], weekday: i };
+            });
+        }
+
+        function tsPreviewHours(idx) {
+            const cin = document.getElementById(`ts-cin-${idx}`)?.value;
+            const cout = document.getElementById(`ts-cout-${idx}`)?.value;
+            const hrsEl = document.getElementById(`ts-hrs-${idx}`);
+            if (cin && cout) {
+                const [ch, cm] = cin.split(':').map(Number);
+                const [oh, om] = cout.split(':').map(Number);
+                let hrs = (oh + om/60) - (ch + cm/60);
+                if (hrs < 0) hrs += 24;
+                hrsEl.textContent = hrs.toFixed(2);
+            } else {
+                hrsEl.textContent = '—';
+            }
+            tsRecalcTotal();
+        }
+
+        function tsRecalcTotal() {
+            let total = 0;
+            document.querySelectorAll('#ts-detail-container [id^="ts-hrs-"]').forEach(el => {
+                const v = parseFloat(el.textContent);
+                if (!isNaN(v)) total += v;
+            });
+            const gt = document.getElementById('ts-grand-total');
+            if (gt) gt.textContent = total.toFixed(1);
+        }
+
+        async function tsSaveAllEntries() {
+            const statusEl = document.getElementById('ts-status');
+            const empEntries = tsClockEntries.filter(e => e.employee_id === tsDetailEmpId);
+            let saved = 0;
+            for (const entry of empEntries) {
+                const idx = tsClockEntries.indexOf(entry);
+                const cinEl = document.getElementById(`ts-cin-${idx}`);
+                if (!cinEl) continue;
+                const cin = cinEl.value;
+                const coutEl = document.getElementById(`ts-cout-${idx}`);
+                const cout = coutEl?.value || '';
+                const date = entry.date;
+                const clockIn = `${date}T${cin}:00`;
+                const clockOut = cout ? `${date}T${cout}:00` : null;
+                const body = {clock_in: clockIn};
+                if (cout) body.clock_out = clockOut;
+                const res = await fetch(`/api/timeclock/entry/${idx}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body),
+                });
+                if (res.ok) saved++;
+            }
+            statusEl.style.color = '#059669';
+            statusEl.textContent = `${saved} entr${saved === 1 ? 'y' : 'ies'} saved`;
+            await tsOpenDetail(tsDetailEmpId);
+        }
+
+        async function tsDeleteEntry(idx) {
+            if (!confirm('Delete this clock entry?')) return;
+            const res = await fetch('/api/timeclock/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({index: idx}),
+            });
+            if (res.ok) {
+                const res2 = await fetch(`/api/timeclock/history?start=${timesheetWeek.week_start}&end=${timesheetWeek.week_end}`);
+                tsClockEntries = await res2.json();
+                await tsOpenDetail(tsDetailEmpId);
+            }
+        }
+
+        async function tsAddEntry(date) {
+            if (!date) {
+                date = prompt('Enter date (YYYY-MM-DD):');
+                if (!date) return;
+            }
+            const emp = tsEmployees.find(e => e.id === tsDetailEmpId);
+            if (!emp) return;
+            const cin = prompt('Clock in time (HH:MM):');
+            if (!cin) return;
+            const cout = prompt('Clock out time (HH:MM, or leave blank):');
+            const clockIn = `${date}T${cin}:00`;
+            const clockOut = cout ? `${date}T${cout}:00` : null;
+            const res = await fetch('/api/timeclock/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: emp.id, date, clock_in: clockIn, clock_out: clockOut}),
+            });
+            const data = await res.json();
+            const statusEl = document.getElementById('ts-status');
+            if (res.ok) {
+                statusEl.style.color = '#059669';
+                statusEl.textContent = 'Entry added';
+                const res2 = await fetch(`/api/timeclock/history?start=${timesheetWeek.week_start}&end=${timesheetWeek.week_end}`);
+                tsClockEntries = await res2.json();
+                await tsOpenDetail(tsDetailEmpId);
+            } else {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = data.error || 'Error adding entry';
+            }
+        }
+
+        function tsGetTotalHours() {
+            const hours = {};
+            tsEmployees.forEach(emp => {
+                let total = 0;
+                tsClockEntries.filter(e => e.employee_id === emp.id).forEach(e => {
+                    if (e.hours) total += e.hours;
+                });
+                hours[emp.id] = Math.round(total * 100) / 100;
+            });
+            return hours;
+        }
+
+        async function calculatePayrollFromTimesheet() {
+            const statusEl = document.getElementById('ts-status');
+
+            // Save all visible entries first
+            if (tsDetailEmpId) {
+                const empEntries = tsClockEntries.filter(e => e.employee_id === tsDetailEmpId);
+                for (const entry of empEntries) {
+                    const idx = tsClockEntries.indexOf(entry);
+                    const cinEl = document.getElementById(`ts-cin-${idx}`);
+                    if (!cinEl) continue;
+                    const cin = cinEl.value;
+                    const coutEl = document.getElementById(`ts-cout-${idx}`);
+                    const cout = coutEl?.value || '';
+                    const date = entry.date;
+                    const clockIn = `${date}T${cin}:00`;
+                    const clockOut = cout ? `${date}T${cout}:00` : null;
+                    const body = {clock_in: clockIn};
+                    if (cout) body.clock_out = clockOut;
+                    await fetch(`/api/timeclock/entry/${idx}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(body),
+                    });
+                }
+            }
+
+            const hours = tsGetTotalHours();
+
+            const res = await fetch('/api/payroll', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({hours, week_info: timesheetWeek}),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                renderPayrollResults(data);
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+                document.getElementById('page-payroll').classList.add('active');
+                const btns = document.querySelectorAll('.nav button');
+                for (let i = 0; i < btns.length; i++) {
+                    if (btns[i].getAttribute('onclick')?.includes("'payroll'")) {
+                        btns[i].classList.add('active');
+                        break;
+                    }
+                }
+                statusEl.style.color = '#059669';
+                statusEl.textContent = 'Payroll calculated';
+            } else if (res.status === 409) {
+                alert('Payroll already exists for this week. Delete it from History first to re-run.');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error calculating payroll');
             }
         }
 
@@ -1078,12 +1585,12 @@
             const btn = document.querySelector(`.nav button[onclick*="'${page}'"]`);
             if (btn) btn.classList.add('active');
             if (page === 'employees') fetchEmployees();
-            if (page === 'hours') { fetchEmployees(); loadWeekPicker(); }
             if (page === 'history') loadHistory();
             if (page === 'reports') initReports();
             if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); }
-            if (page === 'schedule') renderSchedule();
+            if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
             if (page === 'timeclock') initTimeClock();
+            if (page === 'timesheet') renderTimesheet();
         }
 
         // ─── Schedule ─────────────────────────────────────
@@ -1098,6 +1605,221 @@
             const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
             const key = (d) => d.toISOString().split('T')[0];
             return { week_start: key(start), week_end: key(end), week_label: `${start.toLocaleDateString('en-US', {month:'short',day:'2-digit'})} - ${fmt(end)}` };
+        }
+
+        function getWeekDates(weekStartStr) {
+            const start = new Date(weekStartStr + 'T00:00:00');
+            return SCHED_DAYS.map((d, i) => {
+                const dt = new Date(start); dt.setDate(start.getDate() + i);
+                return { weekday: dt.getDay(), date: dt.getDate(), month: dt.toLocaleString('en-US', {month:'short'}), iso: dt.toISOString().split('T')[0] };
+            });
+        }
+
+        async function renderSchedule() {
+            const picker = document.getElementById('sched-week-picker');
+            if (!picker.value) { picker.value = new Date().toISOString().split('T')[0]; }
+            const wi = getSchedWeekInfo(picker.value);
+            document.getElementById('sched-week-display').textContent = wi.week_label;
+            const dates = getWeekDates(wi.week_start);
+
+            const [schedRes, empRes, availRes] = await Promise.all([
+                fetch('/api/schedules'), fetch('/api/employees'), fetch('/api/availability')
+            ]);
+            scheduleData = await schedRes.json();
+            if (!scheduleData.shifts) scheduleData.shifts = {};
+            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
+            const emps = await empRes.json();
+            const availability = await availRes.json();
+
+            const isPub = scheduleData.status === 'published';
+            const pubBtn = document.getElementById('publish-btn');
+            pubBtn.textContent = isPub ? 'Unpublish' : 'Publish';
+            pubBtn.className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
+            const badge = document.getElementById('sched-status-badge');
+            badge.innerHTML = `<span class="sched-status-dot ${scheduleData.status}"></span>${isPub ? 'Published' : 'Draft'}`;
+            badge.style.background = isPub ? '#dcfce7' : '#fef3c7';
+            badge.style.color = isPub ? '#166534' : '#92400e';
+            badge.style.padding = '0.25rem 0.6rem';
+            badge.style.borderRadius = '20px';
+            badge.style.fontSize = '0.8rem';
+            badge.style.fontWeight = '600';
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            const container = document.getElementById('schedule-container');
+
+            let html = '<div style="overflow-x:auto;"><table class="sched-grid"><thead><tr><th style="width:110px;"></th>';
+            dates.forEach((d, i) => {
+                const isToday = d.iso === todayStr;
+                const isWeekend = d.weekday === 0 || d.weekday === 6;
+                html += `<th class="${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
+                    <span class="day-name">${SCHED_DAYS[i].slice(0,3)}</span>
+                    <span class="day-date">${d.month} ${d.date}</span>
+                </th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            emps.forEach(emp => {
+                const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({}));
+                const empAvail = availability[emp.id] || [];
+                html += `<tr><td class="emp-label">${emp.name}</td>`;
+                dates.forEach((d, i) => {
+                    const s = shifts[i] || {};
+                    const isAvail = empAvail.some(a => a.weekday === i);
+                    const hasShift = s.start && s.end;
+                    const conflict = !isAvail && hasShift;
+                    const isToday = d.iso === todayStr;
+                    const isWeekend = d.weekday === 0 || d.weekday === 6;
+
+                    let cellClass = 'day-cell';
+                    if (isToday) cellClass += ' today-cell';
+                    if (isWeekend) cellClass += ' weekend';
+                    if (conflict) cellClass += ' conflict';
+
+                    html += `<td class="${cellClass}" onclick="openShiftEditor('${emp.id}', ${i})">`;
+                    if (hasShift) {
+                        html += `<div class="shift-block ${conflict ? 'conflict-shift' : ''}">
+                            <span class="shift-time">${s.start}-${s.end}</span>`;
+                        if (s.notes) html += `<span class="shift-notes-icon" title="${s.notes.replace(/"/g,'&quot;')}">📝</span>`;
+                        if (!isPub) html += `<span class="shift-remove" onclick="event.stopPropagation();clearShiftQuick('${emp.id}',${i})">✕</span>`;
+                        html += `</div>`;
+                        if (conflict) html += `<span class="avail-mini">unavailable</span>`;
+                    } else {
+                        html += `<span class="empty-cell">${isPub ? '—' : '+'}</span>`;
+                    }
+                    if (conflict && !hasShift) html += `<div class="conflict-badge">!</div>`;
+                    html += `</td>`;
+                });
+                html += '</tr>';
+            });
+
+            // Open shifts row
+            html += `<tr class="open-shifts-row"><td class="emp-label" style="color:#92400e;">Open Shifts</td>`;
+            const os = scheduleData.open_shifts || [];
+            dates.forEach((d, i) => {
+                const dayOs = os.filter(o => o.weekday === i);
+                html += `<td class="day-cell" onclick="${isPub ? '' : `addOpenShiftToDay(${i})`}" style="background:#fffbeb;text-align:center;">`;
+                if (dayOs.length > 0) {
+                    dayOs.forEach(o => {
+                        html += `<div class="shift-block open-shift" style="margin-bottom:2px;">
+                            <span class="shift-time">${o.start}-${o.end}</span>
+                            ${o.notes ? `<span class="shift-notes-icon" title="${o.notes.replace(/"/g,'&quot;')}">📝</span>` : ''}
+                            ${!isPub ? `<span class="shift-remove" onclick="event.stopPropagation();removeOpenShiftQuick(${os.indexOf(o)})">✕</span>` : ''}
+                        </div>`;
+                    });
+                } else if (!isPub) {
+                    html += `<span class="empty-cell">+</span>`;
+                }
+                html += `</td>`;
+            });
+            html += '</tr>';
+
+            html += '</tbody></table></div>';
+            if (!isPub) {
+                html += `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center;">
+                    <span style="font-size:0.85rem;color:#64748b;">Click a cell to add/edit a shift. Open shifts can be claimed by employees.</span>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        async function saveSchedules() {
+            const res = await fetch('/api/employees');
+            const emps = await res.json();
+            const shifts = {};
+            emps.forEach(emp => {
+                const empShifts = [];
+                SCHED_DAYS.forEach((d, i) => {
+                    empShifts.push({
+                        start: scheduleData.shifts?.[emp.id]?.[i]?.start || '',
+                        end: scheduleData.shifts?.[emp.id]?.[i]?.end || '',
+                        notes: scheduleData.shifts?.[emp.id]?.[i]?.notes || '',
+                    });
+                });
+                shifts[emp.id] = empShifts;
+            });
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            await fetch('/api/schedules', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({shifts, open_shifts: scheduleData.open_shifts, week_start: wi.week_start, week_label: wi.week_label}),
+            });
+            alert('Schedules saved');
+        }
+
+        // ─── Shift Modal (click-to-edit) ────────────────
+        function openShiftEditor(empId, dayIdx) {
+            if (scheduleData.status === 'published') return;
+            const s = scheduleData.shifts?.[empId]?.[dayIdx] || {};
+            document.getElementById('shift-edit-emp').value = empId;
+            document.getElementById('shift-edit-day').value = dayIdx;
+            document.getElementById('shift-edit-start').value = s.start || '';
+            document.getElementById('shift-edit-end').value = s.end || '';
+            document.getElementById('shift-edit-notes').value = s.notes || '';
+            const emp = employees.find(e => e.id === empId);
+            document.getElementById('shift-modal-title').textContent = `${emp ? emp.name : empId} — ${SCHED_DAYS[dayIdx]}`;
+            document.getElementById('shift-modal-overlay').classList.add('active');
+        }
+
+        function closeShiftModal(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('shift-modal-overlay').classList.remove('active');
+        }
+
+        function saveShift() {
+            const empId = document.getElementById('shift-edit-emp').value;
+            const dayIdx = parseInt(document.getElementById('shift-edit-day').value);
+            const start = document.getElementById('shift-edit-start').value;
+            const end = document.getElementById('shift-edit-end').value;
+            const notes = document.getElementById('shift-edit-notes').value;
+            if (!scheduleData.shifts[empId]) scheduleData.shifts[empId] = SCHED_DAYS.map(() => ({}));
+            scheduleData.shifts[empId][dayIdx] = {start, end, notes};
+            closeShiftModal();
+            renderSchedule();
+        }
+
+        function clearShift() {
+            const empId = document.getElementById('shift-edit-emp').value;
+            const dayIdx = parseInt(document.getElementById('shift-edit-day').value);
+            if (scheduleData.shifts[empId]) {
+                scheduleData.shifts[empId][dayIdx] = {};
+            }
+            closeShiftModal();
+            renderSchedule();
+        }
+
+        function clearShiftQuick(empId, dayIdx) {
+            if (scheduleData.shifts[empId]) scheduleData.shifts[empId][dayIdx] = {};
+            renderSchedule();
+        }
+
+        function addOpenShiftToDay(weekday) {
+            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
+            scheduleData.open_shifts.push({weekday, start: '09:00', end: '17:00', notes: ''});
+            renderSchedule();
+        }
+
+        function removeOpenShiftQuick(idx) {
+            scheduleData.open_shifts.splice(idx, 1);
+            renderSchedule();
+        }
+
+        async function publishSchedule() {
+            const isPub = scheduleData.status === 'published';
+            await fetch(`/api/schedules/${isPub ? 'unpublish' : 'publish'}`, {method: 'POST'});
+            await renderSchedule();
+        }
+
+        async function copyPrevWeek() {
+            await fetch('/api/schedules/copy', {method: 'POST'});
+            await renderSchedule();
+        }
+
+        function toggleAvailPanel() {
+            const panel = document.getElementById('avail-panel');
+            const vis = panel.style.display === 'block';
+            panel.style.display = vis ? 'none' : 'block';
+            if (!vis) renderAvailEditor();
         }
 
         async function renderSchedule() {
@@ -1146,7 +1868,6 @@
                             <input type="time" id="sched-${emp.id}-${i}-start" value="${s.start||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
                             <span style="font-size:0.75rem;color:#94a3b8;">-</span>
                             <input type="time" id="sched-${emp.id}-${i}-end" value="${s.end||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
-                            <button class="btn btn-sm" style="padding:0.15rem 0.4rem;font-size:0.7rem;background:transparent;border:1px solid #e2e8f0;border-radius:3px;cursor:pointer;" onclick="editShiftNote('${emp.id}',${i})" title="Add note">📝</button>
                         </div>
                         ${s.notes ? `<div style="font-size:0.7rem;color:#64748b;margin-top:2px;">${s.notes}</div>` : ''}
                     </td>`;
@@ -1229,6 +1950,103 @@
             await fetch('/api/schedules/copy', {method: 'POST'});
             await renderSchedule();
             alert('Schedule reset to draft (copied from current data)');
+        }
+
+        // ─── Schedule Templates ───────────────────────────
+        async function loadTemplateDropdown() {
+            const res = await fetch('/api/schedule-templates');
+            const templates = await res.json();
+            const sel = document.getElementById('template-select');
+            const current = sel.value;
+            sel.innerHTML = '<option value="">Load Template</option>';
+            templates.forEach(t => {
+                sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+            });
+            if (current && templates.some(t => t.id === current)) sel.value = current;
+        }
+
+        async function saveAsTemplate() {
+            const name = prompt('Template name:');
+            if (!name) return;
+            const res = await fetch('/api/schedule-templates', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name}),
+            });
+            if (res.ok) {
+                alert(`Template "${name}" saved`);
+                loadTemplateDropdown();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Error saving template');
+            }
+        }
+
+        async function applyTemplate(templateId) {
+            if (!templateId) return;
+            if (!confirm('Apply this template? Current schedule will be overwritten.')) {
+                document.getElementById('template-select').value = '';
+                return;
+            }
+            const res = await fetch(`/api/schedule-templates/${templateId}/apply`, {method: 'POST'});
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message);
+                renderSchedule();
+            } else {
+                alert(data.error || 'Error applying template');
+            }
+        }
+
+        // ─── Admin Swap Management ────────────────────────
+        async function adminLoadSwaps() {
+            const res = await fetch('/api/shift-swaps');
+            const swaps = await res.json();
+            const container = document.getElementById('admin-swaps-container');
+            const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const pending = swaps.filter(s => s.status === 'pending');
+            if (!pending.length) {
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No pending swap requests.</p>';
+                return;
+            }
+            let html = '<table><thead><tr><th>From</th><th>To</th><th>Day</th><th>Status</th><th></th></tr></thead><tbody>';
+            pending.forEach(s => {
+                html += `<tr>
+                    <td>${s.from_name}</td>
+                    <td>${s.to_name}</td>
+                    <td>${DAYS[s.weekday]}</td>
+                    <td style="font-weight:600;color:#f59e0b;">${s.status}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="adminApproveSwap(${s.id})" style="margin-right:0.25rem;">Approve</button>
+                        <button class="btn btn-sm btn-danger" onclick="adminDeleteSwap(${s.id})">Delete</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function adminApproveSwap(swapId) {
+            if (!confirm('Approve this swap? Shifts will be exchanged immediately.')) return;
+            const res = await fetch('/api/shift-swaps/approve', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: swapId}),
+            });
+            if (res.ok) {
+                adminLoadSwaps();
+                renderSchedule();
+            }
+        }
+
+        async function adminDeleteSwap(swapId) {
+            if (!confirm('Delete this swap request?')) return;
+            const res = await fetch('/api/shift-swaps/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: swapId}),
+            });
+            if (res.ok) adminLoadSwaps();
         }
 
         function addOpenShift() {
@@ -1387,20 +2205,70 @@
 
         // ─── Time Clock ────────────────────────────────────
         let timeClockTimer = null;
+        let kpPin = '';
+
+        function kpPress(d) {
+            if (kpPin.length >= 6) return;
+            kpPin += d;
+            updateDots();
+        }
+        function kpBackspace() {
+            kpPin = kpPin.slice(0, -1);
+            updateDots();
+        }
+        function kpClear() {
+            kpPin = '';
+            updateDots();
+            document.getElementById('tc-status').textContent = '';
+        }
+        function updateDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((dot, i) => dot.classList.toggle('filled', i < kpPin.length));
+        }
+        async function kpSubmit() {
+            if (!kpPin) { document.getElementById('tc-status').textContent = 'Enter your PIN'; return; }
+            const statusEl = document.getElementById('tc-status');
+            try {
+                const res = await fetch('/api/timeclock/clock', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({pin: kpPin}),
+                });
+                const data = await res.json();
+                    if (res.ok) {
+                    kpPin = '';
+                    updateDots();
+                    statusEl.style.color = '#059669';
+                    statusEl.textContent = data.message;
+                    refreshTimeClock();
+                    showClockToast(data.message);
+                } else {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = data.error || 'Error';
+                    kpPin = '';
+                    updateDots();
+                }
+            } catch (e) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function showClockToast(msg) {
+            const toast = document.getElementById('clock-toast');
+            const isClockIn = msg.includes('Clocked in');
+            toast.textContent = isClockIn ? 'Have a great day at work!' : 'Enjoy your rest of the day!';
+            toast.className = 'toast-show';
+            setTimeout(() => toast.className = '', 4000);
+        }
 
         async function initTimeClock() {
-            loadTcEmployees();
+            document.getElementById('tc-fullscreen').style.display = 'flex';
             refreshTimeClock();
             if (timeClockTimer) clearInterval(timeClockTimer);
             timeClockTimer = setInterval(refreshTimeClock, 15000);
-        }
-
-        function loadTcEmployees() {
-            const sel = document.getElementById('tc-employee');
-            sel.innerHTML = '<option value="">— Select Employee —</option>';
-            employees.forEach(emp => {
-                sel.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
-            });
+            kpPin = '';
+            updateDots();
         }
 
         async function refreshTimeClock() {
@@ -1429,33 +2297,6 @@
                 todayEl.innerHTML = html;
             } else {
                 todayEl.innerHTML = '<span style="color:#64748b;">No entries today</span>';
-            }
-        }
-
-        async function doClock() {
-            const empId = document.getElementById('tc-employee').value;
-            const pin = document.getElementById('tc-pin').value;
-            const statusEl = document.getElementById('tc-status');
-            if (!empId) { statusEl.textContent = 'Select an employee'; return; }
-            try {
-                const res = await fetch('/api/timeclock/clock', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({employee_id: empId, pin}),
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('tc-pin').value = '';
-                    statusEl.style.color = '#059669';
-                    statusEl.textContent = data.message;
-                    refreshTimeClock();
-                } else {
-                    statusEl.style.color = '#dc2626';
-                    statusEl.textContent = data.error || 'Error';
-                }
-            } catch (e) {
-                statusEl.style.color = '#dc2626';
-                statusEl.textContent = 'Error: ' + e.message;
             }
         }
 
@@ -2065,6 +2906,51 @@
             el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
 
+        let isKioskMode = false;
+
+        function showKioskPrompt() {
+            const el = document.getElementById('kiosk-prompt');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            document.getElementById('kiosk-error').style.display = 'none';
+            document.getElementById('kiosk-code').value = '';
+            document.getElementById('kiosk-code').focus();
+        }
+
+        function doKioskLogin() {
+            const code = document.getElementById('kiosk-code').value;
+            const errEl = document.getElementById('kiosk-error');
+            if (code === '1234') {
+                isKioskMode = true;
+                localStorage.setItem('kioskMode', 'true');
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('app-content').classList.add('visible');
+                document.getElementById('admin-nav').style.display = 'none';
+                document.getElementById('emp-nav').style.display = 'none';
+                document.getElementById('portal-toggle').style.display = 'none';
+                document.getElementById('user-label').style.display = 'none';
+                showPage('timeclock');
+            } else {
+                errEl.textContent = 'Invalid code';
+                errEl.style.display = 'block';
+            }
+        }
+
+        function exitTimeClock() {
+            if (timeClockTimer) { clearInterval(timeClockTimer); timeClockTimer = null; }
+            if (isKioskMode) {
+                isKioskMode = false;
+                localStorage.removeItem('kioskMode');
+                document.getElementById('login-page').style.display = 'flex';
+                document.getElementById('app-content').classList.remove('visible');
+                document.getElementById('admin-nav').style.display = '';
+                document.getElementById('emp-nav').style.display = '';
+                document.getElementById('portal-toggle').style.display = '';
+                document.getElementById('user-label').style.display = '';
+            } else {
+                showPage('timesheet');
+            }
+        }
+
         async function doLogout() {
             await fetch('/api/logout', {method: 'POST'});
             document.getElementById('login-page').style.display = 'flex';
@@ -2171,6 +3057,9 @@
                     document.getElementById('emp-nav').style.display = 'flex';
                     document.getElementById('emp-label').textContent = empSession.name;
                     document.getElementById('portal-toggle').textContent = 'Admin Portal';
+                    // Load employees list for swap dialog
+                    const empRes = await fetch('/api/employees');
+                    if (empRes.ok) employees = await empRes.json();
                     showEmpPage('emp-schedule');
                     return true;
                 }
@@ -2185,7 +3074,7 @@
             document.getElementById('emp-label').textContent = '';
             document.getElementById('portal-toggle').textContent = 'Employee Portal';
             fetch('/api/employee/logout', {method: 'POST'});
-            showPage('hours');
+            showPage('timesheet');
         }
 
         async function empLoadSchedule() {
@@ -2194,17 +3083,28 @@
             const container = document.getElementById('emp-schedule-container');
             const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
             const shifts = data.shifts || [];
-            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th></tr></thead><tbody>';
+            const isPub = data.status === 'published';
+            const statusBadge = document.getElementById('sched-status-badge-emp');
+            statusBadge.innerHTML = isPub
+                ? '<span style="padding:0.2rem 0.5rem;background:#dcfce7;color:#166534;border-radius:4px;font-size:0.8rem;font-weight:600;">Published</span>'
+                : '<span style="padding:0.2rem 0.5rem;background:#fef3c7;color:#92400e;border-radius:4px;font-size:0.8rem;font-weight:600;">Draft — not yet finalized</span>';
+
+            let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th>Notes</th><th></th></tr></thead><tbody>';
             let hasAny = false;
             DAYS.forEach((d, i) => {
                 const s = shifts[i] || {};
                 if (s.start && s.end) {
                     hasAny = true;
-                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td></tr>`;
+                    html += `<tr><td>${d}</td><td>${s.start}</td><td>${s.end}</td>
+                        <td style="color:#64748b;font-size:0.85rem;">${s.notes || ''}</td>
+                        <td>${isPub ? `<button class="btn btn-sm btn-outline" onclick="empOpenSwapDialog(${i})" style="font-size:0.7rem;padding:0.2rem 0.5rem;">Swap</button>` : ''}</td></tr>`;
                 }
             });
             html += '</tbody></table>';
             container.innerHTML = hasAny ? html : '<p style="color:#64748b;">No schedule set for this week.</p>';
+            empLoadOpenShifts();
+            empLoadSwapRequests();
+            empLoadAvailability();
         }
 
         async function submitTimeOff() {
@@ -2319,7 +3219,7 @@
             const res = await fetch('/api/timeclock/clock', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({employee_id: empSession.id, pin: 'admin'}), // employee already authenticated
+                body: JSON.stringify({employee_id: empSession.id, pin: 'admin'}),
             });
             const data = await res.json();
             if (res.ok) {
@@ -2330,8 +3230,153 @@
             }
         }
 
+        // ─── Open Shift Claiming ──────────────────────────
+        async function empLoadOpenShifts() {
+            const res = await fetch('/api/employee/open-shifts');
+            const openShifts = await res.json();
+            const container = document.getElementById('emp-open-shifts-container');
+            if (!openShifts.length) {
+                container.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No open shifts available.</p>';
+                return;
+            }
+            const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            let html = '<table><thead><tr><th>Day</th><th>Time</th><th>Notes</th><th></th></tr></thead><tbody>';
+            openShifts.forEach(o => {
+                html += `<tr><td>${DAYS[o.weekday]}</td><td>${o.start} - ${o.end}</td>
+                    <td style="color:#64748b;font-size:0.85rem;">${o.notes || ''}</td>
+                    <td><button class="btn btn-primary btn-sm" onclick="empClaimOpenShift(${o.weekday})">Claim</button></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function empClaimOpenShift(weekday) {
+            if (!confirm('Claim this open shift?')) return;
+            const res = await fetch('/api/employee/claim-shift', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: empSession.id, weekday}),
+            });
+            const data = await res.json();
+            const statusEl = document.getElementById('emp-open-shifts-status');
+            if (res.ok) {
+                statusEl.style.color = '#059669';
+                statusEl.textContent = 'Shift claimed! Your schedule has been updated.';
+                empLoadSchedule();
+            } else {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = data.error || 'Error claiming shift';
+            }
+        }
+
+        // ─── Shift Swapping ──────────────────────────────
+        function empOpenSwapDialog(weekday) {
+            const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            document.getElementById('swap-dialog-title').textContent = `Swap ${DAYS[weekday]} Shift`;
+            document.getElementById('swap-dialog-day').value = weekday;
+            const sel = document.getElementById('swap-dialog-employee');
+            sel.innerHTML = '<option value="">— Select coworker —</option>';
+            const pool = employees.length ? employees : [];
+            pool.forEach(emp => {
+                if (emp.id !== empSession.id) {
+                    sel.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                }
+            });
+            if (pool.length === 0) {
+                sel.innerHTML = '<option value="">No other employees found</option>';
+            }
+            document.getElementById('swap-dialog-status').textContent = '';
+            document.getElementById('swap-dialog-overlay').classList.add('active');
+        }
+
+        function closeSwapDialog(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('swap-dialog-overlay').classList.remove('active');
+        }
+
+        async function sendSwapRequest() {
+            const weekday = parseInt(document.getElementById('swap-dialog-day').value);
+            const toEid = document.getElementById('swap-dialog-employee').value;
+            const statusEl = document.getElementById('swap-dialog-status');
+            if (!toEid) { statusEl.textContent = 'Select a coworker'; statusEl.style.color = '#dc2626'; return; }
+            const res = await fetch('/api/employee/swap-request', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: empSession.id, to_employee_id: toEid, weekday}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                statusEl.style.color = '#059669';
+                statusEl.textContent = 'Swap request sent!';
+                setTimeout(() => closeSwapDialog(), 1000);
+                empLoadSwapRequests();
+            } else {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = data.error || 'Error';
+            }
+        }
+
+        async function empLoadSwapRequests() {
+            const res = await fetch(`/api/employee/swap-requests?employee_id=${empSession.id}`);
+            const swaps = await res.json();
+            const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const incoming = swaps.filter(s => s.to_employee_id === empSession.id);
+            const outgoing = swaps.filter(s => s.from_employee_id === empSession.id);
+
+            const incomingEl = document.getElementById('emp-swaps-incoming');
+            if (incoming.length === 0) {
+                incomingEl.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No incoming swap requests.</p>';
+            } else {
+                let html = '<table><thead><tr><th>From</th><th>Day</th><th>Status</th><th></th></tr></thead><tbody>';
+                incoming.forEach(s => {
+                    html += `<tr><td>${s.from_name}</td><td>${DAYS[s.weekday]}</td>
+                        <td style="font-weight:600;color:${s.status === 'pending' ? '#f59e0b' : s.status === 'approved' ? '#059669' : '#dc2626'};">${s.status}</td>
+                        <td>${s.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="empRespondSwap(${s.id},'approved')" style="margin-right:0.25rem;">Accept</button><button class="btn btn-sm btn-danger" onclick="empRespondSwap(${s.id},'declined')">Decline</button>` : ''}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                incomingEl.innerHTML = html;
+            }
+
+            const outgoingEl = document.getElementById('emp-swaps-outgoing');
+            if (outgoing.length === 0) {
+                outgoingEl.innerHTML = '<p style="color:#94a3b8;font-size:0.85rem;">No outgoing swap requests.</p>';
+            } else {
+                let html = '<table><thead><tr><th>To</th><th>Day</th><th>Status</th></tr></thead><tbody>';
+                outgoing.forEach(s => {
+                    html += `<tr><td>${s.to_name}</td><td>${DAYS[s.weekday]}</td>
+                        <td style="font-weight:600;color:${s.status === 'pending' ? '#f59e0b' : s.status === 'approved' ? '#059669' : '#dc2626'};">${s.status}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                outgoingEl.innerHTML = html;
+            }
+        }
+
+        async function empRespondSwap(swapId, action) {
+            const res = await fetch('/api/employee/swap-respond', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({employee_id: empSession.id, id: swapId, action}),
+            });
+            if (res.ok) {
+                empLoadSwapRequests();
+                empLoadSchedule();
+            }
+        }
+
         // Add employee login option to login page
         document.addEventListener('DOMContentLoaded', () => {
+            // Check kiosk mode first
+            if (localStorage.getItem('kioskMode') === 'true') {
+                isKioskMode = true;
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('app-content').classList.add('visible');
+                document.getElementById('admin-nav').style.display = 'none';
+                document.getElementById('emp-nav').style.display = 'none';
+                document.getElementById('portal-toggle').style.display = 'none';
+                document.getElementById('user-label').style.display = 'none';
+                showPage('timeclock');
+                return;
+            }
             // Check employee session on load
             fetch('/api/employee/session').then(r => r.json()).then(data => {
                 if (data.employee_id) {

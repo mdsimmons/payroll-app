@@ -26,12 +26,12 @@
       "step2_checked": false,
       "overtime_rate": 1.5,
       "tipped": true,
+      "pin": "2345",
       "fed_add_withholding_type": "amount",
       "fed_add_withholding_value": 0.0,
       "state_add_withholding_type": "amount",
       "state_add_withholding_value": 0.0,
-      "id": "EMP005",
-      "pin": "1234"
+      "id": "EMP005"
     },
     {
       "name": "Justin White",
@@ -45,12 +45,12 @@
       "step2_checked": false,
       "overtime_rate": 1.5,
       "tipped": false,
+      "pin": "3456",
       "fed_add_withholding_type": "amount",
       "fed_add_withholding_value": 17.0,
       "state_add_withholding_type": "amount",
       "state_add_withholding_value": 2.0,
-      "id": "EMP006",
-      "pin": "1234"
+      "id": "EMP006"
     }
   ]
 }
