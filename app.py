@@ -82,7 +82,7 @@ def load_tax_settings():
 
 def load_app_settings():
     if not os.path.exists(APP_SETTINGS_FILE):
-        return {"week_start_day": 6}
+        return {"week_start_day": 6, "notify_on_publish": True}
     with open(APP_SETTINGS_FILE, "r") as f:
         return json.load(f)
 
@@ -317,6 +317,40 @@ def delete_history_week(week_key):
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/history/<week_key>/notes", methods=["PUT"])
+@require_login
+def update_history_notes(week_key):
+    try:
+        history = load_history()
+        if week_key not in history:
+            return jsonify({"error": "Week not found"}), 404
+        notes = request.json.get("notes", "")
+        history[week_key]["notes"] = notes
+        save_history(history)
+        return jsonify({"message": "Notes saved"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/payroll/calculate", methods=["POST"])
+@require_login
+def calculate_payroll_preview():
+    try:
+        data = request.json
+        emp_id = data.get("employee_id")
+        hourly_rate = float(data.get("hourly_rate", 0))
+        hours = float(data.get("hours", 0))
+        employees = load_employees(EMPLOYEES_FILE)
+        emp = next((e for e in employees if e["id"] == emp_id), None)
+        if not emp:
+            return jsonify({"error": "Employee not found"}), 404
+        emp["hourly_rate"] = hourly_rate
+        result = calculate_payroll(emp, hours)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/api/tax-settings", methods=["GET"])
 @require_login
 def get_tax_settings():
@@ -428,7 +462,9 @@ def publish_schedule():
     data["status"] = "published"
     save_json(SCHEDULES_FILE, data)
     label = data.get("week_label", "this week")
-    create_notification("schedule_published", f"Schedule for {label} has been published")
+    settings = load_app_settings()
+    if settings.get("notify_on_publish", True):
+        create_notification("schedule_published", f"Schedule for {label} has been published")
     return jsonify({"message": "Schedule published"})
 
 
@@ -439,7 +475,9 @@ def unpublish_schedule():
     data["status"] = "draft"
     save_json(SCHEDULES_FILE, data)
     label = data.get("week_label", "this week")
-    create_notification("schedule_unpublished", f"Schedule for {label} has been unpublished")
+    settings = load_app_settings()
+    if settings.get("notify_on_publish", True):
+        create_notification("schedule_unpublished", f"Schedule for {label} has been unpublished")
     return jsonify({"message": "Schedule set to draft"})
 
 
@@ -455,6 +493,7 @@ def copy_schedule():
 # ─── Schedule Templates ─────────────────────────────────────
 SCHEDULE_TEMPLATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedule_templates.json")
 NOTIFICATIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notifications.json")
+MESSAGES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "messages.json")
 
 
 def load_templates():
@@ -622,6 +661,75 @@ def mark_notification_read():
         return jsonify({"error": "Not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/notifications/<int:nid>", methods=["DELETE"])
+def delete_notification(nid):
+    data = load_notifications()
+    data["notifications"] = [n for n in data["notifications"] if n["id"] != nid]
+    save_notifications(data)
+    return jsonify({"message": "Notification deleted"})
+
+
+# ─── Messages ────────────────────────────────────────────────
+
+
+def load_messages():
+    return load_json(MESSAGES_FILE, {"messages": []})
+
+
+def save_messages(data):
+    save_json(MESSAGES_FILE, data)
+
+
+@app.route("/api/messages", methods=["GET"])
+def get_messages():
+    eid = session.get("employee_id")
+    is_admin = session.get("user") is not None
+    data = load_messages()
+    msgs = data["messages"]
+    if eid:
+        result = [m for m in msgs if m.get("target") in (None, "all", eid)]
+    else:
+        result = msgs
+    return jsonify(result)
+
+
+@app.route("/api/messages", methods=["POST"])
+@require_login
+def create_message():
+    try:
+        subject = request.json.get("subject", "").strip()
+        body = request.json.get("body", "").strip()
+        target = request.json.get("target", "all")
+        if not subject:
+            return jsonify({"error": "Subject required"}), 400
+        data = load_messages()
+        mid = 1
+        if data["messages"]:
+            mid = max(m["id"] for m in data["messages"]) + 1
+        data["messages"].insert(0, {
+            "id": mid,
+            "subject": subject,
+            "body": body,
+            "target": target,
+            "created_by": session.get("user", "admin"),
+            "created_at": datetime.now().isoformat(),
+        })
+        save_messages(data)
+        create_notification("message", f"New message: {subject}")
+        return jsonify({"id": mid, "subject": subject}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/messages/<int:msg_id>", methods=["DELETE"])
+@require_login
+def delete_message(msg_id):
+    data = load_messages()
+    data["messages"] = [m for m in data["messages"] if m["id"] != msg_id]
+    save_messages(data)
+    return jsonify({"message": "Message deleted"})
 
 
 # ─── Time Clock ─────────────────────────────────────────────
@@ -1137,6 +1245,7 @@ def run_payroll():
             total_gross += result["gross_pay"]
             total_net += result["net_pay"]
 
+        notes = request.json.get("notes", "")
         payroll_data = {
             "week_start": week_info["week_start"],
             "week_end": week_info["week_end"],
@@ -1147,6 +1256,7 @@ def run_payroll():
                 "total_gross": round(total_gross, 2),
                 "total_net": round(total_net, 2),
             },
+            "notes": notes,
         }
 
         history = load_history()
