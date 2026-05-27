@@ -145,6 +145,13 @@ def get_employees():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/employees/managers", methods=["GET"])
+def get_managers():
+    employees = load_employees(EMPLOYEES_FILE)
+    managers = [{"id": e["id"], "name": e["name"]} for e in employees if e.get("role") == "manager"]
+    return jsonify(managers)
+
+
 @app.route("/api/employees", methods=["POST"])
 @require_login
 def add_employee():
@@ -173,6 +180,7 @@ def add_employee():
         new_emp["fed_add_withholding_value"] = float(new_emp.get("fed_add_withholding_value", 0))
         new_emp["state_add_withholding_type"] = new_emp.get("state_add_withholding_type", "amount")
         new_emp["state_add_withholding_value"] = float(new_emp.get("state_add_withholding_value", 0))
+        new_emp["role"] = new_emp.get("role", "employee")
 
         # Auto-generate unique 4-digit PIN
         import random
@@ -228,6 +236,7 @@ def update_employee(emp_id):
                 data["employees"][i]["fed_add_withholding_value"] = float(updated.get("fed_add_withholding_value", 0))
                 data["employees"][i]["state_add_withholding_type"] = updated.get("state_add_withholding_type", "amount")
                 data["employees"][i]["state_add_withholding_value"] = float(updated.get("state_add_withholding_value", 0))
+                data["employees"][i]["role"] = updated.get("role", "employee")
                 # Auto-generate username from name
                 base_username = re.sub(r'[^a-zA-Z0-9]', '', data["employees"][i]["name"]).lower()
                 username = base_username
@@ -606,18 +615,21 @@ def save_notifications(data):
     save_json(NOTIFICATIONS_FILE, data)
 
 
-def create_notification(ntype, message):
+def create_notification(ntype, message, target_employee=None):
     data = load_notifications()
     nid = 1
     if data["notifications"]:
         nid = max(n["id"] for n in data["notifications"]) + 1
-    data["notifications"].insert(0, {
+    n = {
         "id": nid,
         "type": ntype,
         "message": message,
         "created_at": datetime.now().isoformat(),
         "read_by": [],
-    })
+    }
+    if target_employee:
+        n["target_employee"] = target_employee
+    data["notifications"].insert(0, n)
     save_notifications(data)
     return nid
 
@@ -630,6 +642,11 @@ def get_notifications():
     notifs = data["notifications"]
     result = []
     for n in notifs:
+        target = n.get("target_employee")
+        if eid and target and target != eid:
+            continue
+        if is_admin and target:
+            pass
         n_copy = dict(n)
         if eid:
             n_copy["is_read"] = eid in n.get("read_by", [])
@@ -685,39 +702,58 @@ def save_messages(data):
 @app.route("/api/messages", methods=["GET"])
 def get_messages():
     eid = session.get("employee_id")
+    role = session.get("employee_role")
     is_admin = session.get("user") is not None
     data = load_messages()
     msgs = data["messages"]
-    if eid:
-        result = [m for m in msgs if m.get("target") in (None, "all", eid)]
+    if is_admin:
+        result = msgs
+    elif eid and role == "manager":
+        result = [m for m in msgs if m.get("target") in (None, "all", eid, "managers")]
+    elif eid:
+        result = [m for m in msgs if m.get("target") in (None, "all", eid) or m.get("from_employee") == eid]
     else:
         result = msgs
     return jsonify(result)
 
 
 @app.route("/api/messages", methods=["POST"])
-@require_login
 def create_message():
     try:
         subject = request.json.get("subject", "").strip()
         body = request.json.get("body", "").strip()
         target = request.json.get("target", "all")
+        is_admin = session.get("user") is not None
+        eid = session.get("employee_id")
+        if not is_admin and not eid:
+            return jsonify({"error": "Unauthorized"}), 401
         if not subject:
             return jsonify({"error": "Subject required"}), 400
         data = load_messages()
         mid = 1
         if data["messages"]:
             mid = max(m["id"] for m in data["messages"]) + 1
-        data["messages"].insert(0, {
+        msg = {
             "id": mid,
             "subject": subject,
             "body": body,
             "target": target,
-            "created_by": session.get("user", "admin"),
             "created_at": datetime.now().isoformat(),
-        })
+        }
+        if is_admin:
+            msg["created_by"] = session.get("user", "admin")
+            create_notification("message", f"New message: {subject}")
+        else:
+            msg["type"] = "employee_to_manager"
+            msg["from_employee"] = eid
+            msg["from_employee_name"] = session.get("employee_name", "Unknown")
+            msg["target"] = "managers"
+            employees = load_employees(EMPLOYEES_FILE)
+            managers = [e for e in employees if e.get("role") == "manager"]
+            for mgr in managers:
+                create_notification("message", f"Message from {msg['from_employee_name']}: {subject}", mgr["id"])
+        data["messages"].insert(0, msg)
         save_messages(data)
-        create_notification("message", f"New message: {subject}")
         return jsonify({"id": mid, "subject": subject}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -970,16 +1006,17 @@ def employee_login():
         return jsonify({"error": "Invalid credentials"}), 401
     session["employee_id"] = emp["id"]
     session["employee_name"] = emp["name"]
+    session["employee_role"] = emp.get("role", "employee")
     session.permanent = True
     app.permanent_session_lifetime = timedelta(hours=8)
-    return jsonify({"ok": True, "employee": {"id": emp["id"], "name": emp["name"]}})
+    return jsonify({"ok": True, "employee": {"id": emp["id"], "name": emp["name"], "role": emp.get("role", "employee")}})
 
 
 @app.route("/api/employee/session")
 def employee_session():
     eid = session.get("employee_id")
     if eid:
-        return jsonify({"employee_id": eid, "employee_name": session.get("employee_name")})
+        return jsonify({"employee_id": eid, "employee_name": session.get("employee_name"), "employee_role": session.get("employee_role")})
     return jsonify({"employee_id": None})
 
 

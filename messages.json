@@ -1,0 +1,78 @@
+{
+  "messages": [
+    {
+      "id": 8,
+      "subject": ".",
+      "body": "I got your message",
+      "target": "EMP004",
+      "created_at": "2026-05-27T09:26:40.961874",
+      "created_by": "admin"
+    },
+    {
+      "id": 7,
+      "subject": ".",
+      "body": "test",
+      "target": "managers",
+      "created_at": "2026-05-27T09:20:23.370817",
+      "type": "employee_to_manager",
+      "from_employee": "EMP004",
+      "from_employee_name": "Mitchel Simmons"
+    },
+    {
+      "id": 6,
+      "subject": ".",
+      "body": "test",
+      "target": "managers",
+      "created_at": "2026-05-27T09:20:14.914816",
+      "type": "employee_to_manager",
+      "from_employee": "EMP004",
+      "from_employee_name": "Mitchel Simmons"
+    },
+    {
+      "id": 5,
+      "subject": ".",
+      "body": "test",
+      "target": "managers",
+      "created_at": "2026-05-27T09:20:10.199705",
+      "type": "employee_to_manager",
+      "from_employee": "EMP004",
+      "from_employee_name": "Mitchel Simmons"
+    },
+    {
+      "id": 4,
+      "subject": ".",
+      "body": "this is a test",
+      "target": "managers",
+      "created_at": "2026-05-27T09:17:27.262535",
+      "type": "employee_to_manager",
+      "from_employee": "EMP004",
+      "from_employee_name": "Mitchel Simmons"
+    },
+    {
+      "id": 3,
+      "subject": ".",
+      "body": "this is a test",
+      "target": "managers",
+      "created_at": "2026-05-27T09:17:15.488208",
+      "type": "employee_to_manager",
+      "from_employee": "EMP004",
+      "from_employee_name": "Mitchel Simmons"
+    },
+    {
+      "id": 2,
+      "subject": "this is a test",
+      "body": "test",
+      "target": "all",
+      "created_at": "2026-05-27T08:47:08.918440",
+      "created_by": "admin"
+    },
+    {
+      "id": 1,
+      "subject": "time off",
+      "body": "I need tomorrow off",
+      "target": "all",
+      "created_at": "2026-05-27T07:56:22.150363",
+      "created_by": "admin"
+    }
+  ]
+}

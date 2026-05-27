@@ -39,18 +39,23 @@
         .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; touch-action: manipulation; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-        .notif-bell { position: relative; cursor: pointer; padding: 0.5rem; margin-right: 0.25rem; font-size: 1.2rem; color: #475569; border-radius: 6px; transition: background 0.15s; touch-action: manipulation; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-        .notif-bell:hover { background: #e2e8f0; }
-        .notif-badge { position: absolute; top: 2px; right: 2px; background: #dc2626; color: white; font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: none; align-items: center; justify-content: center; padding: 0 4px; }
-        .notif-badge.show { display: flex; }
-        .notif-dropdown { display: none; position: absolute; top: 100%; right: 0; width: 340px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 300; margin-top: 4px; }
-        .notif-dropdown.active { display: block; }
-        .notif-dropdown-header { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 600; font-size: 0.85rem; color: #1e293b; display: flex; justify-content: space-between; align-items: center; }
-        .notif-item { padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: #1e293b; touch-action: manipulation; min-height: 44px; display: flex; align-items: center; }
+        .notif-item { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: #1e293b; touch-action: manipulation; min-height: 44px; display: flex; flex-direction: column; }
         .notif-item:hover { background: #f8fafc; }
         .notif-item.unread { background: #eff6ff; font-weight: 600; }
-        .notif-item .notif-time { font-size: 0.7rem; color: #94a3b8; margin-top: 0.2rem; font-weight: 400; }
-        .notif-empty { padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+
+        .chat-view { display: flex; flex-direction: column; flex: 1; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
+        .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .chat-bubble.sent { align-self: flex-end; background: #1e3a5f; color: white; border-bottom-right-radius: 4px; }
+        .chat-bubble.received { align-self: flex-start; background: #e2e8f0; color: #1e293b; border-bottom-left-radius: 4px; }
+        .chat-bubble .sender-name { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.15rem; color: #64748b; }
+        .chat-bubble.sent .sender-name { color: rgba(255,255,255,0.7); }
+        .chat-bubble .bubble-time { font-size: 0.65rem; margin-top: 0.2rem; text-align: right; opacity: 0.7; }
+        .chat-bubble.system { align-self: center; background: transparent; color: #94a3b8; font-size: 0.78rem; text-align: center; max-width: 90%; padding: 0.4rem 0.6rem; }
+        .chat-input-area { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #e2e8f0; background: white; border-radius: 0 0 8px 8px; }
+        .chat-input-area input { flex: 1; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.9rem; outline: none; }
+        .chat-input-area input:focus { border-color: #1e3a5f; }
+        .chat-input-area button { padding: 0.5rem 1.2rem; border-radius: 20px; white-space: nowrap; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
         .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
@@ -213,7 +218,6 @@
             .emp-schedule-day { padding: 0.5rem 0.25rem; }
             .emp-schedule-day .shift-time-block { font-size: 0.65rem; padding: 0.3rem 0.35rem; }
             .history-list li { min-height: 50px; padding: 0.7rem; }
-            .notif-dropdown { width: 100vw; max-width: 100vw; right: -1rem; border-radius: 0; }
             .notif-item { min-height: 48px; }
             .delete-week { min-height: 44px; }
             .shift-modal .form-group input[type="time"],
@@ -254,8 +258,8 @@
         body.emp-mode #user-label,
         body.emp-mode #emp-logout-btn { display: none !important; }
         body.emp-mode #emp-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; z-index: 99; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); }
-        body.emp-mode #emp-nav button { flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0.4rem 0.2rem; font-size: 0.6rem; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 0; min-height: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; }
-        body.emp-mode #emp-nav button::before { content: ""; display: block; width: 22px; height: 22px; background-color: #94a3b8; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
+        body.emp-mode #emp-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0.4rem 0.2rem; font-size: 0.6rem; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 0; min-height: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; text-align: center; }
+        body.emp-mode #emp-nav button::before { content: ""; display: flex; align-self: center; justify-content: center; width: 22px; height: 22px; background-color: #94a3b8; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
         body.emp-mode #emp-nav button.active::before { background-color: #1e3a5f; }
         body.emp-mode #emp-nav button:nth-child(1)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
         body.emp-mode #emp-nav button:nth-child(2)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
@@ -265,12 +269,9 @@
         body.emp-mode #emp-nav button.active { color: #1e3a5f; font-weight: 600; }
         body.emp-mode #emp-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
         body.emp-mode #emp-label { display: block !important; color: white; font-size: 0.85rem; font-weight: 500; }
-        body.emp-mode .notif-bell { color: white; min-width: 40px; min-height: 40px; }
-        body.emp-mode .notif-bell:hover { background: rgba(255,255,255,0.1); }
         body.emp-mode .container { padding-bottom: 70px; }
-        body.emp-mode .page.active .card { border-radius: 0; box-shadow: none; border-bottom: 1px solid #e2e8f0; margin-bottom: 0; padding: 1rem; }
-        body.emp-mode .page.active .card:first-child { padding-top: 0.5rem; }
-        body.emp-mode .page.active .card h2 { font-size: 1.1rem; }
+        body.emp-mode #page-emp-messages.active { display: flex; flex-direction: column; height: calc(100vh - 210px); }
+        body.emp-mode #page-emp-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; }
         body.emp-mode .emp-schedule-week { grid-template-columns: repeat(7, 1fr); gap: 3px; }
         body.emp-mode .emp-schedule-day { padding: 0.4rem 0.15rem; border-radius: 6px; }
         body.emp-mode .emp-schedule-day .shift-time-block { font-size: 0.6rem; padding: 0.25rem 0.3rem; word-break: break-all; }
@@ -330,16 +331,7 @@
     <div class="header">
         <h1>Payroll App</h1>
         <div style="display:flex;align-items:center;">
-            <div style="position:relative;display:inline-block;">
-                <span class="notif-bell" onclick="toggleNotifDropdown()" title="Notifications">🔔<span class="notif-badge" id="notif-badge">0</span></span>
-                <div class="notif-dropdown" id="notif-dropdown">
-                    <div class="notif-dropdown-header">
-                        <span>Notifications</span>
-                        <button class="btn btn-sm btn-outline" onclick="markAllNotifRead()" style="font-size:0.7rem;padding:0.2rem 0.5rem;">Mark all read</button>
-                    </div>
-                    <div id="notif-list"></div>
-                </div>
-            </div>
+
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
             <div class="nav" id="admin-nav">
                 <button onclick="showPage('employees')">Employees</button>
@@ -358,7 +350,7 @@
                 <button onclick="showEmpPage('emp-timeoff')">Request Time Off</button>
                 <button onclick="showEmpPage('emp-paystubs')">My Paystubs</button>
                 <button onclick="showEmpPage('emp-messages')">Messages</button>
-                <button onclick="empLogout()" style="color:#dc2626;">Logout</button>
+                <button onclick="empLogout()">Logout</button>
             </div>
             <span id="emp-label" style="color:#94a3b8;font-size:0.85rem;margin:0 0.5rem;"></span>
             <button id="emp-logout-btn" class="btn btn-sm btn-outline" style="margin-left:0.25rem;padding:0.25rem 0.5rem;font-size:0.8rem;display:none;" onclick="empLogout()">Logout</button>
@@ -558,43 +550,20 @@
         </div>
 
         <div id="page-admin-messages" class="page">
-            <div class="card">
-                <div class="flex-between" style="margin-bottom:1rem;">
-                    <h2 style="margin:0;">Messages</h2>
-                    <button class="btn btn-primary" onclick="openComposeMessage()">+ Compose</button>
+            <div class="card" style="padding:0;">
+                <div class="chat-view">
+                    <div class="chat-messages" id="admin-chat-messages"></div>
+                    <div class="chat-input-area" style="flex-wrap:wrap;">
+                        <select id="admin-chat-target" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:20px;font-size:0.85rem;min-width:120px;">
+                            <option value="all">All Employees</option>
+                        </select>
+                        <input type="text" id="admin-chat-input" placeholder="Type a message..." style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')adminChatSend()">
+                        <button class="btn btn-primary" onclick="adminChatSend()" style="border-radius:20px;">Send</button>
+                    </div>
                 </div>
-                <div id="admin-messages-container"></div>
             </div>
         </div>
 
-        <!-- Compose Message Modal -->
-        <div id="compose-message-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Compose Message</h2>
-                    <button class="close" onclick="closeComposeMessage()">&times;</button>
-                </div>
-                <div style="margin-bottom:0.75rem;">
-                    <label>Send to</label>
-                    <select id="msg-target" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
-                        <option value="all">All Employees</option>
-                    </select>
-                </div>
-                <div class="form-group" style="margin-bottom:0.75rem;">
-                    <label>Subject</label>
-                    <input type="text" id="msg-subject" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
-                </div>
-                <div class="form-group" style="margin-bottom:1rem;">
-                    <label>Message</label>
-                    <textarea id="msg-body" rows="5" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;resize:vertical;"></textarea>
-                </div>
-                <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                    <button class="btn btn-secondary" onclick="closeComposeMessage()">Cancel</button>
-                    <button class="btn btn-primary" onclick="sendMessage()">Send</button>
-                </div>
-                <div id="compose-message-status" style="margin-top:0.75rem;font-size:0.9rem;color:#64748b;"></div>
-            </div>
-        </div>
 
         <div id="page-app-settings" class="page">
             <div class="card">
@@ -752,9 +721,14 @@
     </div>
 
     <div id="page-emp-messages" class="page">
-        <div class="card">
-            <h2>Messages</h2>
-            <div id="emp-messages-container"></div>
+        <div class="card" style="padding:0;">
+            <div class="chat-view" id="emp-chat-view">
+                <div class="chat-messages" id="emp-chat-messages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="emp-chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')empChatSend()">
+                    <button class="btn btn-primary" onclick="empChatSend()">Send</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -842,6 +816,13 @@
                     </div>
                 </div>
                 <div class="form-row">
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="emp-role" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                            <option value="employee">Employee</option>
+                            <option value="manager">Manager</option>
+                        </select>
+                    </div>
                     <div class="form-group" style="display: flex; align-items: flex-end;">
                         <label>
                             <input type="checkbox" id="emp-tipped" onchange="toggleTipRate()" style="width:auto; margin-right:0.5rem;">
@@ -1053,14 +1034,16 @@
             }
             let html = `<table>
                 <thead><tr>
-                    <th>Name</th><th>Username</th><th>Pay</th><th>Status</th><th>State</th>
+                    <th>Name</th><th>Username</th><th>Role</th><th>Pay</th><th>Status</th><th>State</th>
                     <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>PIN</th><th>Actions</th>
                 </tr></thead><tbody>`;
             employees.forEach(emp => {
                 const stateClass = `badge-${emp.state.toLowerCase()}`;
+                const roleClass = emp.role === 'manager' ? 'badge' : '';
                 html += `<tr>
                     <td><strong>${emp.name}</strong></td>
                     <td style="font-family:monospace;color:#64748b;font-size:0.85rem;">${emp.username || '—'}</td>
+                    <td>${emp.role === 'manager' ? '<span class="badge" style="background:#dbeafe;color:#1e40af;">Manager</span>' : 'Employee'}</td>
                     <td>${emp.pay_type === 'salary' ? `$${(emp.salary_amount||0).toFixed(2)}/wk (<span style="font-size:0.8rem;">$${((emp.salary_amount||0)*52).toLocaleString('en-US', {minimumFractionDigits:2})}/yr</span>)` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td>${emp.filing_status.replace('_', ' ')}</td>
                     <td><span class="badge ${stateClass}">${emp.state}</span></td>
@@ -1122,6 +1105,7 @@
                 document.getElementById('emp-ot-rate').value = emp.overtime_rate || 0;
                 document.getElementById('emp-tipped').checked = emp.tipped || false;
                 document.getElementById('emp-pin').value = emp.pin || '';
+                document.getElementById('emp-role').value = emp.role || 'employee';
                 document.getElementById('emp-fed-add-type').value = emp.fed_add_withholding_type || 'amount';
                 document.getElementById('emp-fed-add-val').value = emp.fed_add_withholding_value || 0;
                 document.getElementById('emp-state-add-type').value = emp.state_add_withholding_type || 'amount';
@@ -1166,6 +1150,7 @@
                 overtime_rate: parseFloat(document.getElementById('emp-ot-rate').value) || 0,
                 tipped: document.getElementById('emp-tipped').checked,
                 pin: document.getElementById('emp-pin').value,
+                role: document.getElementById('emp-role').value,
                 fed_add_withholding_type: document.getElementById('emp-fed-add-type').value,
                 fed_add_withholding_value: parseFloat(document.getElementById('emp-fed-add-val').value) || 0,
                 state_add_withholding_type: document.getElementById('emp-state-add-type').value,
@@ -1859,7 +1844,16 @@
             if (page === 'timeclock') initTimeClock();
             if (page === 'timesheet') renderTimesheet();
             if (page === 'admin-timeoff') adminLoadTimeOff();
-            if (page === 'admin-messages') adminLoadMessages();
+            if (page === 'admin-messages') {
+                const sel = document.getElementById('admin-chat-target');
+                if (sel) {
+                    sel.innerHTML = '<option value="all">All Employees</option>';
+                    if (employees && employees.length) {
+                        employees.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.name}</option>`; });
+                    }
+                }
+                adminLoadMessages();
+            }
         }
 
         // ─── Schedule ─────────────────────────────────────
@@ -2315,100 +2309,7 @@
             loadTemplateDropdown();
         }
 
-        // ─── Notifications ────────────────────────────────
-        let notifDropdownOpen = false;
-        let notifPollTimer = null;
 
-        function toggleNotifDropdown() {
-            notifDropdownOpen = !notifDropdownOpen;
-            document.getElementById('notif-dropdown').classList.toggle('active', notifDropdownOpen);
-            if (notifDropdownOpen) loadNotifList();
-        }
-
-        document.addEventListener('click', function(e) {
-            if (notifDropdownOpen && !e.target.closest('.notif-bell') && !e.target.closest('.notif-dropdown')) {
-                notifDropdownOpen = false;
-                document.getElementById('notif-dropdown').classList.remove('active');
-            }
-        });
-
-        async function loadNotifBadge() {
-            try {
-                const res = await fetch('/api/notifications');
-                const notifs = await res.json();
-                const unread = notifs.filter(n => !n.is_read).length;
-                const badge = document.getElementById('notif-badge');
-                if (unread > 0) {
-                    badge.textContent = unread;
-                    badge.classList.add('show');
-                } else {
-                    badge.classList.remove('show');
-                }
-            } catch (e) {}
-        }
-
-        async function loadNotifList() {
-            try {
-                const res = await fetch('/api/notifications');
-                const notifs = await res.json();
-                const list = document.getElementById('notif-list');
-                if (!notifs.length) {
-                    list.innerHTML = '<div class="notif-empty">No notifications</div>';
-                    return;
-                }
-                let html = '';
-                notifs.forEach(n => {
-                    const time = new Date(n.created_at).toLocaleString();
-                    const cls = n.is_read ? '' : 'unread';
-                    html += `<div class="notif-item ${cls}">
-                        <div style="display:flex;justify-content:space-between;align-items:flex-start;" onclick="markNotifRead(${n.id})">
-                            <div style="flex:1;">${n.message}</div>
-                            <span style="color:#94a3b8;font-size:0.8rem;cursor:pointer;padding:0 0.25rem;" onclick="event.stopPropagation();deleteNotification(${n.id})" title="Delete">&times;</span>
-                        </div>
-                        <div class="notif-time" onclick="markNotifRead(${n.id})">${time}</div>
-                    </div>`;
-                });
-                list.innerHTML = html;
-            } catch (e) {}
-        }
-
-        async function markNotifRead(nid) {
-            await fetch('/api/notifications/read', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id: nid}),
-            });
-            loadNotifBadge();
-            if (notifDropdownOpen) loadNotifList();
-        }
-
-        async function markAllNotifRead() {
-            const res = await fetch('/api/notifications');
-            const notifs = await res.json();
-            for (const n of notifs) {
-                if (!n.is_read) {
-                    await fetch('/api/notifications/read', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({id: n.id}),
-                    });
-                }
-            }
-            loadNotifBadge();
-            if (notifDropdownOpen) loadNotifList();
-        }
-
-        async function deleteNotification(nid) {
-            await fetch('/api/notifications/' + nid, {method: 'DELETE'});
-            loadNotifBadge();
-            if (notifDropdownOpen) loadNotifList();
-        }
-
-        function startNotifPoll() {
-            loadNotifBadge();
-            if (notifPollTimer) clearInterval(notifPollTimer);
-            notifPollTimer = setInterval(loadNotifBadge, 30000);
-        }
 
         // ─── Admin Swap Management ────────────────────────
         async function adminLoadSwaps() {
@@ -2536,83 +2437,65 @@
             }
         }
 
-        // ─── Admin Messages ────────────────────────────────
+        // ─── Admin Messages (Chat) ────────────────────────
         async function adminLoadMessages() {
             const res = await fetch('/api/messages');
             const msgs = await res.json();
-            const container = document.getElementById('admin-messages-container');
+            const container = document.getElementById('admin-chat-messages');
+            if (!container) return;
+
             if (!msgs.length) {
-                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No messages sent yet.</p>';
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No messages yet.</div>';
                 return;
             }
+
+            const items = msgs.map(m => ({
+                body: m.body,
+                created_at: m.created_at,
+                from: m.from_employee_name || m.from_employee || m.created_by || 'Admin',
+                isSent: !m.from_employee,
+            }));
+
+            items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
             let html = '';
-            msgs.forEach(m => {
-                const date = new Date(m.created_at).toLocaleString();
-                html += `<div style="padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:0.5rem;cursor:pointer;" onclick="toggleMsgBody(this)">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="font-size:1rem;">${m.subject}</strong>
-                        <span style="font-size:0.75rem;color:#94a3b8;">${date}</span>
-                        <button class="btn btn-sm btn-danger" style="margin-left:auto;font-size:0.7rem;padding:0.15rem 0.4rem;" onclick="event.stopPropagation();deleteMessage(${m.id})">Delete</button>
-                    </div>
-                    <div class="msg-body" style="display:none;color:#475569;font-size:0.9rem;white-space:pre-wrap;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #e2e8f0;">${m.body}</div>
-                </div>`;
+            let lastDate = '';
+            items.forEach(item => {
+                const date = new Date(item.created_at);
+                const dateStr = date.toLocaleDateString();
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (dateStr !== lastDate) {
+                    html += `<div style="text-align:center;font-size:0.7rem;color:#94a3b8;padding:0.5rem 0 0.25rem;font-weight:500;">${dateStr}</div>`;
+                    lastDate = dateStr;
+                }
+                const side = item.isSent ? 'sent' : 'received';
+                const nameHtml = (!item.isSent && item.from) ? `<div class="sender-name">${item.from}</div>` : '';
+                html += `<div class="chat-bubble ${side}">${nameHtml}<div>${item.body}</div><div class="bubble-time">${timeStr}</div></div>`;
             });
+
             container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
         }
 
-        async function deleteMessage(msgId) {
-            if (!confirm('Delete this message?')) return;
-            await fetch('/api/messages/' + msgId, {method: 'DELETE'});
-            adminLoadMessages();
-        }
-
-        function toggleMsgBody(el) {
-            const body = el.querySelector('.msg-body');
-            if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function openComposeMessage() {
-            document.getElementById('compose-message-modal').classList.add('active');
-            document.getElementById('msg-subject').value = '';
-            document.getElementById('msg-body').value = '';
-            document.getElementById('compose-message-status').textContent = '';
-            const sel = document.getElementById('msg-target');
-            sel.innerHTML = '<option value="all">All Employees</option>';
-            if (employees && employees.length) {
-                employees.forEach(e => {
-                    sel.innerHTML += `<option value="${e.id}">${e.name}</option>`;
-                });
-            }
-        }
-
-        function closeComposeMessage() {
-            document.getElementById('compose-message-modal').classList.remove('active');
-        }
-
-        async function sendMessage() {
-            const target = document.getElementById('msg-target').value;
-            const subject = document.getElementById('msg-subject').value.trim();
-            const body = document.getElementById('msg-body').value.trim();
-            const statusEl = document.getElementById('compose-message-status');
-            if (!subject || !body) { statusEl.textContent = 'Subject and message required'; return; }
+        async function adminChatSend() {
+            const input = document.getElementById('admin-chat-input');
+            const target = document.getElementById('admin-chat-target').value;
+            const body = input.value.trim();
+            if (!body) return;
+            input.value = '';
             const res = await fetch('/api/messages', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',
-                body: JSON.stringify({target, subject, body}),
+                body: JSON.stringify({ target, subject: '.', body }),
             });
-            if (res.ok) {
-                statusEl.textContent = 'Message sent!';
-                closeComposeMessage();
-                adminLoadMessages();
-            } else {
-                try {
-                    const data = await res.json();
-                    statusEl.textContent = data.error || 'Error sending message';
-                } catch (_) {
-                    statusEl.textContent = 'Unauthorized — please log in again';
-                }
+            if (!res.ok) {
+                let err = 'Send failed';
+                try { const d = await res.json(); err = d.error || err; } catch(_) {}
+                alert('Error: ' + err);
+                return;
             }
+            adminLoadMessages();
         }
 
         // ─── Employee Schedule ─────────────────────────────
@@ -3321,7 +3204,6 @@
                     document.getElementById('emp-logout-btn').style.display = 'none';
                     fetchEmployees();
                     loadWeekPicker();
-                    startNotifPoll();
                     return;
                 }
                 // Try employee login
@@ -3457,7 +3339,7 @@
             if (page === 'emp-schedule') empLoadSchedule();
             if (page === 'emp-timeoff') empLoadTimeOff();
             if (page === 'emp-paystubs') empLoadPaystubs();
-            if (page === 'emp-messages') empLoadMessages();
+            if (page === 'emp-messages') { empLoadMessages(); startEmpChatPoll(); } else { stopEmpChatPoll(); }
         }
 
         async function empLogin(username, pin) {
@@ -3474,13 +3356,12 @@
                     document.getElementById('app-content').classList.add('visible');
                     document.getElementById('admin-nav').style.display = 'none';
                     document.getElementById('portal-toggle').style.display = 'none';
-                    document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('emp-label').textContent = empSession.name + (empSession.role === 'manager' ? ' (Manager)' : '');
                     document.body.classList.add('emp-mode');
                     showEmpPage('emp-schedule');
                     // Load employees list for swap dialog
                     const empRes = await fetch('/api/employees');
                     if (empRes.ok) employees = await empRes.json();
-                    startNotifPoll();
                     return true;
                 }
             } catch (e) {}
@@ -3670,27 +3551,88 @@
         }
 
 
-        // ─── Employee Messages ────────────────────────────
+        // ─── Employee Messages (Chat) ─────────────────────
+        let empChatPoll = null;
+
         async function empLoadMessages() {
-            const res = await fetch('/api/messages');
-            const msgs = await res.json();
-            const container = document.getElementById('emp-messages-container');
-            if (!msgs.length) {
-                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No messages.</p>';
+            const [msgRes, notifRes] = await Promise.all([fetch('/api/messages'), fetch('/api/notifications')]);
+            const msgs = await msgRes.json();
+            const notifs = await notifRes.json();
+            const container = document.getElementById('emp-chat-messages');
+            if (!container) return;
+
+            const items = [];
+            msgs.forEach(m => {
+                const fromName = m.from_employee_name || m.created_by || 'Admin';
+                const isSent = empSession && (m.from_employee === empSession.id);
+                items.push({ type: 'message', body: m.body, created_at: m.created_at, from: fromName, isSent: isSent });
+            });
+            notifs.forEach(n => {
+                items.push({ type: 'notification', message: n.message, created_at: n.created_at });
+            });
+
+            items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+            if (!items.length) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No messages yet.</div>';
                 return;
             }
+
             let html = '';
-            msgs.forEach(m => {
-                const date = new Date(m.created_at).toLocaleString();
-                html += `<div style="padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:0.5rem;cursor:pointer;" onclick="toggleMsgBody(this)">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="font-size:1rem;">${m.subject}</strong>
-                        <span style="font-size:0.75rem;color:#94a3b8;">${date}</span>
-                    </div>
-                    <div class="msg-body" style="display:none;color:#475569;font-size:0.9rem;white-space:pre-wrap;margin-top:0.5rem;padding-top:0.5rem;border-top:1px solid #e2e8f0;">${m.body}</div>
-                </div>`;
+            let lastDate = '';
+            items.forEach(item => {
+                const date = new Date(item.created_at);
+                const dateStr = date.toLocaleDateString();
+                const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                if (dateStr !== lastDate) {
+                    html += `<div style="text-align:center;font-size:0.7rem;color:#94a3b8;padding:0.5rem 0 0.25rem;font-weight:500;">${dateStr}</div>`;
+                    lastDate = dateStr;
+                }
+
+                if (item.type === 'notification') {
+                    html += `<div class="chat-bubble system">${item.message}</div>`;
+                } else {
+                    const side = item.isSent ? 'sent' : 'received';
+                    const nameHtml = (!item.isSent && item.from) ? `<div class="sender-name">${item.from}</div>` : '';
+                    html += `<div class="chat-bubble ${side}">${nameHtml}<div>${item.body}</div><div class="bubble-time">${timeStr}</div></div>`;
+                }
             });
+
             container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function empChatSend() {
+            const input = document.getElementById('emp-chat-input');
+            const body = input.value.trim();
+            if (!body) return;
+            input.value = '';
+            const res = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ subject: '.', body }),
+            });
+            if (!res.ok) {
+                let err = 'Send failed';
+                try { const d = await res.json(); err = d.error || err; } catch(_) {}
+                alert('Error: ' + err);
+                return;
+            }
+            empLoadMessages();
+        }
+
+        function startEmpChatPoll() {
+            if (empChatPoll) clearInterval(empChatPoll);
+            empChatPoll = setInterval(() => {
+                const page = document.getElementById('page-emp-messages');
+                if (page && page.classList.contains('active')) empLoadMessages();
+            }, 5000);
+        }
+
+        function stopEmpChatPoll() {
+            if (empChatPoll) { clearInterval(empChatPoll); empChatPoll = null; }
         }
 
         // ─── Open Shift Claiming ──────────────────────────
@@ -3843,15 +3785,14 @@
             // Check employee session on load
             fetch('/api/employee/session').then(r => r.json()).then(data => {
                 if (data.employee_id) {
-                    empSession = {id: data.employee_id, name: data.employee_name};
+                    empSession = {id: data.employee_id, name: data.employee_name, role: data.employee_role};
                     document.getElementById('login-page').style.display = 'none';
                     document.getElementById('app-content').classList.add('visible');
                     document.getElementById('admin-nav').style.display = 'none';
                     document.getElementById('portal-toggle').style.display = 'none';
-                    document.getElementById('emp-label').textContent = empSession.name;
+                    document.getElementById('emp-label').textContent = empSession.name + (empSession.role === 'manager' ? ' (Manager)' : '');
                     document.body.classList.add('emp-mode');
                     showEmpPage('emp-schedule');
-                    startNotifPoll();
                 } else {
                     // Check admin session
                     fetch('/api/session').then(r => r.json()).then(s => {
@@ -3861,7 +3802,6 @@
                             document.getElementById('user-label').textContent = s.user;
                             fetchEmployees();
                             loadWeekPicker();
-                            startNotifPoll();
                         }
                     });
                 }
