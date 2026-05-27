@@ -6,7 +6,7 @@
       "start_date": "2026-06-01",
       "end_date": "2026-06-03",
       "reason": "Vacation",
-      "status": "pending",
+      "status": "denied",
       "created_at": "2026-05-08T19:16:38.582339"
     },
     {
@@ -15,7 +15,7 @@
       "start_date": "2026-05-21",
       "end_date": "2026-05-22",
       "reason": "vacation ",
-      "status": "pending",
+      "status": "denied",
       "created_at": "2026-05-11T10:24:54.355292"
     },
     {
@@ -24,7 +24,7 @@
       "start_date": "2026-05-12",
       "end_date": "2026-05-13",
       "reason": "no work",
-      "status": "pending",
+      "status": "denied",
       "created_at": "2026-05-11T10:45:19.982281"
     }
   ]

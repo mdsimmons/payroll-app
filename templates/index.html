@@ -5,26 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payroll App</title>
     <style>
+        /* ─── Reset & Base (mobile-first) ──────────────── */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1e293b; }
-        .header { background: #1e3a5f; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
-        .header h1 { font-size: 1.5rem; }
-        .nav { display: flex; gap: 0.5rem; }
-        .nav button { background: transparent; color: #94a3b8; border: none; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; border-radius: 4px; transition: all 0.2s; touch-action: manipulation; }
+
+        /* ─── Layout ───────────────────────────────────── */
+        .header { background: #1e3a5f; color: white; display: flex; flex-direction: column; padding: 0.5rem 0.75rem; align-items: stretch; }
+        .header > div { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-start; }
+        .nav { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; justify-content: flex-start; gap: 0.25rem; padding-bottom: 4px; scrollbar-width: none; }
+        .nav::-webkit-scrollbar { display: none; }
+        .nav button { background: transparent; color: #94a3b8; border: none; padding: 0.45rem 0.55rem; cursor: pointer; font-size: 0.72rem; border-radius: 4px; transition: all 0.2s; touch-action: manipulation; white-space: nowrap; flex-shrink: 0; min-height: 40px; }
         .nav button:hover { color: white; background: rgba(255,255,255,0.1); }
         .nav button.active { color: white; background: rgba(255,255,255,0.15); }
         #page-app-settings .nav button { color: #1e293b; }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .container { max-width: 1200px; margin: 0.5rem auto; padding: 0 0.35rem; }
         .page { display: none; }
-        .page.active { display: block; }
-        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.5rem; margin-bottom: 1.5rem; }
-        .card h2 { font-size: 1.25rem; margin-bottom: 1rem; color: #334155; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.85rem; text-transform: uppercase; }
+        .page.active { display: block; padding-bottom: 1rem; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.7rem; margin-bottom: 0.85rem; }
+        .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #334155; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .flex-between .btn { width: 100%; }
+        .flex-gap { display: flex; gap: 0.5rem; }
+
+        /* ─── Tables ───────────────────────────────────── */
+        table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        th, td { text-align: left; padding: 0.45rem 0.4rem; border-bottom: 1px solid #e2e8f0; font-size: 0.82rem; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 0.78rem; text-transform: uppercase; }
         tr:hover { background: #f8fafc; }
-        .btn { padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; touch-action: manipulation; }
+
+        /* ─── Buttons ──────────────────────────────────── */
+        .btn { padding: 0.5rem 0.85rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.88rem; transition: all 0.2s; touch-action: manipulation; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
         .btn-primary { background: #1e3a5f; color: white; }
         .btn-primary:hover { background: #2d4a6f; }
         .btn-success { background: #059669; color: white; }
@@ -33,19 +44,72 @@
         .btn-danger:hover { background: #b91c1c; }
         .btn-secondary { background: #64748b; color: white; }
         .btn-secondary:hover { background: #475569; }
-        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; min-height: 34px; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.35rem; font-weight: 500; color: #475569; font-size: 0.9rem; }
-        .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; touch-action: manipulation; }
+        .btn-sm { padding: 0.35rem 0.6rem; font-size: 0.78rem; min-height: 38px; }
+        .btn-outline { background: transparent; color: #1e3a5f; border: 1px solid #1e3a5f; }
+        .btn-outline:hover { background: #1e3a5f; color: white; }
+
+        /* ─── Forms ────────────────────────────────────── */
+        .form-group { margin-bottom: 0.85rem; }
+        .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; color: #475569; font-size: 0.85rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 1rem; touch-action: manipulation; min-height: 44px; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-        .notif-item { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: #1e293b; touch-action: manipulation; min-height: 44px; display: flex; flex-direction: column; }
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        /* ─── Components ───────────────────────────────── */
+        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-ca { background: #fef3c7; color: #92400e; }
+        .badge-ny { background: #dbeafe; color: #1e40af; }
+        .badge-tx { background: #dcfce7; color: #166534; }
+        .badge-fl { background: #fce7f3; color: #9d174d; }
+        .badge-wa { background: #e0e7ff; color: #3730a3; }
+        .badge-nc { background: #f0fdf4; color: #166534; }
+        .empty-state { text-align: center; padding: 2rem 1rem; color: #94a3b8; }
+        .notif-item { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; color: #1e293b; touch-action: manipulation; min-height: 48px; display: flex; flex-direction: column; }
         .notif-item:hover { background: #f8fafc; }
         .notif-item.unread { background: #eff6ff; font-weight: 600; }
+        .week-selector { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding: 0.65rem; background: #f8fafc; border-radius: 8px; flex-wrap: wrap; }
+        .week-selector label { font-weight: 600; white-space: nowrap; font-size: 0.85rem; }
+        .week-selector input[type="date"] { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 1rem; touch-action: manipulation; min-height: 44px; flex: 1; min-width: 0; }
+        .week-selector .btn { width: 100%; }
+        .week-label { color: #475569; font-weight: 500; font-size: 0.85rem; }
 
+        /* ─── Summary Cards ────────────────────────────── */
+        .summary-cards { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+        .summary-card { background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .summary-card .label { color: #64748b; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 0.35rem; }
+        .summary-card .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-card.gross .value { color: #1e3a5f; }
+        .summary-card.net .value { color: #059669; }
+
+        /* ─── Paystubs ─────────────────────────────────── */
+        .paystub { border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .paystub-header { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; margin-bottom: 0.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid #e2e8f0; }
+        .paystub-header h3 { font-size: 1rem; }
+        .paystub-header span { color: #64748b; font-size: 0.85rem; }
+        .paystub-row { display: flex; justify-content: space-between; padding: 0.35rem 0; }
+        .paystub-row.subtotal { border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.25rem; font-weight: 600; }
+        .paystub-row.net { border-top: 2px solid #1e3a5f; padding-top: 0.65rem; margin-top: 0.5rem; font-size: 1rem; font-weight: 700; color: #059669; }
+
+        /* ─── History ──────────────────────────────────── */
+        .history-list { list-style: none; }
+        .history-list li { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; padding: 0.7rem; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; touch-action: manipulation; min-height: 50px; }
+        .history-list li:hover { background: #f8fafc; }
+        .history-list li:last-child { border-bottom: none; }
+        .history-week { font-weight: 600; }
+        .history-dates { color: #64748b; font-size: 0.85rem; }
+        .history-amounts { text-align: right; }
+        .history-amounts .gross { color: #64748b; font-size: 0.85rem; }
+        .history-amounts .net { font-weight: 700; color: #059669; }
+        .delete-week { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: 4px; touch-action: manipulation; min-height: 44px; }
+        .delete-week:hover { background: #fef2f2; }
+
+        /* ─── Chat ─────────────────────────────────────── */
         .chat-view { display: flex; flex-direction: column; flex: 1; }
         .chat-messages { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem; }
-        .chat-bubble { max-width: 80%; padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; position: relative; }
+        .chat-bubble { max-width: 85%; padding: 0.5rem 0.75rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; position: relative; }
         .chat-bubble.sent { align-self: flex-end; background: #1e3a5f; color: white; border-bottom-right-radius: 4px; }
         .chat-bubble.received { align-self: flex-start; background: #e2e8f0; color: #1e293b; border-bottom-left-radius: 4px; }
         .chat-bubble .sender-name { font-size: 0.75rem; font-weight: 600; margin-bottom: 0.15rem; color: #64748b; }
@@ -56,58 +120,19 @@
         .chat-input-area input { flex: 1; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.9rem; outline: none; }
         .chat-input-area input:focus { border-color: #1e3a5f; }
         .chat-input-area button { padding: 0.5rem 1.2rem; border-radius: 20px; white-space: nowrap; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
+
+        /* ─── Modal ────────────────────────────────────── */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .modal-header h2 { margin: 0; }
+        .modal-content { background: white; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+        .modal-header h2 { margin: 0; font-size: 1.1rem; }
+        .modal .btn { min-height: 48px; }
+        .modal .form-group input, .modal .form-group select { min-height: 48px; }
         .close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; touch-action: manipulation; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
         .close:hover { background: #f1f5f9; }
-        .paystub { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1rem; }
-        .paystub-header { display: flex; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: 0.25rem; }
-        .paystub-header h3 { font-size: 1.1rem; }
-        .paystub-header span { color: #64748b; }
-        .paystub-row { display: flex; justify-content: space-between; padding: 0.35rem 0; }
-        .paystub-row.subtotal { border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top: 0.25rem; font-weight: 600; }
-        .paystub-row.net { border-top: 2px solid #1e3a5f; padding-top: 0.75rem; margin-top: 0.5rem; font-size: 1.15rem; font-weight: 700; color: #059669; }
-        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-        .summary-card { background: white; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
-        .summary-card .label { color: #64748b; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .summary-card .value { font-size: 2rem; font-weight: 700; }
-        .summary-card.gross .value { color: #1e3a5f; }
-        .summary-card.net .value { color: #059669; }
-        .empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
-        .flex-gap { display: flex; gap: 0.5rem; }
-        .badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
-        .badge-ca { background: #fef3c7; color: #92400e; }
-        .badge-ny { background: #dbeafe; color: #1e40af; }
-        .badge-tx { background: #dcfce7; color: #166534; }
-        .badge-fl { background: #fce7f3; color: #9d174d; }
-        .badge-wa { background: #e0e7ff; color: #3730a3; }
-        .badge-nc { background: #f0fdf4; color: #166534; }
-        .week-selector { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; flex-wrap: wrap; }
-        .week-selector label { font-weight: 600; white-space: nowrap; }
-        .week-selector input[type="date"] { padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.95rem; touch-action: manipulation; min-height: 44px; }
-        .week-label { color: #475569; font-weight: 500; }
-        .history-list { list-style: none; }
-        .history-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border-bottom: 1px solid #e2e8f0; cursor: pointer; transition: background 0.2s; touch-action: manipulation; min-height: 54px; }
-        .history-list li:hover { background: #f8fafc; }
-        .history-list li:last-child { border-bottom: none; }
-        .history-week { font-weight: 600; }
-        .history-dates { color: #64748b; font-size: 0.85rem; }
-        .history-amounts { text-align: right; }
-        .history-amounts .gross { color: #64748b; font-size: 0.85rem; }
-        .history-amounts .net { font-weight: 700; color: #059669; }
-        .delete-week { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; padding: 0.5rem 0.75rem; border-radius: 4px; touch-action: manipulation; min-height: 44px; }
-        .delete-week:hover { background: #fef2f2; }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type="number"] { -moz-appearance: textfield; }
-        .btn-outline { background: transparent; color: #1e3a5f; border: 1px solid #1e3a5f; }
-        .btn-outline:hover { background: #1e3a5f; color: white; }
 
-        /* ─── Schedule Grid ───────────────────────────── */
+        /* ─── Schedule Grid (self-scrolling) ───────────── */
         .sched-grid { border-collapse: separate; border-spacing: 3px; min-width: 800px; }
         .sched-grid th { background: transparent; padding: 0.5rem 0.35rem; text-align: center; font-size: 0.75rem; text-transform: none; letter-spacing: 0.02em; border-bottom: 2px solid #e2e8f0; }
         .sched-grid th .day-name { display: block; font-weight: 600; color: #1e293b; }
@@ -116,11 +141,11 @@
         .sched-grid th.today { border-bottom-color: #1e3a5f; }
         .sched-grid th.today .day-name { color: #1e3a5f; }
         .sched-grid .emp-label { padding: 0.5rem 0.75rem; font-weight: 600; font-size: 0.85rem; color: #1e293b; white-space: nowrap; border-bottom: none; vertical-align: middle; }
-        .sched-grid .day-cell { padding: 3px; vertical-align: middle; border-bottom: none; background: #f8fafc; border-radius: 6px; transition: background 0.15s; position: relative; min-width: 90px; height: 52px; cursor: pointer; touch-action: manipulation; }
+        .sched-grid .day-cell { padding: 3px; vertical-align: middle; border-bottom: none; background: #f8fafc; border-radius: 6px; transition: background 0.15s; position: relative; min-width: 75px; height: 46px; cursor: pointer; touch-action: manipulation; }
         .sched-grid .day-cell:hover { background: #eef2f6; }
         .sched-grid .day-cell.weekend { background: #f1f5f9; }
         .sched-grid .day-cell.today-cell { background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
-        .shift-block { display: inline-flex; align-items: center; gap: 3px; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; line-height: 1.4; white-space: nowrap; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; transition: all 0.15s; touch-action: manipulation; }
+        .shift-block { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; line-height: 1.4; white-space: nowrap; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; transition: all 0.15s; touch-action: manipulation; }
         .shift-block:hover { background: #bfdbfe; }
         .shift-block.open-shift { background: #fef3c7; color: #92400e; border-color: #fde68a; }
         .shift-block .shift-time { font-weight: 600; }
@@ -128,17 +153,13 @@
         .shift-block .shift-remove { cursor: pointer; opacity: 0.4; font-size: 0.7rem; margin-left: 2px; touch-action: manipulation; }
         .shift-block .shift-remove:hover { opacity: 1; }
         .day-cell .empty-cell { color: #cbd5e1; font-size: 0.7rem; text-align: center; width: 100%; display: block; }
-
         .open-shifts-row .emp-label { color: #92400e; font-style: italic; }
         .open-shifts-row .day-cell { background: #fffbeb; }
         .open-shifts-row .day-cell:hover { background: #fef3c7; }
-
         .sched-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
         .sched-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
         .sched-status-dot.published { background: #059669; }
         .sched-status-dot.draft { background: #d97706; }
-
-        /* Schedule animation */
         .sched-grid tbody tr { animation: fadeSlideIn 0.3s ease both; }
         .sched-grid tbody tr:nth-child(1) { animation-delay: 0.02s; }
         .sched-grid tbody tr:nth-child(2) { animation-delay: 0.04s; }
@@ -150,6 +171,7 @@
         .sched-grid tbody tr:nth-child(8) { animation-delay: 0.16s; }
         @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* ─── Shift Modal / Swap Dialog ────────────────── */
         .shift-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
         .shift-modal-overlay.active { display: flex; }
         .shift-modal { background: white; border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 360px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); animation: modalPop 0.2s ease; }
@@ -161,18 +183,21 @@
         .shift-modal .form-group input[type="text"] { width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.9rem; touch-action: manipulation; }
         .shift-modal .form-group input:focus { border-color: #1e3a5f; outline: none; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
         .shift-modal .btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+        .shift-modal .btn-row button { min-height: 44px; }
         .shift-modal .clear-btn { background: none; border: none; color: #dc2626; font-size: 0.8rem; cursor: pointer; padding: 0.5rem; touch-action: manipulation; min-height: 44px; }
 
-        .emp-schedule-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-        .emp-schedule-day { background: #f8fafc; border-radius: 8px; padding: 0.75rem 0.4rem; text-align: center; }
-        .emp-schedule-day .day-header { font-weight: 600; font-size: 0.7rem; color: #64748b; margin-bottom: 0.35rem; }
-        .emp-schedule-day .day-header .day-date { display: block; font-weight: 400; color: #94a3b8; font-size: 0.65rem; }
-        .emp-schedule-day .shift-time-block { display: inline-block; padding: 0.4rem 0.5rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; background: #dbeafe; color: #1e40af; touch-action: manipulation; }
-        .emp-schedule-day.no-shift { color: #cbd5e1; font-size: 0.7rem; padding-top: 1.25rem; }
+        /* ─── Employee Schedule ────────────────────────── */
+        .emp-schedule-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .emp-schedule-day { background: #f8fafc; border-radius: 6px; padding: 0.5rem 0.25rem; text-align: center; }
+        .emp-schedule-day .day-header { font-weight: 600; font-size: 0.65rem; color: #64748b; margin-bottom: 0.25rem; }
+        .emp-schedule-day .day-header .day-date { display: block; font-weight: 400; color: #94a3b8; font-size: 0.6rem; }
+        .emp-schedule-day .shift-time-block { display: inline-block; padding: 0.3rem 0.35rem; border-radius: 6px; font-size: 0.65rem; font-weight: 600; background: #dbeafe; color: #1e40af; touch-action: manipulation; }
+        .emp-schedule-day.no-shift { color: #cbd5e1; font-size: 0.65rem; padding-top: 0.8rem; }
         .emp-schedule-day.today { background: #eff6ff; box-shadow: inset 0 0 0 1px #bfdbfe; }
         .emp-schedule-day.weekend { background: #f1f5f9; }
         .emp-schedule-day .shift-note { font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; }
 
+        /* ─── Login Page ───────────────────────────────── */
         #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         #login-page .card { max-width: 400px; width: 100%; text-align: center; }
         #login-page .card h2 { margin-bottom: 1.5rem; }
@@ -182,76 +207,73 @@
         #login-error { color: #dc2626; font-size: 0.9rem; margin-top: 0.5rem; display: none; }
         #app-content { display: none; }
         #app-content.visible { display: block; }
+
+        /* ─── Time Clock ───────────────────────────────── */
         #emp-clock-btn { transition: all 0.2s; min-width: 250px; touch-action: manipulation; }
         #emp-clock-btn:active { transform: scale(0.95); }
         #tc-employee, #tc-pin { font-size: 1.1rem; }
 
-        @media (max-width: 768px) {
-            .header { flex-direction: column; gap: 0.75rem; padding: 0.75rem 0.5rem; }
-            .header > div { flex-wrap: wrap; justify-content: center; }
-            .nav { flex-wrap: wrap; justify-content: center; gap: 0.3rem; }
-            .nav button { font-size: 0.78rem; padding: 0.5rem 0.55rem; min-height: 44px; }
-            .container { margin: 0.75rem auto; padding: 0 0.5rem; }
-            .card { padding: 0.85rem; }
-            .form-row { grid-template-columns: 1fr; }
-            .form-group input, .form-group select { font-size: 1rem; min-height: 48px; }
-            .form-group label { font-size: 0.85rem; }
-            .summary-cards { grid-template-columns: 1fr; }
-            .week-selector { flex-wrap: wrap; padding: 0.75rem; }
-            .week-selector input[type="date"] { min-height: 44px; font-size: 1rem; flex: 1; min-width: 0; }
-            .modal-content { width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; }
-            .modal.active { align-items: flex-end; }
-            .modal-content .modal-body { flex: 1; overflow-y: auto; }
-            .modal .btn { min-height: 48px; }
-            .modal .form-group input, .modal .form-group select { min-height: 48px; }
-            #login-page .card { margin: 1rem; }
-            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-            th, td { padding: 0.6rem 0.5rem; }
-            .paystub { padding: 0.75rem; font-size: 0.9rem; }
-            .paystub-row { padding: 0.4rem 0; }
-            .paystub-header { flex-direction: column; align-items: flex-start; gap: 0.15rem; }
-            .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
-            .btn-sm { min-height: 38px; }
-            .sched-grid .day-cell { min-width: 75px; height: 46px; }
-            .shift-block { font-size: 0.7rem; padding: 3px 6px; }
-            .emp-schedule-week { grid-template-columns: repeat(7, 1fr); gap: 3px; }
-            .emp-schedule-day { padding: 0.5rem 0.25rem; }
-            .emp-schedule-day .shift-time-block { font-size: 0.65rem; padding: 0.3rem 0.35rem; }
-            .history-list li { min-height: 50px; padding: 0.7rem; }
-            .notif-item { min-height: 48px; }
-            .delete-week { min-height: 44px; }
+        /* ─── Desktop (min-width: 769px) ────────────────── */
+        @media (min-width: 769px) {
+            .header { flex-direction: row; padding: 1rem 2rem; align-items: center; }
+            .header > div { gap: 0.5rem; }
+            .nav { overflow-x: visible; gap: 0.5rem; padding-bottom: 0; }
+            .nav button { font-size: 0.9rem; padding: 0.5rem 1rem; min-height: auto; }
+            #admin-nav { padding: 0; gap: 0; }
+            #admin-nav button { font-size: 0.6rem; padding: 0.4rem 0.1rem; min-height: 56px; }
+            .container { margin: 2rem auto; padding: 0 1rem 66px; }
+            .page.active { padding-bottom: 0; }
+            .card { padding: 1.5rem; margin-bottom: 1.5rem; }
+            .card h2 { font-size: 1.25rem; }
+            .flex-between { flex-wrap: nowrap; }
+            .flex-between .btn { width: auto; }
+            table { display: table; overflow-x: visible; white-space: normal; }
+            th, td { padding: 0.75rem; font-size: 0.9rem; }
+            th { font-size: 0.85rem; }
+            .btn { padding: 0.5rem 1rem; font-size: 0.9rem; min-height: auto; }
+            .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; min-height: 34px; }
+            .form-group { margin-bottom: 1rem; }
+            .form-group label { font-size: 0.9rem; }
+            .form-group input, .form-group select { font-size: 0.95rem; min-height: auto; }
+            .form-row { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+            .summary-cards { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+            .summary-card { padding: 1.25rem; }
+            .summary-card .label { font-size: 0.85rem; }
+            .summary-card .value { font-size: 2rem; }
+            .empty-state { padding: 3rem; }
+            .week-selector { flex-wrap: nowrap; gap: 1rem; padding: 1rem; }
+            .week-selector input[type="date"] { font-size: 0.95rem; flex: none; min-width: auto; }
+            .week-selector .btn { width: auto; }
+            .week-label { font-size: 0.9rem; }
+            .paystub { padding: 1.25rem; font-size: 1rem; }
+            .paystub-header { flex-direction: row; align-items: center; gap: 0.25rem; }
+            .paystub-row.net { font-size: 1.15rem; }
+            .history-list li { flex-direction: row; align-items: center; padding: 0.85rem 1rem; min-height: 54px; gap: 0; }
+            .modal { align-items: center; }
+            .modal-content { width: 90%; max-width: 600px; max-height: 90vh; height: auto; border-radius: 8px; }
+            .modal .btn { min-height: auto; }
+            .modal .form-group input, .modal .form-group select { min-height: auto; }
+            .modal-header { margin-bottom: 1rem; }
+            .modal-header h2 { font-size: 1.25rem; }
+            .notif-item { min-height: 44px; }
+            .sched-grid .day-cell { min-width: 90px; height: 52px; }
+            .shift-block { font-size: 0.75rem; padding: 4px 10px; }
+            .emp-schedule-week { gap: 6px; }
+            .emp-schedule-day { padding: 0.75rem 0.4rem; }
+            .emp-schedule-day .day-header { font-size: 0.7rem; }
+            .emp-schedule-day .day-header .day-date { font-size: 0.65rem; }
+            .emp-schedule-day .shift-time-block { font-size: 0.7rem; padding: 0.4rem 0.5rem; }
+            .emp-schedule-day.no-shift { font-size: 0.7rem; padding-top: 1.25rem; }
+            #login-page .card { margin: 0; }
+            .delete-week { min-height: auto; }
             .shift-modal .form-group input[type="time"],
-            .shift-modal .form-group input[type="text"] { min-height: 44px; font-size: 1rem; }
-            .shift-modal .btn-row button { min-height: 44px; }
-        }
-
-        @media (max-width: 480px) {
-            .header h1 { font-size: 1.1rem; }
-            .header { padding: 0.6rem 0.4rem; }
-            .nav button { font-size: 0.7rem; padding: 0.4rem 0.4rem; min-height: 40px; }
-            .btn { font-size: 0.85rem; padding: 0.5rem 0.75rem; min-height: 42px; }
-            .btn-sm { font-size: 0.78rem; padding: 0.4rem 0.6rem; min-height: 36px; }
-            .summary-card .value { font-size: 1.5rem; }
-            .paystub-row.net { font-size: 1rem; }
-            .history-list li { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-            #page-app-settings .nav button { font-size: 0.7rem; padding: 0.4rem 0.4rem; min-height: 40px; }
-            .sched-grid .day-cell { min-width: 60px; height: 40px; }
-            .sched-grid .emp-label { font-size: 0.75rem; padding: 0.35rem 0.4rem; }
-            .emp-schedule-week { gap: 2px; }
-            .emp-schedule-day { padding: 0.4rem 0.15rem; }
-            .emp-schedule-day .shift-time-block { font-size: 0.6rem; padding: 0.25rem 0.25rem; word-break: break-all; }
-            .emp-schedule-day .day-header { font-size: 0.6rem; }
-            .emp-schedule-day .day-header .day-date { font-size: 0.55rem; }
-            .emp-schedule-day.no-shift { font-size: 0.6rem; padding-top: 0.75rem; }
-            .summary-card .value { font-size: 1.3rem; }
-            .week-selector { font-size: 0.85rem; }
-            .week-selector input[type="date"] { font-size: 0.85rem; }
+            .shift-modal .form-group input[type="text"] { min-height: auto; font-size: 0.9rem; }
+            .shift-modal .btn-row button { min-height: auto; }
         }
 
         /* ─── Employee Mobile Mode ──────────────────────────── */
         body.emp-mode .container { padding-top: 0; }
         body.emp-mode .header { padding: 0.5rem 0.75rem; min-height: 50px; }
-        body.emp-mode .header h1 { font-size: 1.1rem; }
         body.emp-mode .header > div { gap: 0.25rem; }
         body.emp-mode #admin-nav,
         body.emp-mode #portal-toggle,
@@ -263,21 +285,16 @@
         body.emp-mode #emp-nav button.active::before { background-color: #1e3a5f; }
         body.emp-mode #emp-nav button:nth-child(1)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
         body.emp-mode #emp-nav button:nth-child(2)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
-        body.emp-mode #emp-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M22 9h-2M4 9H2M22 15h-2M4 15H2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M22 9h-2M4 9H2M22 15h-2M4 15H2'/%3E%3C/svg%3E"); }
-        body.emp-mode #emp-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); }
-        body.emp-mode #emp-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); }
+        body.emp-mode #emp-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
+        body.emp-mode #emp-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M22 9h-2M4 9H2M22 15h-2M4 15H2'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2' y='6' width='20' height='12' rx='2'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M22 9h-2M4 9H2M22 15h-2M4 15H2'/%3E%3C/svg%3E"); }
+        body.emp-mode #emp-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); }
+        body.emp-mode #emp-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); }
         body.emp-mode #emp-nav button.active { color: #1e3a5f; font-weight: 600; }
         body.emp-mode #emp-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
         body.emp-mode #emp-label { display: block !important; color: white; font-size: 0.85rem; font-weight: 500; }
         body.emp-mode .container { padding-bottom: 70px; }
         body.emp-mode #page-emp-messages.active { display: flex; flex-direction: column; height: calc(100vh - 210px); }
         body.emp-mode #page-emp-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; }
-        body.emp-mode .emp-schedule-week { grid-template-columns: repeat(7, 1fr); gap: 3px; }
-        body.emp-mode .emp-schedule-day { padding: 0.4rem 0.15rem; border-radius: 6px; }
-        body.emp-mode .emp-schedule-day .shift-time-block { font-size: 0.6rem; padding: 0.25rem 0.3rem; word-break: break-all; }
-        body.emp-mode .emp-schedule-day .day-header { font-size: 0.6rem; }
-        body.emp-mode .emp-schedule-day .day-header .day-date { font-size: 0.5rem; }
-        body.emp-mode .emp-schedule-day.no-shift { font-size: 0.6rem; padding-top: 0.6rem; }
         body.emp-mode .week-selector { padding: 0.5rem 0; flex-wrap: wrap; background: transparent; margin-bottom: 0.75rem; }
         body.emp-mode .week-selector input[type="date"] { min-height: 44px; font-size: 1rem; flex: 1; min-width: 0; }
         body.emp-mode .paystub { border-radius: 0; border-left: none; border-right: none; margin-bottom: 0; border-bottom: 1px solid #e2e8f0; }
@@ -285,6 +302,30 @@
         body.emp-mode .btn { min-height: 48px; font-size: 1rem; }
         body.emp-mode .form-group input, body.emp-mode .form-group select { min-height: 48px; font-size: 1rem; }
         body.emp-mode #emp-to-reason { min-height: 48px; font-size: 1rem; }
+
+        /* ─── Admin Bottom Nav ──────────────────────────── */
+        .container { padding-bottom: 66px; }
+        #admin-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; z-index: 99; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); overflow-x: visible; gap: 0; }
+        #admin-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0.4rem 0.1rem; font-size: 0.6rem; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 0; min-height: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; text-align: center; white-space: nowrap; }
+        #admin-nav button:hover { color: #1e3a5f; background: none; }
+        #admin-nav button::before { content: ""; display: flex; align-self: center; justify-content: center; width: 22px; height: 22px; background-color: #94a3b8; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
+        #admin-nav button.active { color: #1e3a5f; font-weight: 600; background: none; }
+        #admin-nav button.active::before { background-color: #1e3a5f; }
+        #admin-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
+        /* Timesheet - clock */
+        #admin-nav button:nth-child(1)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
+        /* Payroll - dollar */
+        #admin-nav button:nth-child(2)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); }
+        /* Schedule - calendar */
+        #admin-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
+        /* Time Off - calendar-check */
+        #admin-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
+        /* Messages - chat */
+        #admin-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); }
+        /* Reports - bar-chart */
+        #admin-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); }
+        /* Settings - gear */
+        #admin-nav button:nth-child(7)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); }
     </style>
 </head>
 <body>
@@ -310,8 +351,19 @@
             <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
             <div id="login-error" style="display:none;">Invalid credentials</div>
             <div id="forgot-pw" style="display:none;margin-top:0.75rem;padding:0.75rem;background:#f8fafc;border-radius:4px;font-size:0.85rem;color:#475569;text-align:left;">
-                Default credentials: <strong>admin</strong> / <strong>admin</strong>.<br>
-                If credentials were changed, check the <code>users.json</code> file or set <code>ADMIN_USER</code>/<code>ADMIN_PASS</code> env vars.
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+                    <button class="btn btn-sm btn-primary" onclick="showForgotTab('admin')" id="fp-tab-admin">Admin</button>
+                    <button class="btn btn-sm btn-secondary" onclick="showForgotTab('emp')" id="fp-tab-emp">Employee</button>
+                </div>
+                <div id="fp-admin">
+                    Default credentials: <strong>admin</strong> / <strong>admin</strong>.<br>
+                    If credentials were changed, check the <code>users.json</code> file or set <code>ADMIN_USER</code>/<code>ADMIN_PASS</code> env vars.
+                </div>
+                <div id="fp-emp" style="display:none;">
+                    <strong>Forgot your PIN?</strong><br>
+                    Contact your administrator to reset your time clock PIN.<br>
+                    <span style="font-size:0.8rem;color:#94a3b8;">Admins can reset PINs from the employee settings page.</span>
+                </div>
             </div>
             <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid #e2e8f0;">
                 <button class="btn btn-outline" onclick="showKioskPrompt()" style="width:100%;">Open Time Clock (Kiosk)</button>
@@ -329,26 +381,14 @@
 
     <div id="app-content">
     <div class="header">
-        <h1>Payroll App</h1>
         <div style="display:flex;align-items:center;">
 
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
-            <div class="nav" id="admin-nav">
-                <button onclick="showPage('employees')">Employees</button>
-                <button onclick="showPage('timesheet')">Timesheet</button>
-                <button onclick="showPage('payroll')">Payroll Results</button>
-                <button onclick="showPage('schedule')">Schedule</button>
-                <button onclick="showPage('timeclock')">Time Clock</button>
-                <button onclick="showPage('admin-timeoff')">Time Off</button>
-                <button onclick="showPage('admin-messages')">Messages</button>
-                <button onclick="showPage('history')">History</button>
-                <button onclick="showPage('reports')">Reports</button>
-                <button onclick="showPage('app-settings')">Settings</button>
-            </div>
             <div class="nav" id="emp-nav" style="display:none;">
                 <button class="active" onclick="showEmpPage('emp-schedule')">My Schedule</button>
-                <button onclick="showEmpPage('emp-timeoff')">Request Time Off</button>
-                <button onclick="showEmpPage('emp-paystubs')">My Paystubs</button>
+                <button onclick="showEmpPage('emp-timeoff')">Time Off</button>
+                <button onclick="showEmpPage('emp-timesheet')">Timesheet</button>
+                <button onclick="showEmpPage('emp-paystubs')">Paystubs</button>
                 <button onclick="showEmpPage('emp-messages')">Messages</button>
                 <button onclick="empLogout()">Logout</button>
             </div>
@@ -359,16 +399,6 @@
     </div>
 
     <div class="container">
-        <div id="page-employees" class="page">
-            <div class="card">
-                <div class="flex-between" style="margin-bottom: 1rem;">
-                    <h2>Employee Directory</h2>
-                    <button class="btn btn-primary" onclick="openAddModal()">+ Add Employee</button>
-                </div>
-                <div id="employee-table-container"></div>
-            </div>
-        </div>
-
         <div id="page-timesheet" class="page">
             <div class="card">
                 <div class="flex-between" style="margin-bottom:1rem;">
@@ -494,48 +524,51 @@
             #clock-toast.toast-show { opacity:1; transform:translateX(-50%) translateY(0); }
         </style>
 
-        <div id="page-history" class="page">
+        <div id="page-history-reports" class="page">
             <div class="card">
-                <div class="flex-between" style="margin-bottom:1rem;">
-                    <h2 style="margin:0;">Payroll History</h2>
-                    <button class="btn btn-sm btn-outline" onclick="downloadHistoryCsv()">Download CSV</button>
+                <div style="display:flex;gap:0.35rem;margin-bottom:1rem;">
+                    <button class="btn btn-sm btn-primary" id="hr-tab-history" onclick="showHRTab('history')">History</button>
+                    <button class="btn btn-sm" id="hr-tab-reports" onclick="showHRTab('reports')">Reports</button>
                 </div>
-                <div class="form-row" style="margin-bottom:1rem;">
-                    <div class="form-group" style="margin:0;">
-                        <label>From</label>
-                        <input type="date" id="history-start">
+                <div id="hr-history">
+                    <div class="flex-between" style="margin-bottom:1rem;">
+                        <h2 style="margin:0;">Payroll History</h2>
+                        <button class="btn btn-sm btn-outline" onclick="downloadHistoryCsv()">Download CSV</button>
                     </div>
-                    <div class="form-group" style="margin:0;">
-                        <label>To</label>
-                        <input type="date" id="history-end">
+                    <div class="form-row" style="margin-bottom:1rem;">
+                        <div class="form-group" style="margin:0;">
+                            <label>From</label>
+                            <input type="date" id="history-start">
+                        </div>
+                        <div class="form-group" style="margin:0;">
+                            <label>To</label>
+                            <input type="date" id="history-end">
+                        </div>
+                        <div class="form-group" style="margin:0; display:flex; align-items:flex-end;">
+                            <button class="btn btn-primary btn-sm" onclick="loadHistory()">Filter</button>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin:0; display:flex; align-items:flex-end;">
-                        <button class="btn btn-primary btn-sm" onclick="loadHistory()">Filter</button>
-                    </div>
+                    <div id="history-container"></div>
                 </div>
-                <div id="history-container"></div>
-            </div>
-        </div>
-
-        <div id="page-reports" class="page">
-            <div class="card">
-                <h2>Reports</h2>
-                <div class="form-row" style="margin-bottom: 1rem;">
-                    <div class="form-group">
-                        <label>From</label>
-                        <input type="date" id="report-start">
+                <div id="hr-reports" style="display:none;">
+                    <h2>Reports</h2>
+                    <div class="form-row" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label>From</label>
+                            <input type="date" id="report-start">
+                        </div>
+                        <div class="form-group">
+                            <label>To</label>
+                            <input type="date" id="report-end">
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button class="btn btn-primary" onclick="runReport()">Generate Report</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>To</label>
-                        <input type="date" id="report-end">
-                    </div>
-                    <div class="form-group" style="display:flex; align-items:flex-end;">
-                        <button class="btn btn-primary" onclick="runReport()">Generate Report</button>
-                    </div>
+                    <div id="report-summary"></div>
+                    <div id="report-employees"></div>
+                    <div id="paystub-detail" style="display:none;"></div>
                 </div>
-                <div id="report-summary"></div>
-                <div id="report-employees"></div>
-                <div id="paystub-detail" style="display:none;"></div>
             </div>
         </div>
 
@@ -597,6 +630,19 @@
                     <div id="settings-fed" class="settings-tab"></div>
                     <div id="settings-state" class="settings-tab" style="display:none;"></div>
                     <div id="settings-fica" class="settings-tab" style="display:none;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('emp-mgmt-body', this)">
+                    <h2 style="margin:0;">Employee Management</h2>
+                    <span style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="emp-mgmt-body" style="display:none;">
+                    <div class="flex-between" style="margin-bottom:1rem;">
+                        <p style="color:#64748b;font-size:0.85rem;margin:0;">Add, edit, or remove employees.</p>
+                        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Employee</button>
+                    </div>
+                    <div id="employee-table-container"></div>
                 </div>
             </div>
             <div class="card">
@@ -671,6 +717,20 @@
         </div>
         </div>
 
+    <div id="page-emp-timesheet" class="page">
+        <div class="card">
+            <h2>My Timesheet</h2>
+            <div class="week-selector">
+                <label>Week:</label>
+                <input type="date" id="emp-ts-week-picker" onchange="empLoadTimesheet()">
+                <span id="emp-ts-week-display" class="week-label"></span>
+            </div>
+            <div id="emp-timesheet-container">
+                <div class="empty-state">Select a week to view your hours.</div>
+            </div>
+        </div>
+    </div>
+
     <div id="page-emp-timeoff" class="page">
         <div class="card">
             <h2>Request Time Off</h2>
@@ -682,18 +742,18 @@
                 <div class="form-group">
                     <label>End Date</label>
                     <input type="date" id="emp-to-end">
-                    </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                <label>Reason</label>
-                <input type="text" id="emp-to-reason" placeholder="Vacation, sick, etc.">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Reason</label>
+                    <input type="text" id="emp-to-reason" placeholder="Vacation, sick, etc.">
+                </div>
             </div>
             <button class="btn btn-primary" onclick="submitTimeOff()">Submit Request</button>
             <div id="emp-to-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
             <div id="emp-to-list" style="margin-top:1rem;"></div>
         </div>
-    </div>
     </div>
 
     <div id="page-emp-paystubs" class="page">
@@ -895,32 +955,6 @@
         </div>
     </div>
 
-    <!-- Shift Edit Modal -->
-    <div id="shift-modal-overlay" class="shift-modal-overlay" onclick="closeShiftModal(event)">
-        <div class="shift-modal" onclick="event.stopPropagation()">
-            <h3 id="shift-modal-title">Edit Shift</h3>
-            <input type="hidden" id="shift-edit-emp">
-            <input type="hidden" id="shift-edit-day">
-            <div class="form-group">
-                <label>Start Time</label>
-                <input type="time" id="shift-edit-start">
-            </div>
-            <div class="form-group">
-                <label>End Time</label>
-                <input type="time" id="shift-edit-end">
-            </div>
-            <div class="form-group">
-                <label>Notes <span style="color:#94a3b8;font-size:0.75rem;">(optional)</span></label>
-                <input type="text" id="shift-edit-notes" placeholder="e.g. training, cashier duty">
-            </div>
-            <div class="btn-row">
-                <button class="clear-btn" onclick="clearShift()">Remove Shift</button>
-                <button class="btn btn-secondary btn-sm" onclick="closeShiftModal()">Cancel</button>
-                <button class="btn btn-primary btn-sm" onclick="saveShift()">Save</button>
-            </div>
-        </div>
-    </div>
-
     <div id="clock-toast"></div>
     <script>
         let employees = [];
@@ -963,7 +997,6 @@
             const res = await fetch('/api/employees');
             employees = await res.json();
             renderEmployees();
-            renderHoursForm();
         }
 
         function getWeekInfo(dateStr, weekStartDay) {
@@ -989,11 +1022,10 @@
                 const s = await res.json();
                 weekStartDay = s.week_start_day || 0;
             }
-            const picker = document.getElementById('week-picker');
-            if (!picker.value) {
+            const picker = document.getElementById('ts-week-picker');
+            if (picker && !picker.value) {
                 const today = new Date();
                 picker.value = today.toISOString().split('T')[0];
-                onWeekChange();
             }
         }
 
@@ -1776,15 +1808,14 @@
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
                     document.getElementById('page-payroll').classList.add('active');
-                    document.querySelectorAll('.nav button')[2].classList.add('active');
+                    document.querySelectorAll('.nav button')[1].classList.add('active');
                 } else {
-                    document.getElementById('week-picker').value = data.week_start;
-                    await onWeekChange();
-                    populateHours(data.hours);
+                    document.getElementById('ts-week-picker').value = data.week_start;
+                    await renderTimesheet();
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-                    document.getElementById('page-hours').classList.add('active');
-                    document.querySelectorAll('.nav button')[1].classList.add('active');
+                    document.getElementById('page-timesheet').classList.add('active');
+                    document.querySelectorAll('.nav button')[0].classList.add('active');
                 }
             }
         }
@@ -1836,12 +1867,9 @@
             document.getElementById(`page-${page}`).classList.add('active');
             const btn = document.querySelector(`.nav button[onclick*="'${page}'"]`);
             if (btn) btn.classList.add('active');
-            if (page === 'employees') fetchEmployees();
-            if (page === 'history') loadHistory();
-            if (page === 'reports') initReports();
-            if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); }
+            if (page === 'history-reports') { loadHistory(); initReports(); }
+            if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); fetchEmployees(); }
             if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
-            if (page === 'timeclock') initTimeClock();
             if (page === 'timesheet') renderTimesheet();
             if (page === 'admin-timeoff') adminLoadTimeOff();
             if (page === 'admin-messages') {
@@ -1854,6 +1882,13 @@
                 }
                 adminLoadMessages();
             }
+        }
+
+        function showHRTab(tab) {
+            document.getElementById('hr-history').style.display = tab === 'history' ? 'block' : 'none';
+            document.getElementById('hr-reports').style.display = tab === 'reports' ? 'block' : 'none';
+            document.getElementById('hr-tab-history').className = tab === 'history' ? 'btn btn-sm btn-primary' : 'btn btn-sm';
+            document.getElementById('hr-tab-reports').className = tab === 'reports' ? 'btn btn-sm btn-primary' : 'btn btn-sm';
         }
 
         // ─── Schedule ─────────────────────────────────────
@@ -1876,199 +1911,6 @@
                 const dt = new Date(start); dt.setDate(start.getDate() + i);
                 return { weekday: dt.getDay(), date: dt.getDate(), month: dt.toLocaleString('en-US', {month:'short'}), iso: dt.toISOString().split('T')[0] };
             });
-        }
-
-        async function renderSchedule() {
-            const picker = document.getElementById('sched-week-picker');
-            if (!picker.value) { picker.value = new Date().toISOString().split('T')[0]; }
-            const wi = getSchedWeekInfo(picker.value);
-            document.getElementById('sched-week-display').textContent = wi.week_label;
-            const dates = getWeekDates(wi.week_start);
-
-            const [schedRes, empRes] = await Promise.all([
-                fetch('/api/schedules'), fetch('/api/employees')
-            ]);
-            scheduleData = await schedRes.json();
-            if (!scheduleData.shifts) scheduleData.shifts = {};
-            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
-            const emps = await empRes.json();
-
-            const isPub = scheduleData.status === 'published';
-            const pubBtn = document.getElementById('publish-btn');
-            pubBtn.textContent = isPub ? 'Unpublish' : 'Publish';
-            pubBtn.className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
-            const badge = document.getElementById('sched-status-badge');
-            badge.innerHTML = `<span class="sched-status-dot ${scheduleData.status}"></span>${isPub ? 'Published' : 'Draft'}`;
-            badge.style.background = isPub ? '#dcfce7' : '#fef3c7';
-            badge.style.color = isPub ? '#166534' : '#92400e';
-            badge.style.padding = '0.25rem 0.6rem';
-            badge.style.borderRadius = '20px';
-            badge.style.fontSize = '0.8rem';
-            badge.style.fontWeight = '600';
-
-            const todayStr = new Date().toISOString().split('T')[0];
-            const container = document.getElementById('schedule-container');
-
-            let html = '<div style="overflow-x:auto;"><table class="sched-grid"><thead><tr><th style="width:110px;"></th>';
-            dates.forEach((d, i) => {
-                const isToday = d.iso === todayStr;
-                const isWeekend = d.weekday === 0 || d.weekday === 6;
-                html += `<th class="${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
-                    <span class="day-name">${SCHED_DAYS[i].slice(0,3)}</span>
-                    <span class="day-date">${d.month} ${d.date}</span>
-                </th>`;
-            });
-            html += '</tr></thead><tbody>';
-
-            emps.forEach(emp => {
-                const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({}));
-                html += `<tr><td class="emp-label">${emp.name}</td>`;
-                dates.forEach((d, i) => {
-                    const s = shifts[i] || {};
-                    const hasShift = s.start && s.end;
-                    const isToday = d.iso === todayStr;
-                    const isWeekend = d.weekday === 0 || d.weekday === 6;
-
-                    let cellClass = 'day-cell';
-                    if (isToday) cellClass += ' today-cell';
-                    if (isWeekend) cellClass += ' weekend';
-
-                    html += `<td class="${cellClass}" onclick="openShiftEditor('${emp.id}', ${i})">`;
-                    if (hasShift) {
-                        html += `<div class="shift-block">
-                            <span class="shift-time">${s.start}-${s.end}</span>`;
-                        if (s.notes) html += `<span class="shift-notes-icon" title="${s.notes.replace(/"/g,'&quot;')}">📝</span>`;
-                        if (!isPub) html += `<span class="shift-remove" onclick="event.stopPropagation();clearShiftQuick('${emp.id}',${i})">✕</span>`;
-                        html += `</div>`;
-                    } else {
-                        html += `<span class="empty-cell">${isPub ? '—' : '+'}</span>`;
-                    }
-                    html += `</td>`;
-                });
-                html += '</tr>';
-            });
-
-            // Open shifts row
-            html += `<tr class="open-shifts-row"><td class="emp-label" style="color:#92400e;">Open Shifts</td>`;
-            const os = scheduleData.open_shifts || [];
-            dates.forEach((d, i) => {
-                const dayOs = os.filter(o => o.weekday === i);
-                html += `<td class="day-cell" onclick="${isPub ? '' : `addOpenShiftToDay(${i})`}" style="background:#fffbeb;text-align:center;">`;
-                if (dayOs.length > 0) {
-                    dayOs.forEach(o => {
-                        html += `<div class="shift-block open-shift" style="margin-bottom:2px;">
-                            <span class="shift-time">${o.start}-${o.end}</span>
-                            ${o.notes ? `<span class="shift-notes-icon" title="${o.notes.replace(/"/g,'&quot;')}">📝</span>` : ''}
-                            ${!isPub ? `<span class="shift-remove" onclick="event.stopPropagation();removeOpenShiftQuick(${os.indexOf(o)})">✕</span>` : ''}
-                        </div>`;
-                    });
-                } else if (!isPub) {
-                    html += `<span class="empty-cell">+</span>`;
-                }
-                html += `</td>`;
-            });
-            html += '</tr>';
-
-            html += '</tbody></table></div>';
-            if (!isPub) {
-                html += `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center;">
-                    <span style="font-size:0.85rem;color:#64748b;">Click a cell to add/edit a shift. Open shifts can be claimed by employees.</span>
-                </div>`;
-            }
-            container.innerHTML = html;
-        }
-
-        async function saveSchedules() {
-            const res = await fetch('/api/employees');
-            const emps = await res.json();
-            const shifts = {};
-            emps.forEach(emp => {
-                const empShifts = [];
-                SCHED_DAYS.forEach((d, i) => {
-                    empShifts.push({
-                        start: scheduleData.shifts?.[emp.id]?.[i]?.start || '',
-                        end: scheduleData.shifts?.[emp.id]?.[i]?.end || '',
-                        notes: scheduleData.shifts?.[emp.id]?.[i]?.notes || '',
-                    });
-                });
-                shifts[emp.id] = empShifts;
-            });
-            const picker = document.getElementById('sched-week-picker');
-            const wi = getSchedWeekInfo(picker.value);
-            await fetch('/api/schedules', {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({shifts, open_shifts: scheduleData.open_shifts, week_start: wi.week_start, week_label: wi.week_label}),
-            });
-            alert('Schedules saved');
-        }
-
-        // ─── Shift Modal (click-to-edit) ────────────────
-        function openShiftEditor(empId, dayIdx) {
-            if (scheduleData.status === 'published') return;
-            const s = scheduleData.shifts?.[empId]?.[dayIdx] || {};
-            document.getElementById('shift-edit-emp').value = empId;
-            document.getElementById('shift-edit-day').value = dayIdx;
-            document.getElementById('shift-edit-start').value = s.start || '';
-            document.getElementById('shift-edit-end').value = s.end || '';
-            document.getElementById('shift-edit-notes').value = s.notes || '';
-            const emp = employees.find(e => e.id === empId);
-            document.getElementById('shift-modal-title').textContent = `${emp ? emp.name : empId} — ${SCHED_DAYS[dayIdx]}`;
-            document.getElementById('shift-modal-overlay').classList.add('active');
-        }
-
-        function closeShiftModal(e) {
-            if (e && e.target !== e.currentTarget) return;
-            document.getElementById('shift-modal-overlay').classList.remove('active');
-        }
-
-        function saveShift() {
-            const empId = document.getElementById('shift-edit-emp').value;
-            const dayIdx = parseInt(document.getElementById('shift-edit-day').value);
-            const start = document.getElementById('shift-edit-start').value;
-            const end = document.getElementById('shift-edit-end').value;
-            const notes = document.getElementById('shift-edit-notes').value;
-            if (!scheduleData.shifts[empId]) scheduleData.shifts[empId] = SCHED_DAYS.map(() => ({}));
-            scheduleData.shifts[empId][dayIdx] = {start, end, notes};
-            closeShiftModal();
-            renderSchedule();
-        }
-
-        function clearShift() {
-            const empId = document.getElementById('shift-edit-emp').value;
-            const dayIdx = parseInt(document.getElementById('shift-edit-day').value);
-            if (scheduleData.shifts[empId]) {
-                scheduleData.shifts[empId][dayIdx] = {};
-            }
-            closeShiftModal();
-            renderSchedule();
-        }
-
-        function clearShiftQuick(empId, dayIdx) {
-            if (scheduleData.shifts[empId]) scheduleData.shifts[empId][dayIdx] = {};
-            renderSchedule();
-        }
-
-        function addOpenShiftToDay(weekday) {
-            if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
-            scheduleData.open_shifts.push({weekday, start: '09:00', end: '17:00', notes: ''});
-            renderSchedule();
-        }
-
-        function removeOpenShiftQuick(idx) {
-            scheduleData.open_shifts.splice(idx, 1);
-            renderSchedule();
-        }
-
-        async function publishSchedule() {
-            const isPub = scheduleData.status === 'published';
-            await fetch(`/api/schedules/${isPub ? 'unpublish' : 'publish'}`, {method: 'POST'});
-            await renderSchedule();
-        }
-
-        async function copyPrevWeek() {
-            await fetch('/api/schedules/copy', {method: 'POST'});
-            await renderSchedule();
         }
 
         async function renderSchedule() {
@@ -3204,6 +3046,7 @@
                     document.getElementById('emp-logout-btn').style.display = 'none';
                     fetchEmployees();
                     loadWeekPicker();
+                    showPage('timesheet');
                     return;
                 }
                 // Try employee login
@@ -3220,7 +3063,16 @@
 
         function showForgotPassword() {
             const el = document.getElementById('forgot-pw');
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+            const isVisible = el.style.display !== 'none';
+            el.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) showForgotTab('admin');
+        }
+
+        function showForgotTab(tab) {
+            document.getElementById('fp-admin').style.display = tab === 'admin' ? 'block' : 'none';
+            document.getElementById('fp-emp').style.display = tab === 'emp' ? 'block' : 'none';
+            document.getElementById('fp-tab-admin').className = tab === 'admin' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+            document.getElementById('fp-tab-emp').className = tab === 'emp' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
         }
 
         let isKioskMode = false;
@@ -3338,6 +3190,7 @@
 
             if (page === 'emp-schedule') empLoadSchedule();
             if (page === 'emp-timeoff') empLoadTimeOff();
+            if (page === 'emp-timesheet') empLoadTimesheet();
             if (page === 'emp-paystubs') empLoadPaystubs();
             if (page === 'emp-messages') { empLoadMessages(); startEmpChatPoll(); } else { stopEmpChatPoll(); }
         }
@@ -3413,6 +3266,67 @@
             container.innerHTML = hasAny ? html : '<p style="color:#64748b;">No schedule set for this week.</p>';
             empLoadOpenShifts();
             empLoadSwapRequests();
+        }
+
+        async function empLoadTimesheet() {
+            const picker = document.getElementById('emp-ts-week-picker');
+            if (!picker.value) {
+                const today = new Date();
+                picker.value = today.toISOString().split('T')[0];
+            }
+            const dt = new Date(picker.value + 'T00:00:00');
+            const diff = (dt.getDay() + 6) % 7;
+            const start = new Date(dt);
+            start.setDate(dt.getDate() - diff);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+            const weekLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${fmt(end)}`;
+            document.getElementById('emp-ts-week-display').textContent = weekLabel;
+
+            const [hoursRes, clockRes] = await Promise.all([
+                fetch(`/api/employee/hours?employee_id=${empSession.id}`),
+                fetch(`/api/timeclock/history?start=${start.toISOString().split('T')[0]}&end=${end.toISOString().split('T')[0]}`),
+            ]);
+            const hoursData = await hoursRes.json();
+            const clockData = await clockRes.json();
+
+            const weekStartKey = start.toISOString().split('T')[0];
+            const weekEntry = hoursData.find(h => h.week_start === weekStartKey);
+
+            const myClockEntries = clockData.filter(e => e.employee_id === empSession.id);
+
+            const container = document.getElementById('emp-timesheet-container');
+            let html = '<div class="card">';
+
+            if (weekEntry) {
+                const status = weekEntry.finalized ? '<span class="badge" style="background:#dcfce7;color:#166534;">Finalized</span>' : '<span class="badge" style="background:#fef3c7;color:#92400e;">Saved</span>';
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <h3 style="margin:0;font-size:1rem;">Total Hours: <strong>${weekEntry.hours_worked}</strong></h3>
+                    ${status}
+                </div>`;
+            } else {
+                html += `<p style="color:#64748b;">No hours recorded for this week.</p>`;
+            }
+
+            if (myClockEntries.length > 0) {
+                html += '<h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Clock Entries</h3>';
+                html += '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr></thead><tbody>';
+                myClockEntries.sort((a, b) => a.date.localeCompare(b.date) || (a.clock_in || '').localeCompare(b.clock_in || ''));
+                myClockEntries.forEach(e => {
+                    const dateStr = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const hrs = e.hours != null ? e.hours.toFixed(2) : '—';
+                    html += `<tr><td>${dateStr}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td></tr>`;
+                });
+                html += '</tbody></table></div>';
+            } else if (weekEntry) {
+                html += '<p style="color:#94a3b8;font-size:0.85rem;">Hours were entered manually (no clock entries).</p>';
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         async function submitTimeOff() {
@@ -3802,11 +3716,21 @@
                             document.getElementById('user-label').textContent = s.user;
                             fetchEmployees();
                             loadWeekPicker();
+                            showPage('timesheet');
                         }
                     });
                 }
             });
         });
     </script>
+    <div class="nav" id="admin-nav">
+        <button onclick="showPage('timesheet')">Timesheet</button>
+        <button onclick="showPage('payroll')">Payroll</button>
+        <button onclick="showPage('schedule')">Schedule</button>
+        <button onclick="showPage('admin-timeoff')">Time Off</button>
+        <button onclick="showPage('admin-messages')">Messages</button>
+        <button onclick="showPage('history-reports')">Reports</button>
+        <button onclick="showPage('app-settings')">Settings</button>
+    </div>
 </body>
 </html>

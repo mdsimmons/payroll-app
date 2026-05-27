@@ -1,12 +1,60 @@
 {
   "notifications": [
     {
+      "id": 10,
+      "type": "message",
+      "message": "New message: .",
+      "created_at": "2026-05-27T09:26:40.962421",
+      "read_by": []
+    },
+    {
+      "id": 9,
+      "type": "message",
+      "message": "Message from Mitchel Simmons: .",
+      "created_at": "2026-05-27T09:20:23.371083",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 8,
+      "type": "message",
+      "message": "Message from Mitchel Simmons: .",
+      "created_at": "2026-05-27T09:20:14.915148",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 7,
+      "type": "message",
+      "message": "Message from Mitchel Simmons: .",
+      "created_at": "2026-05-27T09:20:10.199943",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 6,
+      "type": "message",
+      "message": "Message from Mitchel Simmons: .",
+      "created_at": "2026-05-27T09:17:27.262845",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 5,
+      "type": "message",
+      "message": "Message from Mitchel Simmons: .",
+      "created_at": "2026-05-27T09:17:15.489217",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
       "id": 4,
       "type": "schedule_published",
       "message": "Schedule for May 11 - May 17, 2026 has been published",
       "created_at": "2026-05-11T10:21:53.350557",
       "read_by": [
-        "EMP004"
+        "EMP004",
+        "admin"
       ]
     },
     {
@@ -15,25 +63,8 @@
       "message": "Schedule for May 11 - May 17, 2026 has been unpublished",
       "created_at": "2026-05-11T10:20:25.014450",
       "read_by": [
-        "EMP004"
-      ]
-    },
-    {
-      "id": 2,
-      "type": "schedule_published",
-      "message": "Schedule for May 11 - May 17, 2026 has been published",
-      "created_at": "2026-05-11T10:19:06.984545",
-      "read_by": [
-        "EMP004"
-      ]
-    },
-    {
-      "id": 1,
-      "type": "schedule_unpublished",
-      "message": "Schedule for May 11 - May 17, 2026 has been unpublished",
-      "created_at": "2026-05-11T10:18:41.290859",
-      "read_by": [
-        "EMP004"
+        "EMP004",
+        "admin"
       ]
     }
   ]

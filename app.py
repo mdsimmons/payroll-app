@@ -1046,6 +1046,35 @@ def employee_paystubs():
     return jsonify(sorted(result, key=lambda x: x.get("week_start", ""), reverse=True))
 
 
+@app.route("/api/employee/hours", methods=["GET"])
+def employee_hours():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    history = load_history()
+    result = []
+    for week_key, entry in history.items():
+        hours_worked = None
+        finalized = False
+        if entry.get("results"):
+            for r in entry["results"]:
+                if r.get("employee_id") == eid:
+                    hours_worked = float(r.get("hours_worked", 0))
+                    finalized = True
+                    break
+        elif entry.get("hours") and eid in entry["hours"]:
+            hours_worked = float(entry["hours"].get(eid, 0))
+        if hours_worked is not None:
+            result.append({
+                "week_label": entry.get("week_label", week_key),
+                "week_start": entry.get("week_start", ""),
+                "week_end": entry.get("week_end", ""),
+                "hours_worked": hours_worked,
+                "finalized": finalized,
+            })
+    return jsonify(sorted(result, key=lambda x: x.get("week_start", ""), reverse=True))
+
+
 @app.route("/api/employee/schedule", methods=["GET"])
 def employee_schedule():
     eid = request.args.get("employee_id") or session.get("employee_id")

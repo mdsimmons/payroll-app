@@ -48,6 +48,7 @@
       "overtime_rate": 1.5,
       "tipped": false,
       "pin": "3456",
+      "role": "manager",
       "fed_add_withholding_type": "amount",
       "fed_add_withholding_value": 17.0,
       "state_add_withholding_type": "amount",
