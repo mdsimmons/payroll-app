@@ -180,6 +180,7 @@ def add_employee():
         new_emp["fed_add_withholding_value"] = float(new_emp.get("fed_add_withholding_value", 0))
         new_emp["state_add_withholding_type"] = new_emp.get("state_add_withholding_type", "amount")
         new_emp["state_add_withholding_value"] = float(new_emp.get("state_add_withholding_value", 0))
+        new_emp["child_support"] = float(new_emp.get("child_support", 0))
         new_emp["role"] = new_emp.get("role", "employee")
 
         # Auto-generate unique 4-digit PIN
@@ -236,6 +237,7 @@ def update_employee(emp_id):
                 data["employees"][i]["fed_add_withholding_value"] = float(updated.get("fed_add_withholding_value", 0))
                 data["employees"][i]["state_add_withholding_type"] = updated.get("state_add_withholding_type", "amount")
                 data["employees"][i]["state_add_withholding_value"] = float(updated.get("state_add_withholding_value", 0))
+                data["employees"][i]["child_support"] = float(updated.get("child_support", 0))
                 data["employees"][i]["role"] = updated.get("role", "employee")
                 # Auto-generate username from name
                 base_username = re.sub(r'[^a-zA-Z0-9]', '', data["employees"][i]["name"]).lower()

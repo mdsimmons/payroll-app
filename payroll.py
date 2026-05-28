@@ -209,7 +209,8 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
     additional_medicare = 0.0
 
     total_tax = round(federal_tax + state_tax + social_security + medicare, 2)
-    total_deductions = total_tax
+    child_support = float(employee.get("child_support", 0) or 0)
+    total_deductions = round(total_tax + child_support, 2)
 
     if employee.get("tipped"):
         employer_paid = round(regular_pay + makeup, 2)
@@ -233,6 +234,7 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
         "medicare": medicare,
         "additional_medicare": additional_medicare,
         "total_tax": total_tax,
+        "child_support": child_support,
         "total_deductions": total_deductions,
         "net_pay": net_pay,
         "employer_paid": round(regular_pay + makeup, 2) if employee.get("tipped") else gross_pay,

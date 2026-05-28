@@ -917,6 +917,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Child Support Withholding ($/check)</label>
+                        <input type="number" id="emp-child-support" step="0.01" min="0" value="0" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                    </div>
+                </div>
                 <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
@@ -1067,7 +1073,7 @@
             let html = `<table>
                 <thead><tr>
                     <th>Name</th><th>Username</th><th>Role</th><th>Pay</th><th>Status</th><th>State</th>
-                    <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>PIN</th><th>Actions</th>
+                    <th>Fed Allow</th><th>State Allow</th><th>Tipped</th><th>Child Support</th><th>PIN</th><th>Actions</th>
                 </tr></thead><tbody>`;
             employees.forEach(emp => {
                 const stateClass = `badge-${emp.state.toLowerCase()}`;
@@ -1082,6 +1088,7 @@
                     <td>${emp.federal_allowances}</td>
                     <td>${emp.state_allowances}</td>
                     <td>${emp.tipped ? '<span class="badge" style="background:#fef3c7;color:#92400e;">Yes</span>' : 'No'}</td>
+                    <td>${emp.child_support ? '$'+Number(emp.child_support).toFixed(2) : '—'}</td>
                     <td style="font-family:monospace;font-weight:600;">${emp.pin || '—'}</td>
                     <td>
                         <div class="flex-gap">
@@ -1142,6 +1149,7 @@
                 document.getElementById('emp-fed-add-val').value = emp.fed_add_withholding_value || 0;
                 document.getElementById('emp-state-add-type').value = emp.state_add_withholding_type || 'amount';
                 document.getElementById('emp-state-add-val').value = emp.state_add_withholding_value || 0;
+                document.getElementById('emp-child-support').value = emp.child_support || 0;
                 modal.classList.add('active');
             } catch (e) {
                 console.error('openEditModal error:', e.message);
@@ -1187,6 +1195,7 @@
                 fed_add_withholding_value: parseFloat(document.getElementById('emp-fed-add-val').value) || 0,
                 state_add_withholding_type: document.getElementById('emp-state-add-type').value,
                 state_add_withholding_value: parseFloat(document.getElementById('emp-state-add-val').value) || 0,
+                child_support: parseFloat(document.getElementById('emp-child-support').value) || 0,
             };
 
             const url = editId ? `/api/employees/${editId}` : '/api/employees';
