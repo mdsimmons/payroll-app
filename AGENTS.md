@@ -78,6 +78,10 @@ payroll_app/
 - `GET /api/timeoff` - get all time off requests (admin)
 - `POST /api/timeoff/request` - submit time off request (public, uses session or body)
 - `POST /api/timeoff/respond` - approve/deny a request (admin)
+- `GET /api/messages` - list announcements (admin sees all; employees see only `target: "all"`)
+- `POST /api/messages` - create announcement (admin-only; employees get 403)
+- `POST /api/messages/read` - mark all announcements read by admin (clears dashboard unread badge)
+- `DELETE /api/messages/<id>` - delete an announcement (admin)
 - `POST /api/employee/login` - employee login with `{employee_id, pin}`
 - `GET /api/employee/session` - check employee session
 - `POST /api/employee/logout` - employee logout

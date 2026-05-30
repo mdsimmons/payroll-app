@@ -46,7 +46,11 @@ APP_SETTINGS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ap
 SCHEDULES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedules.json")
 TIMECLOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "timeclock.json")
 TIMEOFF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "time_off.json")
+REQUESTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "requests.json")
+REQUEST_TYPES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "request_types.json")
 SHIFT_SWAPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "shift_swaps.json")
+MANAGER_NOTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "manager_notes.json")
+BILLS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bills.json")
 
 
 def load_json(path, default=None):
@@ -476,6 +480,9 @@ def publish_schedule():
     settings = load_app_settings()
     if settings.get("notify_on_publish", True):
         create_notification("schedule_published", f"Schedule for {label} has been published")
+    tracker = load_json(EMPLOYEE_TRACKER_FILE, {"schedule_published": False, "announcement_read": {}})
+    tracker["schedule_published"] = True
+    save_json(EMPLOYEE_TRACKER_FILE, tracker)
     return jsonify({"message": "Schedule published"})
 
 
@@ -505,6 +512,7 @@ def copy_schedule():
 SCHEDULE_TEMPLATES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schedule_templates.json")
 NOTIFICATIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notifications.json")
 MESSAGES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "messages.json")
+EMPLOYEE_TRACKER_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "employee_tracker.json")
 
 
 def load_templates():
@@ -702,64 +710,50 @@ def save_messages(data):
 
 
 @app.route("/api/messages", methods=["GET"])
-def get_messages():
-    eid = session.get("employee_id")
-    role = session.get("employee_role")
+def get_announcements():
     is_admin = session.get("user") is not None
     data = load_messages()
     msgs = data["messages"]
     if is_admin:
         result = msgs
-    elif eid and role == "manager":
-        result = [m for m in msgs if m.get("target") in (None, "all", eid, "managers")]
-    elif eid:
-        result = [m for m in msgs if m.get("target") in (None, "all", eid) or m.get("from_employee") == eid]
     else:
-        result = msgs
+        result = [m for m in msgs if m.get("target") in (None, "all")]
     return jsonify(result)
 
 
 @app.route("/api/messages", methods=["POST"])
-def create_message():
+def create_announcement():
+    if session.get("user") is None:
+        return jsonify({"error": "Admin only"}), 403
     try:
-        subject = request.json.get("subject", "").strip()
         body = request.json.get("body", "").strip()
-        target = request.json.get("target", "all")
-        is_admin = session.get("user") is not None
-        eid = session.get("employee_id")
-        if not is_admin and not eid:
-            return jsonify({"error": "Unauthorized"}), 401
-        if not subject:
-            return jsonify({"error": "Subject required"}), 400
+        if not body:
+            return jsonify({"error": "Body required"}), 400
         data = load_messages()
         mid = 1
         if data["messages"]:
             mid = max(m["id"] for m in data["messages"]) + 1
         msg = {
             "id": mid,
-            "subject": subject,
             "body": body,
-            "target": target,
+            "target": "all",
             "created_at": datetime.now().isoformat(),
+            "created_by": session.get("user", "admin"),
         }
-        if is_admin:
-            msg["created_by"] = session.get("user", "admin")
-            create_notification("message", f"New message: {subject}")
-        else:
-            msg["type"] = "employee_to_manager"
-            msg["from_employee"] = eid
-            msg["from_employee_name"] = session.get("employee_name", "Unknown")
-            msg["target"] = "managers"
-            employees = load_employees(EMPLOYEES_FILE)
-            managers = [e for e in employees if e.get("role") == "manager"]
-            for mgr in managers:
-                create_notification("message", f"Message from {msg['from_employee_name']}: {subject}", mgr["id"])
         data["messages"].insert(0, msg)
         save_messages(data)
-        return jsonify({"id": mid, "subject": subject}), 201
+        create_notification("announcement", f"New announcement: {body[:80]}")
+        return jsonify({"id": mid}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/api/messages/unread", methods=["GET"])
+@require_login
+def unread_announcements():
+    data = load_messages()
+    count = sum(1 for m in data.get("messages", []) if not m.get("admin_read"))
+    return jsonify({"count": count})
 
 @app.route("/api/messages/<int:msg_id>", methods=["DELETE"])
 @require_login
@@ -768,6 +762,16 @@ def delete_message(msg_id):
     data["messages"] = [m for m in data["messages"] if m["id"] != msg_id]
     save_messages(data)
     return jsonify({"message": "Message deleted"})
+
+
+@app.route("/api/messages/read", methods=["POST"])
+@require_login
+def mark_messages_read():
+    data = load_messages()
+    for m in data["messages"]:
+        m["admin_read"] = True
+    save_messages(data)
+    return jsonify({"ok": True})
 
 
 # ─── Time Clock ─────────────────────────────────────────────
@@ -848,12 +852,17 @@ def get_timeclock_history():
     data = load_json(TIMECLOCK_FILE, {"entries": []})
     start = request.args.get("start")
     end = request.args.get("end")
-    entries = data["entries"]
-    if start:
-        entries = [e for e in entries if e.get("date") >= start]
-    if end:
-        entries = [e for e in entries if e.get("date") <= end]
-    return jsonify(entries)
+    result = []
+    for i, e in enumerate(data["entries"]):
+        d = e.get("date", "")
+        if start and d < start:
+            continue
+        if end and d > end:
+            continue
+        entry = dict(e)
+        entry["original_index"] = i
+        result.append(entry)
+    return jsonify(result)
 
 
 @app.route("/api/timeclock/delete", methods=["POST"])
@@ -941,55 +950,156 @@ def add_timeclock_entry():
         return jsonify({"error": str(e)}), 500
 
 
-# ─── Time Off Requests ──────────────────────────────────────
-@app.route("/api/timeoff", methods=["GET"])
-@require_login
-def get_timeoff():
-    data = load_json(TIMEOFF_FILE, {"requests": []})
+# ─── Request Types (admin configurable) ──────────────────────
+@app.route("/api/request-types", methods=["GET"])
+def get_request_types():
+    data = load_json(REQUEST_TYPES_FILE, {"types": []})
     return jsonify(data)
 
 
-@app.route("/api/timeoff/request", methods=["POST"])
-def request_timeoff():
+@app.route("/api/request-types", methods=["PUT"])
+@require_login
+def save_request_types():
+    try:
+        data = request.json
+        save_json(REQUEST_TYPES_FILE, data)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ─── Unified Requests ────────────────────────────────────────
+def load_requests():
+    if not os.path.exists(REQUESTS_FILE) and os.path.exists(TIMEOFF_FILE):
+        old = load_json(TIMEOFF_FILE, {"requests": []})
+        migrated = []
+        for r in old.get("requests", []):
+            r["type"] = "Time Off"
+            r["fields"] = {
+                "start_date": r.pop("start_date", ""),
+                "end_date": r.pop("end_date", ""),
+                "reason": r.pop("reason", ""),
+            }
+            migrated.append(r)
+        save_json(REQUESTS_FILE, {"requests": migrated})
+    data = load_json(REQUESTS_FILE, {"requests": []})
+    # Repair any entries missing type or fields
+    dirty = False
+    for r in data.get("requests", []):
+        if not r.get("type"):
+            r["type"] = "Time Off"
+            dirty = True
+        if "fields" not in r:
+            r["fields"] = {}
+            for k in ("start_date", "end_date", "reason"):
+                if k in r:
+                    r["fields"][k] = r.pop(k)
+            dirty = True
+    if dirty:
+        save_json(REQUESTS_FILE, data)
+    return data
+
+
+@app.route("/api/requests", methods=["GET"])
+@require_login
+def get_requests():
+    data = load_requests()
+    return jsonify(data)
+
+
+@app.route("/api/requests", methods=["POST"])
+def submit_request():
     try:
         data = request.json
         emp_id = data.get("employee_id") or session.get("employee_id")
         if not emp_id:
             return jsonify({"error": "Employee ID required"}), 400
-        off = load_json(TIMEOFF_FILE, {"requests": []})
-        off["requests"].append({
-            "id": len(off["requests"]) + 1,
+        reqs = load_requests()
+        # Load employee name
+        employees = load_employees(EMPLOYEES_FILE)
+        emp_name = data.get("employee_name", "")
+        if not emp_name:
+            for e in employees:
+                if e.get("id") == emp_id:
+                    emp_name = e.get("name", emp_id)
+                    break
+        # Anonymous suggestions: hide employee name
+        req_type = data.get("type", "Time Off")
+        if req_type == "Suggestion" and data.get("fields", {}).get("anonymous"):
+            emp_name = "Anonymous"
+        # Auto-populate checklist from request type template
+        checklist = []
+        rtypes = load_json(REQUEST_TYPES_FILE, {"types": []})
+        for t in rtypes.get("types", []):
+            if t["name"] == req_type and t.get("checklist"):
+                checklist = [{"label": item, "done": False} for item in t["checklist"]]
+                break
+        reqs["requests"].append({
+            "id": len(reqs["requests"]) + 1,
             "employee_id": emp_id,
-            "start_date": data["start_date"],
-            "end_date": data["end_date"],
-            "reason": data.get("reason", ""),
+            "employee_name": emp_name,
+            "type": req_type,
+            "fields": data.get("fields", {}),
+            "checklist": checklist,
             "status": "pending",
             "created_at": datetime.now().isoformat(),
         })
-        save_json(TIMEOFF_FILE, off)
+        save_json(REQUESTS_FILE, reqs)
+        create_notification("request", f"New {req_type} from {emp_name}")
         return jsonify({"message": "Request submitted"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/timeoff/respond", methods=["POST"])
+@app.route("/api/requests/respond", methods=["POST"])
 @require_login
-def respond_timeoff():
+def respond_request():
     try:
         data = request.json
         req_id = data.get("id")
         new_status = data.get("status")
         if new_status not in ("approved", "denied"):
             return jsonify({"error": "Invalid status"}), 400
-        off = load_json(TIMEOFF_FILE, {"requests": []})
-        for r in off["requests"]:
+        reqs = load_requests()
+        for r in reqs["requests"]:
             if r["id"] == req_id:
                 r["status"] = new_status
-                save_json(TIMEOFF_FILE, off)
+                save_json(REQUESTS_FILE, reqs)
+                create_notification("request_response", f"Your {r.get('type', 'request')} has been {new_status}", r["employee_id"])
                 return jsonify({"message": f"Request {new_status}"})
         return jsonify({"error": "Request not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/requests/checklist", methods=["POST"])
+@require_login
+def update_request_checklist():
+    try:
+        data = request.json
+        req_id = data.get("id")
+        items = data.get("items")
+        if req_id is None or not isinstance(items, list):
+            return jsonify({"error": "id and items required"}), 400
+        reqs = load_requests()
+        for r in reqs["requests"]:
+            if r["id"] == req_id:
+                r["checklist"] = items
+                save_json(REQUESTS_FILE, reqs)
+                return jsonify({"message": "Checklist updated"})
+        return jsonify({"error": "Request not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/employee/requests", methods=["GET"])
+def employee_my_requests():
+    eid = request.args.get("employee_id") or session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = load_requests()
+    mine = [r for r in data["requests"] if r.get("employee_id") == eid]
+    return jsonify(mine)
 
 
 # ─── Employee Portal Login ──────────────────────────────────
@@ -1092,8 +1202,12 @@ def employee_schedule():
         return jsonify({"shifts": [], "status": "published", "week_start": week_start, "week_label": ""})
 
     shifts = data.get("shifts", {}).get(eid, [])
+    blackouts = data.get("blackouts", {}).get(eid, {})
+    closures = data.get("closures", {})
     return jsonify({
         "shifts": shifts,
+        "blackouts": blackouts,
+        "closures": closures,
         "status": "published",
         "week_start": data.get("week_start", ""),
         "week_label": data.get("week_label", ""),
@@ -1107,7 +1221,7 @@ def employee_my_timeoff():
     eid = request.args.get("employee_id") or session.get("employee_id")
     if not eid:
         return jsonify({"error": "Unauthorized"}), 401
-    data = load_json(TIMEOFF_FILE, {"requests": []})
+    data = load_requests()
     mine = [r for r in data["requests"] if r.get("employee_id") == eid]
     return jsonify(mine)
 
@@ -1249,6 +1363,36 @@ def admin_get_swap_requests():
         s["to_name"] = emp_map.get(s["to_employee_id"], s["to_employee_id"])
     return jsonify(swaps["swaps"])
 
+
+@app.route("/api/employee/notifications", methods=["GET"])
+def employee_notifications():
+    eid = session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    tracker = load_json(EMPLOYEE_TRACKER_FILE, {"schedule_published": False, "announcement_read": {}})
+    last_read = tracker.get("announcement_read", {}).get(eid, "")
+    messages = load_messages()
+    new_announcements = 0
+    for m in messages.get("messages", []):
+        if m.get("target") in (None, "all") and m.get("created_at", "") > last_read:
+            new_announcements += 1
+    schedules = load_json(SCHEDULES_FILE, {})
+    new_schedule = tracker.get("schedule_published", False)
+    return jsonify({"new_announcements": new_announcements, "new_schedule": new_schedule})
+
+@app.route("/api/employee/notifications/read", methods=["POST"])
+def employee_notifications_read():
+    eid = session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Unauthorized"}), 401
+    ntype = request.json.get("type", "announcements")
+    tracker = load_json(EMPLOYEE_TRACKER_FILE, {"schedule_published": False, "announcement_read": {}})
+    if ntype in ("announcements", "all"):
+        tracker.setdefault("announcement_read", {})[eid] = datetime.now().isoformat()
+    if ntype in ("schedule", "all"):
+        tracker["schedule_published"] = False
+    save_json(EMPLOYEE_TRACKER_FILE, tracker)
+    return jsonify({"ok": True})
 
 @app.route("/api/shift-swaps/approve", methods=["POST"])
 @require_login
@@ -1541,6 +1685,144 @@ def download_reports_csv():
             mimetype="text/csv",
             headers={"Content-Disposition": "attachment; filename=payroll_report.csv"},
         )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/dashboard", methods=["GET"])
+@require_login
+def get_dashboard():
+    try:
+        today = datetime.now().strftime("%Y-%m-%d")
+        current_month = datetime.now().strftime("%Y-%m")
+        employees = load_employees(EMPLOYEES_FILE)
+        schedules = load_json(SCHEDULES_FILE, {"shifts": {}})
+        history = load_history()
+
+        # Labor cost today: sum hourly_rate of employees scheduled today
+        day_name = datetime.now().strftime("%A")
+        day_index = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].index(day_name)
+        labor_today = 0.0
+        for emp in employees:
+            shifts = schedules.get("shifts", {}).get(emp["id"], [])
+            if day_index < len(shifts) and shifts[day_index].get("start") and shifts[day_index].get("end"):
+                start_parts = shifts[day_index]["start"].split(":")
+                end_parts = shifts[day_index]["end"].split(":")
+                start_mins = int(start_parts[0]) * 60 + int(start_parts[1]) if len(start_parts) > 1 else int(start_parts[0]) * 60
+                end_mins = int(end_parts[0]) * 60 + int(end_parts[1]) if len(end_parts) > 1 else int(end_parts[0]) * 60
+                hours = max(0, end_mins - start_mins) / 60.0
+                rate = emp.get("hourly_rate", 0)
+                labor_today += hours * rate
+
+        # Monthly gross = sales from manager notes, labor = gross_pay from payroll
+        monthly_gross = 0.0
+        monthly_labor = 0.0
+        month_data = {}
+
+        # Sum sales from manager notes per month
+        notes_data = load_json(MANAGER_NOTES_FILE, {"notes": []})
+        for n in notes_data.get("notes", []):
+            m = n.get("date", "")[:7]
+            if m:
+                if m not in month_data:
+                    month_data[m] = {"gross": 0, "labor": 0}
+                sales = float(n.get("sales", 0))
+                month_data[m]["gross"] += sales
+                if m == current_month:
+                    monthly_gross += sales
+
+        # Sum labor (gross_pay) from payroll history per month
+        for wk_key, wk in history.items():
+            m = wk.get("week_start", "")[:7]
+            if m:
+                if m not in month_data:
+                    month_data[m] = {"gross": 0, "labor": 0}
+                for r in wk.get("results", []):
+                    gp = r.get("gross_pay", 0)
+                    month_data[m]["labor"] += gp
+                    if m == current_month:
+                        monthly_labor += gp
+
+        # Bills for the month
+        bills = load_json(BILLS_FILE, {"bills": []})
+        total_bills = sum(float(b.get("amount", 0)) for b in bills.get("bills", []))
+
+        # Pending requests (all types)
+        reqs = load_requests()
+        pending_requests = [r for r in reqs.get("requests", []) if r.get("status") == "pending"]
+
+        # Unread messages count
+        messages = load_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), "messages.json"), {"messages": []})
+        unread_count = sum(1 for m in messages.get("messages", []) if not m.get("admin_read"))
+
+        return jsonify({
+            "labor_today": round(labor_today, 2),
+            "monthly_gross": round(monthly_gross, 2),
+            "monthly_labor": round(monthly_labor, 2),
+            "total_bills": total_bills,
+            "month_data": month_data,
+            "pending_requests": pending_requests[:5],
+            "unread_count": unread_count,
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/manager-notes", methods=["GET"])
+@require_login
+def get_manager_notes():
+    try:
+        notes = load_json(MANAGER_NOTES_FILE, {"notes": []})
+        search = request.args.get("search", "").lower()
+        if search:
+            filtered = []
+            for n in notes.get("notes", []):
+                if search in n.get("daily_notes", "").lower() or search in n.get("employee_notes", "").lower() or search in n.get("date", ""):
+                    filtered.append(n)
+            return jsonify({"notes": filtered})
+        return jsonify(notes)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/manager-notes", methods=["POST"])
+@require_login
+def save_manager_note():
+    try:
+        notes = load_json(MANAGER_NOTES_FILE, {"notes": []})
+        data = request.json
+        data["date"] = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+        data["timestamp"] = datetime.now().isoformat()
+        # Find existing note for today and update it, or add new
+        existing = None
+        for i, n in enumerate(notes.get("notes", [])):
+            if n.get("date") == data["date"]:
+                existing = i
+                break
+        if existing is not None:
+            notes["notes"][existing] = data
+        else:
+            notes["notes"].insert(0, data)
+        save_json(MANAGER_NOTES_FILE, notes)
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/bills", methods=["GET"])
+@require_login
+def get_bills():
+    bills = load_json(BILLS_FILE, {"bills": []})
+    return jsonify(bills)
+
+
+@app.route("/api/bills", methods=["PUT"])
+@require_login
+def save_bills():
+    try:
+        data = request.json
+        save_json(BILLS_FILE, data)
+        return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

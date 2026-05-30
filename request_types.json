@@ -1,0 +1,89 @@
+{
+  "types": [
+    {
+      "name": "Time Off",
+      "fields": [
+        {
+          "key": "start_date",
+          "label": "Start Date",
+          "type": "date"
+        },
+        {
+          "key": "end_date",
+          "label": "End Date",
+          "type": "date"
+        },
+        {
+          "key": "reason",
+          "label": "Reason",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "New Work Shirt",
+      "fields": [
+        {
+          "key": "size",
+          "label": "Size",
+          "type": "select",
+          "options": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "2XL",
+            "3XL"
+          ]
+        },
+        {
+          "key": "color",
+          "label": "Color",
+          "type": "text"
+        }
+      ],
+      "checklist": [
+        "Order shirt",
+        "Shirt received",
+        "Delivered to employee"
+      ]
+    },
+    {
+      "name": "Equipment Repair",
+      "fields": [
+        {
+          "key": "equipment",
+          "label": "Equipment Name",
+          "type": "text"
+        },
+        {
+          "key": "description",
+          "label": "Issue Description",
+          "type": "textarea"
+        }
+      ],
+      "checklist": [
+        "Assess issue",
+        "Order parts (if needed)",
+        "Complete repair",
+        "Test equipment"
+      ]
+    },
+    {
+      "name": "Suggestion",
+      "fields": [
+        {
+          "key": "suggestion",
+          "label": "Your Suggestion",
+          "type": "textarea"
+        },
+        {
+          "key": "anonymous",
+          "label": "Submit Anonymously",
+          "type": "checkbox"
+        }
+      ]
+    }
+  ]
+}

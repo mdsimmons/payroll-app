@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payroll App</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         /* ─── Reset & Base (mobile-first) ──────────────── */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,7 +12,7 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f1f5f9; color: #1e293b; }
 
         /* ─── Layout ───────────────────────────────────── */
-        .header { background: #1e3a5f; color: white; display: flex; flex-direction: column; padding: 0.5rem 0.75rem; align-items: stretch; }
+        .header { background: #1e3a5f; color: white; display: flex; flex-direction: column; padding: 0.25rem 0.75rem; align-items: stretch; }
         .header > div { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; justify-content: flex-start; }
         .nav { display: flex; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; justify-content: flex-start; gap: 0.25rem; padding-bottom: 4px; scrollbar-width: none; }
         .nav::-webkit-scrollbar { display: none; }
@@ -19,9 +20,11 @@
         .nav button:hover { color: white; background: rgba(255,255,255,0.1); }
         .nav button.active { color: white; background: rgba(255,255,255,0.15); }
         #page-app-settings .nav button { color: #1e293b; }
-        .container { max-width: 1200px; margin: 0.5rem auto; padding: 0 0.35rem; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 0.35rem; }
         .page { display: none; }
         .page.active { display: block; padding-bottom: 1rem; }
+        #page-admin-messages.active { display: flex; flex-direction: column; height: calc(100vh - 110px); min-height: 200px; }
+        #page-admin-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 0; }
         .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.7rem; margin-bottom: 0.85rem; }
         .card h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #334155; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -116,7 +119,7 @@
         .chat-bubble.sent .sender-name { color: rgba(255,255,255,0.7); }
         .chat-bubble .bubble-time { font-size: 0.65rem; margin-top: 0.2rem; text-align: right; opacity: 0.7; }
         .chat-bubble.system { align-self: center; background: transparent; color: #94a3b8; font-size: 0.78rem; text-align: center; max-width: 90%; padding: 0.4rem 0.6rem; }
-        .chat-input-area { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #e2e8f0; background: white; border-radius: 0 0 8px 8px; }
+        .chat-input-area { display: flex; gap: 0.5rem; padding: 0.75rem; border-top: 1px solid #e2e8f0; background: white; border-radius: 0 0 8px 8px; flex-shrink: 0; }
         .chat-input-area input { flex: 1; padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.9rem; outline: none; }
         .chat-input-area input:focus { border-color: #1e3a5f; }
         .chat-input-area button { padding: 0.5rem 1.2rem; border-radius: 20px; white-space: nowrap; }
@@ -124,7 +127,7 @@
         /* ─── Modal ────────────────────────────────────── */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: flex-end; justify-content: center; }
         .modal.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; }
+        .modal-content { background: white; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; display: flex; flex-direction: column; padding: 1rem; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
         .modal-header h2 { margin: 0; font-size: 1.1rem; }
         .modal .btn { min-height: 48px; }
@@ -197,6 +200,21 @@
         .emp-schedule-day.weekend { background: #f1f5f9; }
         .emp-schedule-day .shift-note { font-size: 0.65rem; color: #94a3b8; margin-top: 0.25rem; }
 
+        /* ─── Schedule Blocks ──────────────────────────── */
+        .sched-block { border-radius: 6px; padding: 0.35rem 0.4rem; cursor: pointer; transition: opacity 0.15s; touch-action: manipulation; }
+        .sched-block:hover { opacity: 0.85; }
+        .sched-block .sched-time { font-weight: 700; font-size: 0.75rem; }
+        .sched-block .sched-notes { font-size: 0.6rem; opacity: 0.7; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sched-block.pub { cursor: default; }
+        .sched-block.pub:hover { opacity: 1; }
+        .sched-add-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; border: 2px dashed #cbd5e1; color: #94a3b8; font-size: 1.1rem; font-weight: 600; cursor: pointer; background: transparent; transition: all 0.15s; touch-action: manipulation; }
+        .sched-add-btn:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
+        .sched-total { font-size: 0.8rem; font-weight: 700; color: #1e293b; text-align: center; padding: 0.25rem; }
+
+        /* ─── Shift Presets ────────────────────────────── */
+        .shift-preset-btn { padding: 0.3rem 0.6rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.78rem; background: #f8fafc; color: #1e293b; cursor: pointer; touch-action: manipulation; }
+        .shift-preset-btn:hover { background: #eef2ff; border-color: #6366f1; color: #6366f1; }
+
         /* ─── Login Page ───────────────────────────────── */
         #login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
         #login-page .card { max-width: 400px; width: 100%; text-align: center; }
@@ -215,14 +233,15 @@
 
         /* ─── Desktop (min-width: 769px) ────────────────── */
         @media (min-width: 769px) {
-            .header { flex-direction: row; padding: 1rem 2rem; align-items: center; }
+            .header { flex-direction: row; padding: 0.25rem 1rem; align-items: center; }
             .header > div { gap: 0.5rem; }
             .nav { overflow-x: visible; gap: 0.5rem; padding-bottom: 0; }
             .nav button { font-size: 0.9rem; padding: 0.5rem 1rem; min-height: auto; }
             #admin-nav { padding: 0; gap: 0; }
             #admin-nav button { font-size: 0.6rem; padding: 0.4rem 0.1rem; min-height: 56px; }
-            .container { margin: 2rem auto; padding: 0 1rem 66px; }
+            .container { margin: 0.5rem auto 0; padding: 0 1rem 66px; }
             .page.active { padding-bottom: 0; }
+            #page-admin-messages.active { height: calc(100vh - 145px); }
             .card { padding: 1.5rem; margin-bottom: 1.5rem; }
             .card h2 { font-size: 1.25rem; }
             .flex-between { flex-wrap: nowrap; }
@@ -273,7 +292,7 @@
 
         /* ─── Employee Mobile Mode ──────────────────────────── */
         body.emp-mode .container { padding-top: 0; }
-        body.emp-mode .header { padding: 0.5rem 0.75rem; min-height: 50px; }
+        body.emp-mode .header { padding: 0.25rem 0.75rem; min-height: 0; }
         body.emp-mode .header > div { gap: 0.25rem; }
         body.emp-mode #admin-nav,
         body.emp-mode #portal-toggle,
@@ -291,10 +310,14 @@
         body.emp-mode #emp-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E"); }
         body.emp-mode #emp-nav button.active { color: #1e3a5f; font-weight: 600; }
         body.emp-mode #emp-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
+        .emp-badge { background: #dc2626; color: white; font-size: 0.45rem; min-width: 8px; height: 8px; border-radius: 4px; display: inline-block; text-align: center; line-height: 8px; padding: 1px; box-sizing: content-box; }
         body.emp-mode #emp-label { display: block !important; color: white; font-size: 0.85rem; font-weight: 500; }
         body.emp-mode .container { padding-bottom: 70px; }
-        body.emp-mode #page-emp-messages.active { display: flex; flex-direction: column; height: calc(100vh - 210px); }
-        body.emp-mode #page-emp-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; }
+        body.emp-mode { display: flex; flex-direction: column; min-height: 100vh; }
+        body.emp-mode #app-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        body.emp-mode #app-content > .container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        body.emp-mode #page-emp-messages.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        body.emp-mode #page-emp-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 0; }
         body.emp-mode .week-selector { padding: 0.5rem 0; flex-wrap: wrap; background: transparent; margin-bottom: 0.75rem; }
         body.emp-mode .week-selector input[type="date"] { min-height: 44px; font-size: 1rem; flex: 1; min-width: 0; }
         body.emp-mode .paystub { border-radius: 0; border-left: none; border-right: none; margin-bottom: 0; border-bottom: 1px solid #e2e8f0; }
@@ -306,26 +329,29 @@
         /* ─── Admin Bottom Nav ──────────────────────────── */
         .container { padding-bottom: 66px; }
         #admin-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e2e8f0; z-index: 99; padding: 0; justify-content: space-around; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); overflow-x: visible; gap: 0; }
-        #admin-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0.4rem 0.1rem; font-size: 0.6rem; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 0; min-height: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; text-align: center; white-space: nowrap; }
+        #admin-nav button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 0.4rem 0.1rem; font-size: 0.6rem; color: #94a3b8; background: none; border: none; cursor: pointer; border-radius: 0; min-height: 56px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: color 0.15s; text-align: center; white-space: nowrap; position: relative; }
+
         #admin-nav button:hover { color: #1e3a5f; background: none; }
         #admin-nav button::before { content: ""; display: flex; align-self: center; justify-content: center; width: 22px; height: 22px; background-color: #94a3b8; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
         #admin-nav button.active { color: #1e3a5f; font-weight: 600; background: none; }
         #admin-nav button.active::before { background-color: #1e3a5f; }
         #admin-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
+        /* Dashboard - grid */
+        #admin-nav button:nth-child(1)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7'/%3E%3Crect x='14' y='3' width='7' height='7'/%3E%3Crect x='14' y='14' width='7' height='7'/%3E%3Crect x='3' y='14' width='7' height='7'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7'/%3E%3Crect x='14' y='3' width='7' height='7'/%3E%3Crect x='14' y='14' width='7' height='7'/%3E%3Crect x='3' y='14' width='7' height='7'/%3E%3C/svg%3E"); }
         /* Timesheet - clock */
-        #admin-nav button:nth-child(1)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(2)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E"); }
         /* Payroll - dollar */
-        #admin-nav button:nth-child(2)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); }
         /* Schedule - calendar */
-        #admin-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
         /* Time Off - calendar-check */
-        #admin-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
-        /* Messages - chat */
-        #admin-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
+        /* Announcements - megaphone */
+        #admin-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); }
         /* Reports - bar-chart */
-        #admin-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(7)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); }
         /* Settings - gear */
-        #admin-nav button:nth-child(7)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(8)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); }
     </style>
 </head>
 <body>
@@ -384,12 +410,13 @@
         <div style="display:flex;align-items:center;">
 
             <span id="user-label" style="color:#94a3b8;font-size:0.85rem;margin-right:0.5rem;"></span>
+            <span id="header-announce-badge" style="display:none;background:#dc2626;color:white;font-size:0.7rem;font-weight:700;padding:1px 6px;border-radius:8px;margin-right:0.5rem;"></span>
             <div class="nav" id="emp-nav" style="display:none;">
-                <button class="active" onclick="showEmpPage('emp-schedule')">My Schedule</button>
-                <button onclick="showEmpPage('emp-timeoff')">Time Off</button>
+                <button class="active" onclick="showEmpPage('emp-schedule')"><span style="display:flex;align-items:center;gap:2px;">My Schedule<span class="emp-badge" id="emp-schedule-badge" style="display:none;">&#9679;</span></span></button>
+                <button onclick="showEmpPage('emp-requests')">Requests</button>
                 <button onclick="showEmpPage('emp-timesheet')">Timesheet</button>
                 <button onclick="showEmpPage('emp-paystubs')">Paystubs</button>
-                <button onclick="showEmpPage('emp-messages')">Messages</button>
+                <button onclick="showEmpPage('emp-messages')"><span style="display:flex;align-items:center;gap:2px;">Announcements<span class="emp-badge" id="emp-announce-badge" style="display:none;">&#9679;</span></span></button>
                 <button onclick="empLogout()">Logout</button>
             </div>
             <span id="emp-label" style="color:#94a3b8;font-size:0.85rem;margin:0 0.5rem;"></span>
@@ -399,6 +426,49 @@
     </div>
 
     <div class="container">
+        <div id="page-dashboard" class="page">
+            <div class="card">
+                <h2>Dashboard</h2>
+                <button class="btn btn-success" style="width:100%;padding:1.5rem;font-size:1.3rem;font-weight:700;margin-bottom:1rem;border-radius:12px;" onclick="openManagerNotes()">📋 Manager's Notes</button>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;">
+                    <div style="background:#f0fdf4;padding:0.75rem;border-radius:8px;text-align:center;">
+                        <div style="font-size:0.75rem;color:#166534;">Labor Cost Today</div>
+                        <div id="dash-labor" style="font-size:1.3rem;font-weight:700;color:#059669;">$0</div>
+                    </div>
+                    <div style="background:#eff6ff;padding:0.75rem;border-radius:8px;text-align:center;">
+                        <div style="font-size:0.75rem;color:#1e40af;">Unread Announcements</div>
+                        <div id="dash-messages" style="font-size:1.3rem;font-weight:700;color:#1e3a5f;">0</div>
+                    </div>
+                </div>
+                <div id="dash-timeoff" style="margin-bottom:1rem;">
+                    <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Pending Requests</h3>
+                    <div id="dash-timeoff-list"><div class="empty-state">None</div></div>
+                </div>
+                <div style="margin-bottom:0.5rem;">
+                    <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Monthly Summary</h3>
+                    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+                        <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;" onchange="loadDashboardChart()"></select>
+                    </div>
+                    <canvas id="dash-chart" style="max-height:250px;"></canvas>
+                </div>
+                <div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm" onclick="loadDashboard()" style="flex:1;">Refresh</button>
+                    <button class="btn btn-secondary btn-sm" onclick="showPage('manager-notes-history')" style="flex:1;">Notes History</button>
+                </div>
+            </div>
+        </div>
+        <div id="page-manager-notes-history" class="page">
+            <div class="card">
+                <div class="flex-between" style="margin-bottom:1rem;">
+                    <h2 style="margin:0;">Manager's Notes History</h2>
+                    <button class="btn btn-sm btn-outline" onclick="showPage('dashboard')">Back</button>
+                </div>
+                <div class="form-group" style="margin-bottom:1rem;">
+                    <input type="text" id="mn-search" placeholder="Search notes..." onkeyup="loadManagerNotesHistory()" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                </div>
+                <div id="manager-notes-history-list"></div>
+            </div>
+        </div>
         <div id="page-timesheet" class="page">
             <div class="card">
                 <div class="flex-between" style="margin-bottom:1rem;">
@@ -572,13 +642,13 @@
             </div>
         </div>
 
-        <div id="page-admin-timeoff" class="page">
+        <div id="page-admin-requests" class="page">
             <div class="card">
                 <div class="flex-between" style="margin-bottom:1rem;">
-                    <h2 style="margin:0;">Time Off Requests</h2>
+                    <h2 style="margin:0;">All Requests</h2>
                 </div>
-                <div id="admin-timeoff-container"></div>
-                <div id="admin-timeoff-status" style="margin-top:0.75rem;font-size:0.9rem;color:#64748b;"></div>
+                <div id="admin-requests-container"></div>
+                <div id="admin-requests-status" style="margin-top:0.75rem;font-size:0.9rem;color:#64748b;"></div>
             </div>
         </div>
 
@@ -586,12 +656,9 @@
             <div class="card" style="padding:0;">
                 <div class="chat-view">
                     <div class="chat-messages" id="admin-chat-messages"></div>
-                    <div class="chat-input-area" style="flex-wrap:wrap;">
-                        <select id="admin-chat-target" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:20px;font-size:0.85rem;min-width:120px;">
-                            <option value="all">All Employees</option>
-                        </select>
-                        <input type="text" id="admin-chat-input" placeholder="Type a message..." style="flex:1;min-width:120px;" onkeydown="if(event.key==='Enter')adminChatSend()">
-                        <button class="btn btn-primary" onclick="adminChatSend()" style="border-radius:20px;">Send</button>
+                    <div class="chat-input-area">
+                        <input type="text" id="admin-chat-input" placeholder="Write an announcement..." style="flex:1;" onkeydown="if(event.key==='Enter')adminSendAnnouncement()">
+                        <button class="btn btn-primary" onclick="adminSendAnnouncement()">Post</button>
                     </div>
                 </div>
             </div>
@@ -643,6 +710,36 @@
                         <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Employee</button>
                     </div>
                     <div id="employee-table-container"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('bills-body', this)">
+                    <h2 style="margin:0;">Monthly Bills</h2>
+                    <span style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="bills-body" style="display:none;">
+                    <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Add your monthly bills for dashboard chart tracking.</p>
+                    <div id="bills-list"></div>
+                    <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+                        <input type="text" id="bill-name" placeholder="Bill name" style="flex:2;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        <input type="number" id="bill-amount" placeholder="Amount" step="0.01" min="0" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        <button class="btn btn-primary btn-sm" onclick="addBill()">Add</button>
+                    </div>
+                    <button class="btn btn-success" onclick="saveBills()" style="margin-top:0.75rem;width:100%;">Save Bills</button>
+                    <div id="bills-status" style="margin-top:0.5rem;font-size:0.9rem;color:#059669;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('req-types-body', this)">
+                    <h2 style="margin:0;">Request Types</h2>
+                    <span style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="req-types-body" style="display:none;">
+                    <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Configure custom request types employees can submit. Fields support text, textarea, date, select, and checkbox types.</p>
+                    <div id="req-types-list"></div>
+                    <button class="btn btn-primary btn-sm" onclick="addRequestType()" style="margin-top:0.5rem;">+ Add Request Type</button>
+                    <button class="btn btn-success" onclick="saveRequestTypes()" style="margin-top:0.5rem;width:100%;">Save Request Types</button>
+                    <div id="req-types-status" style="margin-top:0.5rem;font-size:0.9rem;color:#059669;"></div>
                 </div>
             </div>
             <div class="card">
@@ -731,28 +828,17 @@
         </div>
     </div>
 
-    <div id="page-emp-timeoff" class="page">
+    <div id="page-emp-requests" class="page">
         <div class="card">
-            <h2>Request Time Off</h2>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Start Date</label>
-                    <input type="date" id="emp-to-start">
-                </div>
-                <div class="form-group">
-                    <label>End Date</label>
-                    <input type="date" id="emp-to-end">
-                </div>
+            <h2>Submit a Request</h2>
+            <div class="form-group">
+                <label>Request Type</label>
+                <select id="emp-req-type" onchange="renderRequestFields()" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;width:100%;"></select>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Reason</label>
-                    <input type="text" id="emp-to-reason" placeholder="Vacation, sick, etc.">
-                </div>
-            </div>
-            <button class="btn btn-primary" onclick="submitTimeOff()">Submit Request</button>
-            <div id="emp-to-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
-            <div id="emp-to-list" style="margin-top:1rem;"></div>
+            <div id="emp-req-fields"></div>
+            <button class="btn btn-primary" onclick="submitRequest()" style="margin-top:0.5rem;">Submit Request</button>
+            <div id="emp-req-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+            <div id="emp-req-list" style="margin-top:1rem;"></div>
         </div>
     </div>
 
@@ -784,10 +870,6 @@
         <div class="card" style="padding:0;">
             <div class="chat-view" id="emp-chat-view">
                 <div class="chat-messages" id="emp-chat-messages"></div>
-                <div class="chat-input-area">
-                    <input type="text" id="emp-chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')empChatSend()">
-                    <button class="btn btn-primary" onclick="empChatSend()">Send</button>
-                </div>
             </div>
         </div>
     </div>
@@ -931,6 +1013,51 @@
         </div>
     </div>
 
+    <!-- Manager Notes Modal -->
+    <div id="manager-notes-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Manager's Notes</h2>
+                <button class="close" onclick="closeManagerNotes()">&times;</button>
+            </div>
+            <form id="manager-notes-form" onsubmit="saveManagerNotes(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="mn-date" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Total Daily Sales ($)</label>
+                        <input type="number" id="mn-sales" step="0.01" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Cash Sales ($)</label>
+                        <input type="number" id="mn-cash" step="0.01" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Employee Notes</label>
+                        <textarea id="mn-employee-notes" rows="3" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Daily Notes</label>
+                        <textarea id="mn-daily-notes" rows="3" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;resize:vertical;"></textarea>
+                    </div>
+                </div>
+                <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeManagerNotes()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+                <div id="mn-status" style="margin-top:0.5rem;font-size:0.9rem;color:#059669;text-align:center;"></div>
+            </form>
+        </div>
+    </div>
+
     <!-- Template Manager Modal -->
     <div id="template-manager-modal" class="modal">
         <div class="modal-content">
@@ -944,6 +1071,41 @@
     </div>
 
     <!-- Swap Shift Dialog -->
+    <div id="shift-editor-overlay" class="shift-modal-overlay" onclick="closeShiftEditor(event)">
+        <div class="shift-modal" onclick="event.stopPropagation()">
+            <h3 id="shift-editor-title">Edit Shift</h3>
+            <p id="shift-editor-sub" style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;"></p>
+            <input type="hidden" id="shift-editor-emp">
+            <input type="hidden" id="shift-editor-day">
+            <div class="form-group">
+                <label>From</label>
+                <div id="shift-editor-start"></div>
+            </div>
+            <div class="form-group">
+                <label>To</label>
+                <div id="shift-editor-end"></div>
+            </div>
+            <div class="form-group">
+                <label style="margin-bottom:0.3rem;display:block;">Apply to days</label>
+                <div id="shift-editor-days" style="display:flex;gap:0.35rem;flex-wrap:wrap;"></div>
+            </div>
+            <div style="margin:0.75rem 0;display:flex;gap:0.35rem;flex-wrap:wrap;">
+                <button class="shift-preset-btn" onclick="shiftPreset(6,14)">6a-2p</button>
+                <button class="shift-preset-btn" onclick="shiftPreset(9,17)">9a-5p</button>
+                <button class="shift-preset-btn" onclick="shiftPreset(14,22)">2p-10p</button>
+                <span style="color:#cbd5e1;font-size:0.75rem;align-self:center;">|</span>
+                <button class="shift-preset-btn" onclick="shiftPreset(null,4)">4h</button>
+                <button class="shift-preset-btn" onclick="shiftPreset(null,6)">6h</button>
+                <button class="shift-preset-btn" onclick="shiftPreset(null,8)">8h</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-danger btn-sm" id="shift-editor-delete" onclick="deleteShiftEditor()">Delete</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeShiftEditor()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="saveShiftEditor()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="swap-dialog-overlay" class="shift-modal-overlay" onclick="closeSwapDialog(event)">
         <div class="shift-modal" onclick="event.stopPropagation()">
             <h3 id="swap-dialog-title">Swap Shift</h3>
@@ -1323,6 +1485,45 @@
             }
         }
 
+        // ─── Time Picker Helpers ────────────────────────────
+        function timeSelectHtml(id, value, onChange, disabled) {
+            const [h24, m] = (value || '').split(':');
+            const hNum = h24 ? parseInt(h24) : 12;
+            const hSel = hNum % 12 || 12;
+            const ampm = h24 !== undefined ? (hNum >= 12 ? 'PM' : 'AM') : 'AM';
+            const dis = disabled ? ' disabled' : '';
+            let html = `<select id="${id}-h" class="ts-time-h" onchange="${onChange || ''}" style="width:48px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;"${dis}>`;
+            for (let i = 1; i <= 12; i++) {
+                html += `<option value="${i}" ${i === hSel ? 'selected' : ''}>${i}</option>`;
+            }
+            html += `</select>:<select id="${id}-m" class="ts-time-m" onchange="${onChange || ''}" style="width:54px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;"${dis}>`;
+            for (const v of ['00', '15', '30', '45']) {
+                html += `<option value="${v}" ${v === m ? 'selected' : ''}>${v}</option>`;
+            }
+            html += `</select> <select id="${id}-a" class="ts-time-a" onchange="${onChange || ''}" style="width:54px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;"${dis}>`;
+            html += `<option value="AM" ${ampm === 'AM' ? 'selected' : ''}>AM</option>`;
+            html += `<option value="PM" ${ampm === 'PM' ? 'selected' : ''}>PM</option>`;
+            html += `</select>`;
+            return html;
+        }
+        function timeSelectValue(id) {
+            const h = parseInt(document.getElementById(`${id}-h`)?.value) || 12;
+            const m = document.getElementById(`${id}-m`)?.value || '00';
+            const a = document.getElementById(`${id}-a`)?.value || 'AM';
+            let h24 = h;
+            if (a === 'PM' && h < 12) h24 = h + 12;
+            if (a === 'AM' && h === 12) h24 = 0;
+            return String(h24).padStart(2, '0') + ':' + m;
+        }
+        function fmtTime12(val) {
+            if (!val) return '';
+            const [h, m] = val.split(':').map(Number);
+            if (isNaN(h)) return '';
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return h12 + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+        }
+
         // ─── Timesheet ──────────────────────────────────────
         let timesheetWeek = null;
         let tsClockEntries = [];
@@ -1415,10 +1616,10 @@
                         html += `<tr>
                             <td>${ei === 0 ? d.label : ''}</td>
                             <td>${ei === 0 ? d.iso : ''}</td>
-                            <td><input type="time" id="ts-cin-${idx}" value="${cin}" style="width:90px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;" onchange="tsPreviewHours(${idx})"></td>
-                            <td><input type="time" id="ts-cout-${idx}" value="${cout}" style="width:90px;padding:0.3rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.85rem;" onchange="tsPreviewHours(${idx})"></td>
+                            <td>${timeSelectHtml(`ts-cin-${idx}`, cin, `tsPreviewHours(${idx})`)}</td>
+                            <td>${timeSelectHtml(`ts-cout-${idx}`, cout, `tsPreviewHours(${idx})`)}</td>
                             <td><span id="ts-hrs-${idx}">${hrs.toFixed(2)}</span></td>
-                            <td><button class="btn btn-sm btn-danger" onclick="tsDeleteEntry(${idx})" style="font-size:0.7rem;">✕</button></td>
+                            <td><button class="btn btn-sm btn-danger" onclick="tsDeleteEntry(${entry.original_index})" style="font-size:0.7rem;">✕</button></td>
                         </tr>`;
                     });
                 }
@@ -1450,8 +1651,8 @@
         }
 
         function tsPreviewHours(idx) {
-            const cin = document.getElementById(`ts-cin-${idx}`)?.value;
-            const cout = document.getElementById(`ts-cout-${idx}`)?.value;
+            const cin = timeSelectValue(`ts-cin-${idx}`);
+            const cout = timeSelectValue(`ts-cout-${idx}`);
             const hrsEl = document.getElementById(`ts-hrs-${idx}`);
             if (cin && cout) {
                 const [ch, cm] = cin.split(':').map(Number);
@@ -1481,17 +1682,17 @@
             let saved = 0;
             for (const entry of empEntries) {
                 const idx = tsClockEntries.indexOf(entry);
-                const cinEl = document.getElementById(`ts-cin-${idx}`);
+                const cinEl = document.getElementById(`ts-cin-${idx}-h`);
                 if (!cinEl) continue;
-                const cin = cinEl.value;
-                const coutEl = document.getElementById(`ts-cout-${idx}`);
-                const cout = coutEl?.value || '';
+                const cin = timeSelectValue(`ts-cin-${idx}`);
+                const cout = timeSelectValue(`ts-cout-${idx}`);
                 const date = entry.date;
                 const clockIn = `${date}T${cin}:00`;
                 const clockOut = cout ? `${date}T${cout}:00` : null;
                 const body = {clock_in: clockIn};
                 if (cout) body.clock_out = clockOut;
-                const res = await fetch(`/api/timeclock/entry/${idx}`, {
+                const origIdx = entry.original_index;
+                const res = await fetch(`/api/timeclock/entry/${origIdx}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(body),
@@ -1568,17 +1769,16 @@
                 const empEntries = tsClockEntries.filter(e => e.employee_id === tsDetailEmpId);
                 for (const entry of empEntries) {
                     const idx = tsClockEntries.indexOf(entry);
-                    const cinEl = document.getElementById(`ts-cin-${idx}`);
+                    const cinEl = document.getElementById(`ts-cin-${idx}-h`);
                     if (!cinEl) continue;
-                    const cin = cinEl.value;
-                    const coutEl = document.getElementById(`ts-cout-${idx}`);
-                    const cout = coutEl?.value || '';
+                    const cin = timeSelectValue(`ts-cin-${idx}`);
+                    const cout = timeSelectValue(`ts-cout-${idx}`);
                     const date = entry.date;
                     const clockIn = `${date}T${cin}:00`;
                     const clockOut = cout ? `${date}T${cout}:00` : null;
                     const body = {clock_in: clockIn};
                     if (cout) body.clock_out = clockOut;
-                    await fetch(`/api/timeclock/entry/${idx}`, {
+                    await fetch(`/api/timeclock/entry/${entry.original_index}`, {
                         method: 'PUT',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify(body),
@@ -1876,20 +2076,16 @@
             document.getElementById(`page-${page}`).classList.add('active');
             const btn = document.querySelector(`.nav button[onclick*="'${page}'"]`);
             if (btn) btn.classList.add('active');
+            checkAnnouncementBadge();
+            if (page === 'dashboard') loadDashboard();
             if (page === 'history-reports') { loadHistory(); initReports(); }
-            if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); fetchEmployees(); }
+            if (page === 'manager-notes-history') loadManagerNotesHistory();
+            if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); fetchEmployees(); loadRequestTypesSettings(); }
             if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
             if (page === 'timesheet') renderTimesheet();
-            if (page === 'admin-timeoff') adminLoadTimeOff();
+            if (page === 'admin-requests') adminLoadRequests();
             if (page === 'admin-messages') {
-                const sel = document.getElementById('admin-chat-target');
-                if (sel) {
-                    sel.innerHTML = '<option value="all">All Employees</option>';
-                    if (employees && employees.length) {
-                        employees.forEach(e => { sel.innerHTML += `<option value="${e.id}">${e.name}</option>`; });
-                    }
-                }
-                adminLoadMessages();
+                adminLoadAnnouncements();
             }
         }
 
@@ -1903,6 +2099,13 @@
         // ─── Schedule ─────────────────────────────────────
         let scheduleData = {shifts: {}, status: 'draft', open_shifts: []};
         const SCHED_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+        const BLACKOUT_TYPES = {
+            vacation: {label: 'Vacation', bg: '#dbeafe', text: '#1e40af'},
+            holiday: {label: 'Holiday', bg: '#fce7f3', text: '#9d174d'},
+            maintenance: {label: 'Maintenance', bg: '#fed7aa', text: '#9a3412'},
+            other: {label: 'Other', bg: '#e2e8f0', text: '#475569'},
+        };
+        const EMP_COLORS = ['#1e3a5f','#059669','#7c3aed','#d97706','#0891b2','#be123c','#16a34a','#ca8a04','#db2777','#0284c7','#65a30d','#9333ea','#0d9488','#dc2626','#4f46e5'];
 
         function getSchedWeekInfo(dateStr) {
             const dt = new Date(dateStr + 'T00:00:00');
@@ -1938,9 +2141,18 @@
             scheduleData = await schedRes.json();
             if (!scheduleData.shifts) scheduleData.shifts = {};
             if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
+            if (!scheduleData.blackouts) scheduleData.blackouts = {};
+            if (!scheduleData.closures) scheduleData.closures = {};
             const emps = await empRes.json();
+            scheduleData._empNames = {};
+            emps.forEach(e => { scheduleData._empNames[e.id] = e.name; });
+            scheduleData._emps = emps;
 
-            const container = document.getElementById('schedule-container');
+            renderScheduleFromData();
+        }
+
+        function renderScheduleFromData() {
+            const emps = scheduleData._emps || [];
             const isPub = scheduleData.status === 'published';
             document.getElementById('publish-btn').textContent = isPub ? 'Unpublish' : 'Publish';
             document.getElementById('publish-btn').className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
@@ -1949,23 +2161,77 @@
             badge.style.background = isPub ? '#dcfce7' : '#fef3c7';
             badge.style.color = isPub ? '#166534' : '#92400e';
 
+            const container = document.getElementById('schedule-container');
             let html = '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
             SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;min-width:100px;">${d.slice(0,3)}</th>`; });
+            html += '<th style="text-align:center;width:50px;font-size:0.8rem;">Total</th>';
             html += '</tr></thead><tbody>';
 
-            emps.forEach(emp => {
-                const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({start:'', end:'', notes:''}));
-                html += `<tr><td><strong>${emp.name}</strong></td>`;
-                shifts.forEach((s, i) => {
+            // Business Closures row
+            html += `<tr style="background:#f8fafc;"><td><strong style="font-size:0.85rem;">Closures</strong>${!isPub ? `<br><span onclick="closeAllWeek()" style="font-size:0.65rem;color:#6366f1;cursor:pointer;">Close all week</span>` : ''}</td>`;
+            SCHED_DAYS.forEach((d, i) => {
+                const cl = scheduleData.closures?.[i];
+                if (cl) {
                     html += `<td style="padding:0.35rem;text-align:center;">
-                        <div style="display:flex;gap:2px;justify-content:center;align-items:center;">
-                            <input type="time" id="sched-${emp.id}-${i}-start" value="${s.start||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
-                            <span style="font-size:0.75rem;color:#94a3b8;">-</span>
-                            <input type="time" id="sched-${emp.id}-${i}-end" value="${s.end||''}" style="width:65px;padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;" ${isPub ? 'disabled' : ''}>
+                        <div style="background:#1e293b;color:white;padding:0.5rem;border-radius:4px;font-size:0.75rem;font-weight:600;">
+                            <div>Closed</div>
+                            <div style="font-size:0.65rem;font-weight:400;opacity:0.8;margin-top:2px;">${cl}</div>
+                            ${!isPub ? `<div onclick="toggleClosure(${i},'')" style="cursor:pointer;font-size:0.7rem;opacity:0.7;margin-top:2px;">✕</div>` : ''}
                         </div>
-                        ${s.notes ? `<div style="font-size:0.7rem;color:#64748b;margin-top:2px;">${s.notes}</div>` : ''}
                     </td>`;
+                } else {
+                    html += `<td style="padding:0.35rem;text-align:center;">
+                        ${!isPub ? `<button onclick="toggleClosure(${i})" style="font-size:0.7rem;padding:0.15rem 0.4rem;border:1px dashed #94a3b8;border-radius:3px;background:transparent;color:#94a3b8;cursor:pointer;">+ Close</button>` : '<span style="color:#cbd5e1;font-size:0.7rem;">—</span>'}
+                    </td>`;
+                }
+            });
+            html += '</tr>';
+
+            emps.forEach((emp, ei) => {
+                const shifts = scheduleData.shifts[emp.id] || SCHED_DAYS.map(() => ({start:'', end:'', notes:''}));
+                const color = EMP_COLORS[ei % EMP_COLORS.length];
+                html += `<tr><td><strong>${emp.name}</strong></td>`;
+                let weekTotal = 0;
+                shifts.forEach((s, i) => {
+                    const closed = scheduleData.closures?.[i];
+                    if (closed) {
+                        html += `<td style="padding:0.35rem;text-align:center;">
+                            <div style="background:#e2e8f0;color:#64748b;padding:0.5rem;border-radius:4px;font-size:0.75rem;font-weight:600;">Closed</div>
+                        </td>`;
+                        return;
+                    }
+                    const bo = scheduleData.blackouts?.[emp.id]?.[i];
+                    if (bo) {
+                        const bc = BLACKOUT_TYPES[bo] || BLACKOUT_TYPES.other;
+                        html += `<td style="padding:0.35rem;text-align:center;">
+                            <div style="background:${bc.bg};color:${bc.text};padding:0.4rem;border-radius:4px;font-size:0.75rem;font-weight:600;">
+                                <span>${bc.label}</span>
+                                ${!isPub ? `<span onclick="setBlackout('${emp.id}',${i},'')" style="cursor:pointer;font-size:0.8rem;opacity:0.6;margin-left:0.25rem;">✕</span>` : ''}
+                            </div>
+                        </td>`;
+                        return;
+                    }
+                    const hasShift = s.start && s.end;
+                    const onClick = isPub ? '' : ` onclick="openShiftEditor('${emp.id}',${i})"`;
+                    if (hasShift) {
+                        const [sh, sm] = s.start.split(':').map(Number);
+                        const [eh, em] = s.end.split(':').map(Number);
+                        let hrs = (eh + (em||0)/60) - (sh + (sm||0)/60);
+                        if (hrs < 0) hrs += 24;
+                        weekTotal += hrs;
+                        html += `<td style="padding:0.3rem;text-align:center;">
+                            <div class="sched-block${isPub ? ' pub' : ''}"${onClick} style="background:${color}15;color:${color};border-left:3px solid ${color};">
+                                <div class="sched-time">${fmtTime12(s.start)} – ${fmtTime12(s.end)}</div>
+                                ${s.notes ? `<div class="sched-notes">${s.notes}</div>` : ''}
+                            </div>
+                        </td>`;
+                    } else {
+                        html += `<td style="padding:0.3rem;text-align:center;">
+                            ${!isPub ? `<button class="sched-add-btn" onclick="openShiftEditor('${emp.id}',${i})">+</button>` : '<span style="color:#e2e8f0;font-size:1rem;">—</span>'}
+                        </td>`;
+                    }
                 });
+                html += `<td class="sched-total">${weekTotal > 0 ? weekTotal.toFixed(1) : ''}</td>`;
                 html += '</tr>';
             });
 
@@ -1978,9 +2244,9 @@
                 os.forEach((osft, oi) => {
                     html += `<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
                         <select id="os-day-${oi}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">${SCHED_DAYS.map((d,di) => `<option value="${di}" ${di===osft.weekday?'selected':''}>${d.slice(0,3)}</option>`).join('')}</select>
-                        <input type="time" id="os-start-${oi}" value="${osft.start||''}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">
+                        ${timeSelectHtml(`os-start-${oi}`, osft.start||'')}
                         <span style="color:#94a3b8;">-</span>
-                        <input type="time" id="os-end-${oi}" value="${osft.end||''}" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;">
+                        ${timeSelectHtml(`os-end-${oi}`, osft.end||'')}
                         <input type="text" id="os-notes-${oi}" value="${osft.notes||''}" placeholder="Notes" style="padding:0.25rem;border:1px solid #cbd5e1;border-radius:3px;flex:1;">
                         <button class="btn btn-danger btn-sm" onclick="removeOpenShift(${oi})" style="padding:0.25rem 0.5rem;">✕</button>
                     </div>`;
@@ -2001,10 +2267,11 @@
             emps.forEach(emp => {
                 const empShifts = [];
                 SCHED_DAYS.forEach((d, i) => {
+                    const s = scheduleData.shifts?.[emp.id]?.[i] || {};
                     empShifts.push({
-                        start: document.getElementById(`sched-${emp.id}-${i}-start`)?.value || '',
-                        end: document.getElementById(`sched-${emp.id}-${i}-end`)?.value || '',
-                        notes: scheduleData.shifts?.[emp.id]?.[i]?.notes || '',
+                        start: s.start || '',
+                        end: s.end || '',
+                        notes: s.notes || '',
                     });
                 });
                 shifts[emp.id] = empShifts;
@@ -2019,8 +2286,8 @@
                 if (dayEl) {
                     openShifts.push({
                         weekday: parseInt(dayEl.value),
-                        start: document.getElementById(`os-start-${i}`)?.value || '',
-                        end: document.getElementById(`os-end-${i}`)?.value || '',
+                        start: timeSelectValue(`os-start-${i}`) || '',
+                        end: timeSelectValue(`os-end-${i}`) || '',
                         notes: document.getElementById(`os-notes-${i}`)?.value || '',
                     });
                 }
@@ -2029,9 +2296,119 @@
             await fetch('/api/schedules', {
                 method: 'PUT',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({shifts, open_shifts: openShifts, week_start: wi.week_start, week_label: wi.week_label}),
+                body: JSON.stringify({shifts, open_shifts: openShifts, week_start: wi.week_start, week_label: wi.week_label, blackouts: scheduleData.blackouts || {}, closures: scheduleData.closures || {}}),
             });
             alert('Schedules saved');
+        }
+
+        function setBlackout(empId, dayIdx, type) {
+            if (!scheduleData.blackouts) scheduleData.blackouts = {};
+            if (!scheduleData.blackouts[empId]) scheduleData.blackouts[empId] = {};
+            if (type) {
+                scheduleData.blackouts[empId][dayIdx] = type;
+            } else {
+                delete scheduleData.blackouts[empId][dayIdx];
+                if (!Object.keys(scheduleData.blackouts[empId]).length) delete scheduleData.blackouts[empId];
+            }
+            renderScheduleFromData();
+        }
+
+        function toggleClosure(dayIdx, reason) {
+            if (!scheduleData.closures) scheduleData.closures = {};
+            if (reason === undefined) {
+                reason = prompt('Reason for closing (e.g. "Memorial Day"):');
+                if (!reason) return;
+                scheduleData.closures[dayIdx] = reason;
+            } else if (reason === '') {
+                delete scheduleData.closures[dayIdx];
+            } else {
+                scheduleData.closures[dayIdx] = reason;
+            }
+            renderScheduleFromData();
+        }
+
+        function closeAllWeek() {
+            const reason = prompt('Reason for closing the week (e.g. "Summer Break"):');
+            if (!reason) return;
+            if (!scheduleData.closures) scheduleData.closures = {};
+            SCHED_DAYS.forEach((d, i) => { scheduleData.closures[i] = reason; });
+            renderScheduleFromData();
+        }
+
+        // ─── Shift Editor Modal ──────────────────────────
+        function openShiftEditor(empId, dayIdx) {
+            const empName = scheduleData._empNames?.[empId] || empId;
+            document.getElementById('shift-editor-title').textContent = empName;
+            document.getElementById('shift-editor-sub').textContent = `${SCHED_DAYS[dayIdx]} — ${document.getElementById('sched-week-display')?.textContent || ''}`;
+            document.getElementById('shift-editor-emp').value = empId;
+            document.getElementById('shift-editor-day').value = dayIdx;
+            const shift = scheduleData.shifts?.[empId]?.[dayIdx] || {};
+            const startEl = document.getElementById('shift-editor-start');
+            const endEl = document.getElementById('shift-editor-end');
+            startEl.innerHTML = timeSelectHtml(`se-start`, shift.start||'');
+            endEl.innerHTML = timeSelectHtml(`se-end`, shift.end||'');
+            // Day checkboxes — pre-check the current day
+            const daysEl = document.getElementById('shift-editor-days');
+            daysEl.style.cssText = 'display:grid;grid-template-columns:repeat(7,1fr);gap:4px;';
+            daysEl.innerHTML = SCHED_DAYS.map((d, i) =>
+                `<label style="display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 2px;background:#f1f5f9;border-radius:6px;border:2px solid ${i === dayIdx ? '#6366f1' : '#e2e8f0'};font-size:0.7rem;color:#1e293b;font-weight:600;text-align:center;user-select:none;">
+                    <input type="checkbox" class="se-day-cb" value="${i}" ${i === dayIdx ? 'checked' : ''} style="width:16px;height:16px;accent-color:#6366f1;cursor:pointer;">
+                    <span style="font-size:0.6rem;color:#475569;">${d.slice(0,3)}</span>
+                </label>`
+            ).join('');
+            document.getElementById('shift-editor-delete').style.display = (shift.start || shift.end) ? '' : 'none';
+            document.getElementById('shift-editor-overlay').classList.add('active');
+        }
+
+        function closeShiftEditor(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('shift-editor-overlay').classList.remove('active');
+        }
+
+        function saveShiftEditor() {
+            const empId = document.getElementById('shift-editor-emp').value;
+            const start = timeSelectValue('se-start');
+            const end = timeSelectValue('se-end');
+            if (!scheduleData.shifts[empId]) scheduleData.shifts[empId] = SCHED_DAYS.map(() => ({}));
+            document.querySelectorAll('.se-day-cb:checked').forEach(cb => {
+                const i = parseInt(cb.value);
+                scheduleData.shifts[empId][i] = {start, end, notes: scheduleData.shifts?.[empId]?.[i]?.notes || ''};
+            });
+            closeShiftEditor({target: document.getElementById('shift-editor-overlay'), currentTarget: document.getElementById('shift-editor-overlay')});
+            renderScheduleFromData();
+        }
+
+        function shiftPreset(startH, endH) {
+            if (startH !== null && endH !== null) {
+                // Absolute times — fill the form fields only
+                const start = String(startH).padStart(2,'0') + ':00';
+                const end = String(endH).padStart(2,'0') + ':00';
+                const startEl = document.getElementById('shift-editor-start');
+                const endEl = document.getElementById('shift-editor-end');
+                startEl.innerHTML = timeSelectHtml(`se-start`, start);
+                endEl.innerHTML = timeSelectHtml(`se-end`, end);
+            } else {
+                // Duration preset: add endH hours from current start
+                const start = timeSelectValue('se-start');
+                if (!start) { alert('Set a start time first'); return; }
+                const [h, m] = start.split(':').map(Number);
+                let totalMin = h * 60 + m + endH * 60;
+                const endH2 = Math.floor(totalMin / 60) % 24;
+                const endM = totalMin % 60;
+                const end = String(endH2).padStart(2,'0') + ':' + String(endM).padStart(2,'0');
+                const endEl = document.getElementById('shift-editor-end');
+                endEl.innerHTML = timeSelectHtml(`se-end`, end);
+            }
+        }
+
+        function deleteShiftEditor() {
+            const empId = document.getElementById('shift-editor-emp').value;
+            const dayIdx = parseInt(document.getElementById('shift-editor-day').value);
+            if (scheduleData.shifts[empId]) {
+                scheduleData.shifts[empId][dayIdx] = {start: '', end: '', notes: ''};
+            }
+            closeShiftEditor({target: document.getElementById('shift-editor-overlay'), currentTarget: document.getElementById('shift-editor-overlay')});
+            renderScheduleFromData();
         }
 
         async function publishSchedule() {
@@ -2216,12 +2593,12 @@
         function addOpenShift() {
             if (!scheduleData.open_shifts) scheduleData.open_shifts = [];
             scheduleData.open_shifts.push({weekday: 0, start: '09:00', end: '17:00', notes: ''});
-            renderSchedule();
+            renderScheduleFromData();
         }
 
         function removeOpenShift(idx) {
             scheduleData.open_shifts.splice(idx, 1);
-            renderSchedule();
+            renderScheduleFromData();
         }
 
         let osIdCounter = 0;
@@ -2238,50 +2615,118 @@
         }
 
 
-        // ─── Admin Time Off ────────────────────────────────
-        async function adminLoadTimeOff() {
+        // ─── Admin Requests (all types) ──────────────────
+        function renderRequestFieldsDisplay(fields) {
+            if (!fields || typeof fields !== 'object') return '';
+            return Object.entries(fields).map(([k, v]) => {
+                if (k === 'anonymous') return '';
+                return `<div style="font-size:0.8rem;color:#475569;"><strong>${k.replace(/_/g,' ')}:</strong> ${v}</div>`;
+            }).join('');
+        }
+
+        function renderChecklist(cl) {
+            if (!cl || !cl.length) return '';
+            const done = cl.filter(i => i.done).length;
+            const pct = Math.round(done / cl.length * 100);
+            return `<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;">
+                <span style="color:#64748b;">${done}/${cl.length}</span>
+                <div style="flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
+                    <div style="height:100%;width:${pct}%;background:#059669;border-radius:3px;transition:width 0.3s;"></div>
+                </div>
+            </div>`;
+        }
+
+        function renderChecklistItems(reqId, cl) {
+            if (!cl || !cl.length) return '';
+            let h = `<div id="checklist-items-${reqId}" style="margin-top:0.5rem;padding:0.5rem;background:#fff;border-radius:4px;">`;
+            cl.forEach((item, idx) => {
+                h += `<label style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;font-size:0.85rem;cursor:pointer;user-select:none;">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem(${reqId}, ${idx}, this.checked)">
+                    <span style="${item.done ? 'text-decoration:line-through;color:#94a3b8;' : ''}">${item.label}</span>
+                </label>`;
+            });
+            h += '</div>';
+            return h;
+        }
+
+        async function toggleChecklistItem(reqId, idx, done) {
+            const res = await fetch('/api/requests');
+            const data = await res.json();
+            const req = data.requests.find(r => r.id === reqId);
+            if (!req || !req.checklist) return;
+            req.checklist[idx].done = done;
+            await fetch('/api/requests/checklist', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: reqId, items: req.checklist}),
+            });
+            // Update progress bar
+            const prog = document.getElementById(`checklist-progress-${reqId}`);
+            if (prog) {
+                const doneCount = req.checklist.filter(i => i.done).length;
+                const pct = Math.round(doneCount / req.checklist.length * 100);
+                prog.innerHTML = `<span style="color:#64748b;">${doneCount}/${req.checklist.length}</span>
+                    <div style="flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
+                        <div style="height:100%;width:${pct}%;background:#059669;border-radius:3px;transition:width 0.3s;"></div>
+                    </div>`;
+            }
+        }
+
+        async function adminLoadRequests() {
             const [res, empRes] = await Promise.all([
-                fetch('/api/timeoff'),
+                fetch('/api/requests'),
                 fetch('/api/employees'),
             ]);
             const data = await res.json();
             const emps = await empRes.json();
             const nameMap = {};
             emps.forEach(e => { nameMap[e.id] = e.name; });
-            const container = document.getElementById('admin-timeoff-container');
-            const status = document.getElementById('admin-timeoff-status');
+            const container = document.getElementById('admin-requests-container');
+            const status = document.getElementById('admin-requests-status');
             const requests = data.requests || [];
             if (!requests.length) {
-                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No time off requests.</p>';
+                container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:2rem 0;">No requests yet.</p>';
                 status.textContent = '';
                 return;
             }
-            let html = '<table><thead><tr><th>Employee</th><th>Start</th><th>End</th><th>Reason</th><th>Status</th><th></th></tr></thead><tbody>';
-            requests.forEach(r => {
+            let html = '<div style="overflow-x:auto;"><table><thead><tr><th>Employee</th><th>Type</th><th>Details</th><th>Checklist</th><th>Status</th><th></th></tr></thead><tbody>';
+            requests.slice().reverse().forEach(r => {
                 const isPending = r.status === 'pending';
-                const name = nameMap[r.employee_id] || r.employee_id;
+                const isAnonymous = r.type === 'Suggestion' && r.fields?.anonymous;
+                const name = isAnonymous ? 'Anonymous' : (nameMap[r.employee_id] || r.employee_id);
+                const fieldsHtml = renderRequestFieldsDisplay(r.fields);
+                const hasChecklist = r.checklist && r.checklist.length > 0;
+                const arrow = hasChecklist ? `<span style="cursor:pointer;font-size:0.9rem;color:#6366f1;margin-right:0.25rem;" onclick="document.getElementById('cl-expand-${r.id}').style.display=document.getElementById('cl-expand-${r.id}').style.display==='none'?'block':'none'">&#9654; Checklist</span>` : '';
                 html += `<tr>
                     <td><strong>${name}</strong></td>
-                    <td>${r.start_date}</td>
-                    <td>${r.end_date}</td>
-                    <td style="color:#64748b;font-size:0.85rem;">${r.reason || ''}</td>
+                    <td><span style="font-size:0.8rem;background:#e0e7ff;color:#3730a3;padding:0.15rem 0.5rem;border-radius:4px;">${r.type || 'Time Off'}</span></td>
+                    <td style="font-size:0.85rem;">${fieldsHtml || '-'}</td>
+                    <td style="font-size:0.85rem;">${hasChecklist ? `<div id="checklist-progress-${r.id}">${renderChecklist(r.checklist)}</div>` : '-'}</td>
                     <td><span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;background:${isPending?'#fef3c7':r.status==='approved'?'#dcfce7':'#f1f5f9'};color:${isPending?'#92400e':r.status==='approved'?'#166534':'#64748b'};">${r.status}</span></td>
-                    <td>${isPending ? `<button class="btn btn-sm btn-success" onclick="adminRespondTimeOff(${r.id},'approved')" style="margin-right:0.25rem;">Approve</button><button class="btn btn-sm btn-danger" onclick="adminRespondTimeOff(${r.id},'denied')">Deny</button>` : ''}</td>
+                    <td style="font-size:0.85rem;">
+                        ${isPending ? `<button class="btn btn-sm btn-success" onclick="adminRespondRequest(${r.id},'approved')" style="margin-right:0.25rem;">Approve</button><button class="btn btn-sm btn-danger" onclick="adminRespondRequest(${r.id},'denied')">Deny</button>` : ''}
+                        ${hasChecklist && !isPending ? arrow : ''}
+                    </td>
                 </tr>`;
+                if (hasChecklist) {
+                    html += `<tr id="cl-expand-${r.id}" style="display:${!isPending ? 'table-row' : 'none'};">
+                        <td colspan="6" style="padding:0.5rem 1rem;background:#f8fafc;">${renderChecklistItems(r.id, r.checklist)}</td>
+                    </tr>`;
+                }
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
             status.textContent = `${requests.length} request(s)`;
         }
 
-        async function adminRespondTimeOff(reqId, newStatus) {
-            const res = await fetch('/api/timeoff/respond', {
+        async function adminRespondRequest(reqId, newStatus) {
+            const res = await fetch('/api/requests/respond', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id: reqId, status: newStatus}),
             });
             if (res.ok) {
-                adminLoadTimeOff();
+                adminLoadRequests();
             } else {
                 const data = await res.json();
                 alert(data.error || 'Error');
@@ -2289,48 +2734,52 @@
         }
 
         // ─── Admin Messages (Chat) ────────────────────────
-        async function adminLoadMessages() {
+        async function adminLoadAnnouncements() {
+            await fetch('/api/messages/read', { method: 'POST' });
+            const badge = document.getElementById('announce-badge');
+            if (badge) badge.style.display = 'none';
+            const hBadge = document.getElementById('header-announce-badge');
+            if (hBadge) hBadge.style.display = 'none';
+            await adminRefreshAnnouncements();
+        }
+
+        async function adminRefreshAnnouncements() {
             const res = await fetch('/api/messages');
             const msgs = await res.json();
             const container = document.getElementById('admin-chat-messages');
             if (!container) return;
 
             if (!msgs.length) {
-                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No messages yet.</div>';
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No announcements yet.</div>';
                 return;
             }
 
-            const items = msgs.map(m => ({
-                body: m.body,
-                created_at: m.created_at,
-                from: m.from_employee_name || m.from_employee || m.created_by || 'Admin',
-                isSent: !m.from_employee,
-            }));
-
-            items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            msgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
             let html = '';
             let lastDate = '';
-            items.forEach(item => {
-                const date = new Date(item.created_at);
+            msgs.forEach(m => {
+                const date = new Date(m.created_at);
                 const dateStr = date.toLocaleDateString();
                 const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 if (dateStr !== lastDate) {
                     html += `<div style="text-align:center;font-size:0.7rem;color:#94a3b8;padding:0.5rem 0 0.25rem;font-weight:500;">${dateStr}</div>`;
                     lastDate = dateStr;
                 }
-                const side = item.isSent ? 'sent' : 'received';
-                const nameHtml = (!item.isSent && item.from) ? `<div class="sender-name">${item.from}</div>` : '';
-                html += `<div class="chat-bubble ${side}">${nameHtml}<div>${item.body}</div><div class="bubble-time">${timeStr}</div></div>`;
+                const by = m.created_by ? ` &mdash; ${m.created_by}` : '';
+                html += `<div class="chat-bubble received" style="position:relative;padding-right:2rem;">
+                    <div>${m.body}</div>
+                    <div class="bubble-time">${timeStr}${by}</div>
+                    <span onclick="adminDeleteAnnouncement(${m.id})" style="position:absolute;top:0.3rem;right:0.5rem;cursor:pointer;color:#94a3b8;font-size:1rem;line-height:1;">&times;</span>
+                </div>`;
             });
 
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
         }
 
-        async function adminChatSend() {
+        async function adminSendAnnouncement() {
             const input = document.getElementById('admin-chat-input');
-            const target = document.getElementById('admin-chat-target').value;
             const body = input.value.trim();
             if (!body) return;
             input.value = '';
@@ -2338,7 +2787,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',
-                body: JSON.stringify({ target, subject: '.', body }),
+                body: JSON.stringify({ body }),
             });
             if (!res.ok) {
                 let err = 'Send failed';
@@ -2346,7 +2795,64 @@
                 alert('Error: ' + err);
                 return;
             }
-            adminLoadMessages();
+            checkAnnouncementBadge();
+            adminRefreshAnnouncements();
+        }
+
+        async function adminDeleteAnnouncement(id) {
+            if (!confirm('Delete this announcement?')) return;
+            const res = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                adminLoadAnnouncements();
+            } else {
+                alert('Failed to delete');
+            }
+        }
+
+        async function checkEmployeeBadges() {
+            if (!empSession) return;
+            try {
+                const res = await fetch('/api/employee/notifications');
+                if (!res.ok) return;
+                const data = await res.json();
+                const sBadge = document.getElementById('emp-schedule-badge');
+                if (sBadge) sBadge.style.display = data.new_schedule ? 'inline-block' : 'none';
+                const aBadge = document.getElementById('emp-announce-badge');
+                if (aBadge) aBadge.style.display = data.new_announcements > 0 ? 'inline-block' : 'none';
+                const hBadge = document.getElementById('header-announce-badge');
+                if (hBadge) {
+                    if (data.new_announcements > 0) {
+                        hBadge.textContent = data.new_announcements + ' unread';
+                        hBadge.style.display = 'inline-block';
+                    } else {
+                        hBadge.style.display = 'none';
+                    }
+                }
+            } catch (_) {}
+        }
+
+        async function checkAnnouncementBadge() {
+            const badge = document.getElementById('announce-badge');
+            const hBadge = document.getElementById('header-announce-badge');
+            try {
+                const res = await fetch('/api/messages/unread');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.count > 0) {
+                    const text = data.count > 99 ? '99+' : String(data.count);
+                    if (badge) {
+                        badge.textContent = text;
+                        badge.style.cssText = 'background:#dc2626;color:white;font-size:0.55rem;font-weight:700;min-width:16px;height:14px;border-radius:7px;display:inline-block;text-align:center;padding:0 4px;line-height:14px;margin-left:2px;';
+                    }
+                    if (hBadge) {
+                        hBadge.textContent = text + ' unread';
+                        hBadge.style.display = 'inline-block';
+                    }
+                } else {
+                    if (badge) badge.style.display = 'none';
+                    if (hBadge) hBadge.style.display = 'none';
+                }
+            } catch (_) {}
         }
 
         // ─── Employee Schedule ─────────────────────────────
@@ -3055,7 +3561,9 @@
                     document.getElementById('emp-logout-btn').style.display = 'none';
                     fetchEmployees();
                     loadWeekPicker();
-                    showPage('timesheet');
+                    showPage('dashboard');
+                    checkAnnouncementBadge();
+                    setInterval(checkAnnouncementBadge, 30000);
                     return;
                 }
                 // Try employee login
@@ -3196,12 +3704,13 @@
             if (el) el.classList.add('active');
             const btn = document.querySelector(`#emp-nav button[onclick*="'${page}'"]`);
             if (btn) btn.classList.add('active');
+            checkEmployeeBadges();
 
             if (page === 'emp-schedule') empLoadSchedule();
-            if (page === 'emp-timeoff') empLoadTimeOff();
+            if (page === 'emp-requests') { loadRequestTypes(); empLoadRequests(); }
             if (page === 'emp-timesheet') empLoadTimesheet();
             if (page === 'emp-paystubs') empLoadPaystubs();
-            if (page === 'emp-messages') { empLoadMessages(); startEmpChatPoll(); } else { stopEmpChatPoll(); }
+            if (page === 'emp-messages') empLoadAnnouncements();
         }
 
         async function empLogin(username, pin) {
@@ -3221,6 +3730,8 @@
                     document.getElementById('emp-label').textContent = empSession.name + (empSession.role === 'manager' ? ' (Manager)' : '');
                     document.body.classList.add('emp-mode');
                     showEmpPage('emp-schedule');
+                    checkEmployeeBadges();
+                    setInterval(checkEmployeeBadges, 30000);
                     // Load employees list for swap dialog
                     const empRes = await fetch('/api/employees');
                     if (empRes.ok) employees = await empRes.json();
@@ -3264,6 +3775,21 @@
             let html = '<table><thead><tr><th>Day</th><th>Start</th><th>End</th><th></th></tr></thead><tbody>';
             let hasAny = false;
             DAYS.forEach((d, i) => {
+                const closures = data.closures || {};
+                const cl = closures[i];
+                if (cl) {
+                    hasAny = true;
+                    html += `<tr><td>${d}</td><td colspan="3"><span style="background:#1e293b;color:white;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;">Closed — ${cl}</span></td></tr>`;
+                    return;
+                }
+                const blackouts = data.blackouts || {};
+                const bo = blackouts[i];
+                if (bo) {
+                    const bc = BLACKOUT_TYPES[bo] || BLACKOUT_TYPES.other;
+                    hasAny = true;
+                    html += `<tr><td>${d}</td><td colspan="2"><span style="background:${bc.bg};color:${bc.text};padding:0.2rem 0.5rem;border-radius:4px;font-size:0.8rem;font-weight:600;">${bc.label}</span></td><td></td></tr>`;
+                    return;
+                }
                 const s = shifts[i] || {};
                 if (s.start && s.end) {
                     hasAny = true;
@@ -3275,6 +3801,7 @@
             container.innerHTML = hasAny ? html : '<p style="color:#64748b;">No schedule set for this week.</p>';
             empLoadOpenShifts();
             empLoadSwapRequests();
+            fetch('/api/employee/notifications/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'schedule'})}).then(() => checkEmployeeBadges());
         }
 
         async function empLoadTimesheet() {
@@ -3338,43 +3865,116 @@
             container.innerHTML = html;
         }
 
-        async function submitTimeOff() {
-            const statusEl = document.getElementById('emp-to-status');
-            const start = document.getElementById('emp-to-start').value;
-            const end = document.getElementById('emp-to-end').value;
-            const reason = document.getElementById('emp-to-reason').value;
-            if (!start || !end) { statusEl.textContent = 'Select start and end dates'; return; }
-            const res = await fetch('/api/timeoff/request', {
+        // ─── Request Types Management ──────────────────────
+        let requestTypes = {types: []};
+
+        async function loadRequestTypes() {
+            const res = await fetch('/api/request-types');
+            if (res.ok) {
+                requestTypes = await res.json();
+                if (!requestTypes.types) requestTypes.types = [];
+            }
+            const sel = document.getElementById('emp-req-type');
+            if (!sel) return;
+            sel.innerHTML = '';
+            requestTypes.types.forEach((t, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = t.name;
+                sel.appendChild(opt);
+            });
+            renderRequestFields();
+        }
+
+        function renderRequestFields() {
+            const container = document.getElementById('emp-req-fields');
+            const sel = document.getElementById('emp-req-type');
+            if (!container || !sel) return;
+            const idx = parseInt(sel.value);
+            const type = requestTypes.types[idx];
+            if (!type || !type.fields) { container.innerHTML = ''; return; }
+            let html = '';
+            type.fields.forEach(f => {
+                html += '<div class="form-group">';
+                html += `<label>${f.label}</label>`;
+                if (f.type === 'select') {
+                    html += `<select id="emp-req-field-${f.key}" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">`;
+                    (f.options || []).forEach(o => { html += `<option value="${o}">${o}</option>`; });
+                    html += '</select>';
+                } else if (f.type === 'textarea') {
+                    html += `<textarea id="emp-req-field-${f.key}" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;min-height:60px;"></textarea>`;
+                } else if (f.type === 'checkbox') {
+                    html += `<label style="display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;cursor:pointer;"><input type="checkbox" id="emp-req-field-${f.key}"> ${f.label}</label>`;
+                } else {
+                    html += `<input type="${f.type || 'text'}" id="emp-req-field-${f.key}" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">`;
+                }
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        async function submitRequest() {
+            const statusEl = document.getElementById('emp-req-status');
+            const sel = document.getElementById('emp-req-type');
+            const idx = parseInt(sel?.value || 0);
+            const type = requestTypes.types[idx];
+            if (!type) { statusEl.textContent = 'Select a request type'; return; }
+            const fields = {};
+            let valid = true;
+            (type.fields || []).forEach(f => {
+                const el = document.getElementById(`emp-req-field-${f.key}`);
+                if (!el) return;
+                if (f.type === 'checkbox') {
+                    fields[f.key] = el.checked;
+                } else {
+                    const val = el.value.trim();
+                    if (f.type !== 'checkbox' && !val) valid = false;
+                    fields[f.key] = val;
+                }
+            });
+            if (!valid) { statusEl.textContent = 'Fill in all fields'; return; }
+            const res = await fetch('/api/requests', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({employee_id: empSession.id, start_date: start, end_date: end, reason}),
+                body: JSON.stringify({employee_id: empSession.id, type: type.name, fields}),
             });
             const data = await res.json();
             if (res.ok) {
                 statusEl.style.color = '#059669';
                 statusEl.textContent = 'Request submitted';
-                document.getElementById('emp-to-start').value = '';
-                document.getElementById('emp-to-end').value = '';
-                document.getElementById('emp-to-reason').value = '';
-                empLoadTimeOff();
+                renderRequestFields();
+                empLoadRequests();
             } else {
                 statusEl.style.color = '#dc2626';
                 statusEl.textContent = data.error || 'Error';
             }
         }
 
-        async function empLoadTimeOff() {
-            const res = await fetch(`/api/employee/timeoff?employee_id=${empSession.id}`);
+        async function empLoadRequests() {
+            const res = await fetch(`/api/employee/requests?employee_id=${empSession.id}`);
             const data = await res.json();
-            const container = document.getElementById('emp-to-list');
+            const container = document.getElementById('emp-req-list');
             if (!data.length) {
                 container.innerHTML = '<p style="color:#64748b;">No requests yet.</p>';
                 return;
             }
-            let html = '<h3 style="margin-top:1rem;">My Requests</h3><div style="overflow-x:auto;"><table><thead><tr><th>Dates</th><th>Reason</th><th>Status</th></tr></thead><tbody>';
-            data.forEach(r => {
+            let html = '<h3 style="margin-top:1rem;">My Requests</h3><div style="overflow-x:auto;"><table><thead><tr><th>Type</th><th>Details</th><th>Checklist</th><th>Status</th></tr></thead><tbody>';
+            data.slice().reverse().forEach(r => {
                 const color = r.status === 'approved' ? '#059669' : r.status === 'denied' ? '#dc2626' : '#f59e0b';
-                html += `<tr><td>${r.start_date} to ${r.end_date}</td><td>${r.reason}</td><td style="color:${color};font-weight:600;">${r.status}</td></tr>`;
+                const detail = r.fields ? Object.entries(r.fields).filter(([k]) => k !== 'anonymous').map(([k, v]) => `${k.replace(/_/g,' ')}: ${v}`).join(', ') : '';
+                const cl = r.checklist;
+                let clHtml = '-';
+                if (cl && cl.length > 0) {
+                    const done = cl.filter(i => i.done).length;
+                    const pct = Math.round(done / cl.length * 100);
+                    clHtml = `<div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
+                        <span style="color:#64748b;white-space:nowrap;">${done}/${cl.length}</span>
+                        <div style="flex:1;min-width:40px;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:#059669;border-radius:3px;"></div>
+                        </div>
+                    </div>`;
+                }
+                html += `<tr><td><span style="font-size:0.8rem;background:#e0e7ff;color:#3730a3;padding:0.15rem 0.5rem;border-radius:4px;">${r.type || 'Time Off'}</span></td><td style="font-size:0.85rem;">${detail || '-'}</td><td style="font-size:0.85rem;">${clHtml}</td><td style="color:${color};font-weight:600;">${r.status}</td></tr>`;
             });
             html += '</tbody></table></div>';
             container.innerHTML = html;
@@ -3474,37 +4074,24 @@
         }
 
 
-        // ─── Employee Messages (Chat) ─────────────────────
-        let empChatPoll = null;
-
-        async function empLoadMessages() {
-            const [msgRes, notifRes] = await Promise.all([fetch('/api/messages'), fetch('/api/notifications')]);
-            const msgs = await msgRes.json();
-            const notifs = await notifRes.json();
+        // ─── Employee Announcements ────────────────────────
+        async function empLoadAnnouncements() {
+            const res = await fetch('/api/messages');
+            const msgs = await res.json();
             const container = document.getElementById('emp-chat-messages');
             if (!container) return;
 
-            const items = [];
-            msgs.forEach(m => {
-                const fromName = m.from_employee_name || m.created_by || 'Admin';
-                const isSent = empSession && (m.from_employee === empSession.id);
-                items.push({ type: 'message', body: m.body, created_at: m.created_at, from: fromName, isSent: isSent });
-            });
-            notifs.forEach(n => {
-                items.push({ type: 'notification', message: n.message, created_at: n.created_at });
-            });
-
-            items.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-            if (!items.length) {
-                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No messages yet.</div>';
+            if (!msgs.length) {
+                container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:2rem 0;font-size:0.85rem;">No announcements yet.</div>';
                 return;
             }
 
+            msgs.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
             let html = '';
             let lastDate = '';
-            items.forEach(item => {
-                const date = new Date(item.created_at);
+            msgs.forEach(m => {
+                const date = new Date(m.created_at);
                 const dateStr = date.toLocaleDateString();
                 const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -3513,49 +4100,13 @@
                     lastDate = dateStr;
                 }
 
-                if (item.type === 'notification') {
-                    html += `<div class="chat-bubble system">${item.message}</div>`;
-                } else {
-                    const side = item.isSent ? 'sent' : 'received';
-                    const nameHtml = (!item.isSent && item.from) ? `<div class="sender-name">${item.from}</div>` : '';
-                    html += `<div class="chat-bubble ${side}">${nameHtml}<div>${item.body}</div><div class="bubble-time">${timeStr}</div></div>`;
-                }
+                const by = m.created_by ? ` &mdash; ${m.created_by}` : '';
+                html += `<div class="chat-bubble received"><div>${m.body}</div><div class="bubble-time">${timeStr}${by}</div></div>`;
             });
 
             container.innerHTML = html;
             container.scrollTop = container.scrollHeight;
-        }
-
-        async function empChatSend() {
-            const input = document.getElementById('emp-chat-input');
-            const body = input.value.trim();
-            if (!body) return;
-            input.value = '';
-            const res = await fetch('/api/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ subject: '.', body }),
-            });
-            if (!res.ok) {
-                let err = 'Send failed';
-                try { const d = await res.json(); err = d.error || err; } catch(_) {}
-                alert('Error: ' + err);
-                return;
-            }
-            empLoadMessages();
-        }
-
-        function startEmpChatPoll() {
-            if (empChatPoll) clearInterval(empChatPoll);
-            empChatPoll = setInterval(() => {
-                const page = document.getElementById('page-emp-messages');
-                if (page && page.classList.contains('active')) empLoadMessages();
-            }, 5000);
-        }
-
-        function stopEmpChatPoll() {
-            if (empChatPoll) { clearInterval(empChatPoll); empChatPoll = null; }
+            fetch('/api/employee/notifications/read', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'announcements'})}).then(() => checkEmployeeBadges());
         }
 
         // ─── Open Shift Claiming ──────────────────────────
@@ -3716,6 +4267,8 @@
                     document.getElementById('emp-label').textContent = empSession.name + (empSession.role === 'manager' ? ' (Manager)' : '');
                     document.body.classList.add('emp-mode');
                     showEmpPage('emp-schedule');
+                    checkEmployeeBadges();
+                    setInterval(checkEmployeeBadges, 30000);
                 } else {
                     // Check admin session
                     fetch('/api/session').then(r => r.json()).then(s => {
@@ -3725,19 +4278,344 @@
                             document.getElementById('user-label').textContent = s.user;
                             fetchEmployees();
                             loadWeekPicker();
-                            showPage('timesheet');
+                            showPage('dashboard');
+                            checkAnnouncementBadge();
+                            setInterval(checkAnnouncementBadge, 30000);
                         }
                     });
                 }
             });
         });
+
+        // ─── Dashboard ─────────────────────────────────────
+        let dashChart = null;
+        let billsData = {bills: []};
+
+        async function loadDashboard() {
+            const res = await fetch('/api/dashboard');
+            if (!res.ok) return;
+            const data = await res.json();
+
+            document.getElementById('dash-labor').textContent = '$' + data.labor_today.toFixed(2);
+            document.getElementById('dash-messages').textContent = data.unread_count;
+
+            // Pending requests (all types)
+            const toContainer = document.getElementById('dash-timeoff-list');
+            if (data.pending_requests && data.pending_requests.length > 0) {
+                toContainer.innerHTML = '<div style="display:flex;flex-direction:column;gap:0.35rem;">';
+                data.pending_requests.forEach(r => {
+                    const label = r.type || 'Request';
+                    const isAnonymous = r.type === 'Suggestion' && r.fields?.anonymous;
+                    const who = isAnonymous ? 'Anonymous' : (r.employee_name || r.employee_id || '');
+                    const detail = r.fields ? Object.entries(r.fields).filter(([k]) => k !== 'anonymous').map(([k, v]) => `${k.replace(/_/g,' ')}: ${v}`).slice(0, 2).join(', ') : '';
+                    toContainer.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0.5rem;background:#f8fafc;border-radius:4px;font-size:0.85rem;">
+                        <span style="font-weight:500;white-space:nowrap;">${label}</span>
+                        <span style="color:#64748b;font-size:0.8rem;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 0.5rem;">${detail}</span>
+                        <span style="color:#94a3b8;font-size:0.8rem;white-space:nowrap;">${who}</span>
+                        <span class="badge" style="background:#fef3c7;color:#92400e;margin-left:0.25rem;">pending</span>
+                    </div>`;
+                });
+                toContainer.innerHTML += '</div>';
+            } else {
+                toContainer.innerHTML = '<div class="empty-state">None</div>';
+            }
+
+            // Load bills for chart
+            await loadBills();
+
+            // Populate month selector
+            const sel = document.getElementById('dash-month-year');
+            const current = new Date();
+            const currentVal = current.toISOString().slice(0, 7);
+            sel.innerHTML = '';
+            const months = {};
+            if (data.month_data) {
+                Object.keys(data.month_data).sort().forEach(m => { months[m] = data.month_data[m]; });
+            }
+            // Add current month if not present
+            if (!months[currentVal]) months[currentVal] = {gross: 0, labor: 0};
+            Object.keys(months).sort().reverse().forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                const d = new Date(m + '-01');
+                opt.textContent = d.toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+                sel.appendChild(opt);
+            });
+            sel.value = currentVal;
+            loadDashboardChart(data);
+        }
+
+        function loadDashboardChart(dashData) {
+            const sel = document.getElementById('dash-month-year');
+            const month = sel.value;
+            if (!month) return;
+            const canvas = document.getElementById('dash-chart');
+            if (dashChart) { dashChart.destroy(); dashChart = null; }
+
+            const useData = (dashData && dashData.month_data) ? dashData : null;
+
+            const draw = (data) => {
+                const md = data.month_data || {};
+                const mData = md[month] || {gross: 0, labor: 0};
+                const totalBills = data.total_bills || 0;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                dashChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Sales (Gross)', 'Labor Cost', 'Bills'],
+                        datasets: [{
+                            label: 'Monthly ($)',
+                            data: [mData.gross, mData.labor, totalBills],
+                            backgroundColor: ['#1e3a5f', '#059669', '#dc2626'],
+                            borderRadius: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: v => '$' + (v.toLocaleString ? v.toLocaleString() : v) }
+                            }
+                        }
+                    }
+                });
+            };
+
+            if (useData) {
+                draw(useData);
+            } else {
+                fetch('/api/dashboard').then(r => r.json()).then(draw).catch(() => {});
+            }
+        }
+
+        async function openManagerNotes() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('mn-date').value = today;
+            document.getElementById('mn-sales').value = '';
+            document.getElementById('mn-cash').value = '';
+            document.getElementById('mn-employee-notes').value = '';
+            document.getElementById('mn-daily-notes').value = '';
+            document.getElementById('mn-status').textContent = '';
+
+            // Try to load existing note for today
+            const res = await fetch('/api/manager-notes');
+            if (res.ok) {
+                const data = await res.json();
+                const existing = (data.notes || []).find(n => n.date === today);
+                if (existing) {
+                    document.getElementById('mn-sales').value = existing.sales || '';
+                    document.getElementById('mn-cash').value = existing.cash_sales || '';
+                    document.getElementById('mn-employee-notes').value = existing.employee_notes || '';
+                    document.getElementById('mn-daily-notes').value = existing.daily_notes || '';
+                }
+            }
+
+            document.getElementById('manager-notes-modal').classList.add('active');
+        }
+
+        function closeManagerNotes() {
+            document.getElementById('manager-notes-modal').classList.remove('active');
+        }
+
+        async function saveManagerNotes(e) {
+            e.preventDefault();
+            const data = {
+                date: document.getElementById('mn-date').value,
+                sales: parseFloat(document.getElementById('mn-sales').value) || 0,
+                cash_sales: parseFloat(document.getElementById('mn-cash').value) || 0,
+                employee_notes: document.getElementById('mn-employee-notes').value,
+                daily_notes: document.getElementById('mn-daily-notes').value,
+            };
+            const res = await fetch('/api/manager-notes', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data),
+            });
+            if (res.ok) {
+                document.getElementById('mn-status').textContent = 'Notes saved!';
+                setTimeout(closeManagerNotes, 1000);
+                loadDashboard();
+            }
+        }
+
+        async function loadManagerNotesHistory() {
+            const search = document.getElementById('mn-search')?.value || '';
+            const url = search ? '/api/manager-notes?search=' + encodeURIComponent(search) : '/api/manager-notes';
+            const res = await fetch(url);
+            if (!res.ok) return;
+            const data = await res.json();
+            const container = document.getElementById('manager-notes-history-list');
+            const notes = data.notes || [];
+            if (notes.length === 0) {
+                container.innerHTML = '<div class="empty-state">No notes found.</div>';
+                return;
+            }
+            let html = '';
+            notes.forEach(n => {
+                html += `<div style="background:#f8fafc;border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
+                        <strong style="font-size:0.9rem;">${n.date}</strong>
+                        <span style="font-size:0.85rem;color:#475569;">Sales: $${parseFloat(n.sales||0).toFixed(2)} | Cash: $${parseFloat(n.cash_sales||0).toFixed(2)}</span>
+                    </div>
+                    ${n.employee_notes ? '<div style="font-size:0.85rem;color:#64748b;margin-bottom:0.25rem;"><strong>Employee Notes:</strong> ' + n.employee_notes + '</div>' : ''}
+                    ${n.daily_notes ? '<div style="font-size:0.85rem;color:#64748b;"><strong>Daily Notes:</strong> ' + n.daily_notes + '</div>' : ''}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // ─── Bills ─────────────────────────────────────────
+        async function loadBills() {
+            const res = await fetch('/api/bills');
+            if (res.ok) {
+                billsData = await res.json();
+                if (!billsData.bills) billsData.bills = [];
+                renderBills();
+            }
+        }
+
+        function renderBills() {
+            const container = document.getElementById('bills-list');
+            if (!container) return;
+            if (billsData.bills.length === 0) {
+                container.innerHTML = '<div class="empty-state">No bills configured.</div>';
+                return;
+            }
+            let html = '';
+            billsData.bills.forEach((b, i) => {
+                html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.5rem;background:#f8fafc;border-radius:4px;margin-bottom:0.35rem;font-size:0.9rem;">
+                    <span>${b.name}</span>
+                    <span style="font-weight:600;">$${(b.amount||0).toFixed(2)}</span>
+                    <button class="btn btn-danger btn-sm" onclick="removeBill(${i})" style="min-height:30px;padding:0.25rem 0.5rem;font-size:0.8rem;">X</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function addBill() {
+            const name = document.getElementById('bill-name').value.trim();
+            const amount = parseFloat(document.getElementById('bill-amount').value) || 0;
+            if (!name || amount <= 0) { alert('Enter a bill name and amount.'); return; }
+            billsData.bills.push({name, amount});
+            document.getElementById('bill-name').value = '';
+            document.getElementById('bill-amount').value = '';
+            renderBills();
+        }
+
+        function removeBill(index) {
+            billsData.bills.splice(index, 1);
+            renderBills();
+        }
+
+        async function saveBills() {
+            const res = await fetch('/api/bills', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(billsData),
+            });
+            if (res.ok) {
+                document.getElementById('bills-status').textContent = 'Bills saved!';
+                setTimeout(() => document.getElementById('bills-status').textContent = '', 2000);
+                loadDashboard();
+            }
+        }
+        // ─── Request Types Settings ──────────────────────────
+        let reqTypesData = {types: []};
+
+        async function loadRequestTypesSettings() {
+            const res = await fetch('/api/request-types');
+            if (res.ok) {
+                reqTypesData = await res.json();
+                if (!reqTypesData.types) reqTypesData.types = [];
+                renderRequestTypesSettings();
+            }
+        }
+
+        function renderRequestTypesSettings() {
+            const container = document.getElementById('req-types-list');
+            if (!container) return;
+            if (reqTypesData.types.length === 0) {
+                container.innerHTML = '<div class="empty-state">No custom request types configured.</div>';
+                return;
+            }
+            let html = '';
+            reqTypesData.types.forEach((t, i) => {
+                const cl = t.checklist;
+                const clStr = cl && cl.length ? `Checklist: ${cl.join(' → ')}` : 'No checklist';
+                html += `<div style="background:#f8fafc;border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                        <strong style="font-size:0.95rem;">${t.name}</strong>
+                        <button class="btn btn-danger btn-sm" onclick="removeRequestType(${i})" style="min-height:30px;padding:0.25rem 0.5rem;font-size:0.8rem;">X</button>
+                    </div>
+                    <div style="font-size:0.8rem;color:#64748b;">Fields: ${(t.fields||[]).map(f => f.label).join(', ') || 'none'}</div>
+                    <div style="font-size:0.8rem;color:#64748b;margin-top:0.2rem;">${clStr}</div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function addRequestType() {
+            const name = prompt('Request type name (e.g. "New Work Shirt"):');
+            if (!name || !name.trim()) return;
+            const fields = [];
+            let addMore = true;
+            while (addMore) {
+                const label = prompt('Field label (e.g. "Size", "Color") or leave blank to finish:');
+                if (!label || !label.trim()) { addMore = false; break; }
+                const key = label.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                const type = prompt('Field type (text, textarea, date, select, checkbox):', 'text') || 'text';
+                let options = [];
+                if (type === 'select') {
+                    const opts = prompt('Enter options separated by comma (e.g. XS,S,M,L,XL):');
+                    if (opts) options = opts.split(',').map(s => s.trim());
+                }
+                fields.push({key, label: label.trim(), type, options});
+            }
+            if (fields.length === 0) { alert('At least one field is required.'); return; }
+            // Checklist
+            const checklist = [];
+            let addCl = true;
+            while (addCl) {
+                const item = prompt('Checklist item (e.g. "Order item") or leave blank to finish:');
+                if (!item || !item.trim()) { addCl = false; break; }
+                checklist.push(item.trim());
+            }
+            reqTypesData.types.push({name: name.trim(), fields, checklist: checklist.length > 0 ? checklist : undefined});
+            renderRequestTypesSettings();
+        }
+
+        function removeRequestType(index) {
+            reqTypesData.types.splice(index, 1);
+            renderRequestTypesSettings();
+        }
+
+        async function saveRequestTypes() {
+            const res = await fetch('/api/request-types', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(reqTypesData),
+            });
+            if (res.ok) {
+                document.getElementById('req-types-status').textContent = 'Request types saved!';
+                setTimeout(() => document.getElementById('req-types-status').textContent = '', 2000);
+            } else {
+                alert('Error saving request types');
+            }
+        }
     </script>
     <div class="nav" id="admin-nav">
+        <button onclick="showPage('dashboard')">Dashboard</button>
         <button onclick="showPage('timesheet')">Timesheet</button>
         <button onclick="showPage('payroll')">Payroll</button>
         <button onclick="showPage('schedule')">Schedule</button>
-        <button onclick="showPage('admin-timeoff')">Time Off</button>
-        <button onclick="showPage('admin-messages')">Messages</button>
+        <button onclick="showPage('admin-requests')">Requests</button>
+        <button onclick="showPage('admin-messages')"><span style="display:flex;align-items:center;gap:2px;">Announcements<span id="announce-badge"></span></span></button>
         <button onclick="showPage('history-reports')">Reports</button>
         <button onclick="showPage('app-settings')">Settings</button>
     </div>
