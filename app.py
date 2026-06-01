@@ -1318,6 +1318,27 @@ def employee_logout():
     return jsonify({"ok": True})
 
 
+@app.route("/api/employee/change-pin", methods=["POST"])
+def employee_change_pin():
+    eid = session.get("employee_id")
+    if not eid:
+        return jsonify({"error": "Not logged in"}), 401
+    data = request.json
+    current_pin = str(data.get("current_pin", "")).strip()
+    new_pin = str(data.get("new_pin", "")).strip()
+    if not new_pin or not new_pin.isdigit() or len(new_pin) != 4:
+        return jsonify({"error": "New PIN must be 4 digits"}), 400
+    employees = load_employees(EMPLOYEES_FILE)
+    for emp in employees:
+        if emp["id"] == eid:
+            if str(emp.get("pin", "")).strip() != current_pin:
+                return jsonify({"error": "Current PIN is incorrect"}), 403
+            emp["pin"] = new_pin
+            save_json(EMPLOYEES_FILE, {"employees": employees})
+            return jsonify({"ok": True, "message": "PIN updated"})
+    return jsonify({"error": "Employee not found"}), 404
+
+
 @app.route("/api/employee/paystubs", methods=["GET"])
 def employee_paystubs():
     eid = request.args.get("employee_id") or session.get("employee_id")
