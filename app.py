@@ -51,6 +51,7 @@ REQUEST_TYPES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "r
 SHIFT_SWAPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "shift_swaps.json")
 MANAGER_NOTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "manager_notes.json")
 BILLS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bills.json")
+MAINTENANCE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "maintenance_log.json")
 
 
 def load_json(path, default=None):
@@ -86,7 +87,7 @@ def load_tax_settings():
 
 def load_app_settings():
     if not os.path.exists(APP_SETTINGS_FILE):
-        return {"week_start_day": 6, "notify_on_publish": True}
+        return {"week_start_day": 6, "notify_on_publish": True, "show_maintenance_on_dashboard": False}
     with open(APP_SETTINGS_FILE, "r") as f:
         return json.load(f)
 
@@ -1066,6 +1067,38 @@ def respond_request():
                 r["status"] = new_status
                 save_json(REQUESTS_FILE, reqs)
                 create_notification("request_response", f"Your {r.get('type', 'request')} has been {new_status}", r["employee_id"])
+                if new_status == "approved" and r.get("type") == "Equipment Repair":
+                    maint = load_maintenance()
+                    mid = 1
+                    if maint.get("tasks"):
+                        mid = max(t["id"] for t in maint["tasks"]) + 1
+                    equip = (r.get("fields") or {}).get("equipment", "Unknown Equipment")
+                    desc = (r.get("fields") or {}).get("description", "")
+                    task = {
+                        "id": mid,
+                        "title": f"Repair: {equip}",
+                        "description": desc,
+                        "category": "repair",
+                        "checklist": [{"label": item, "done": False} for item in (r.get("checklist") or [])],
+                        "is_recurring": False,
+                        "interval_days": 0,
+                        "created_at": datetime.now().isoformat(),
+                        "last_completed": None,
+                        "next_due": None,
+                        "status": "active",
+                        "source_request_id": req_id,
+                        "notes": f"Auto-created from Equipment Repair request by {r.get('employee_name', 'unknown')}",
+                    }
+                    if not task["checklist"]:
+                        task["checklist"] = [
+                            {"label": "Assess issue", "done": False},
+                            {"label": "Order parts (if needed)", "done": False},
+                            {"label": "Complete repair", "done": False},
+                            {"label": "Test equipment", "done": False},
+                        ]
+                    maint.setdefault("tasks", []).append(task)
+                    save_maintenance(maint)
+                    create_notification("maintenance", f"Maintenance task created from repair: {task['title']}")
                 return jsonify({"message": f"Request {new_status}"})
         return jsonify({"error": "Request not found"}), 404
     except Exception as e:
@@ -1100,6 +1133,152 @@ def employee_my_requests():
     data = load_requests()
     mine = [r for r in data["requests"] if r.get("employee_id") == eid]
     return jsonify(mine)
+
+
+# ─── Maintenance Log ────────────────────────────────────────
+
+def load_maintenance():
+    return load_json(MAINTENANCE_FILE, {"tasks": [], "completions": []})
+
+
+def save_maintenance(data):
+    save_json(MAINTENANCE_FILE, data)
+
+
+@app.route("/api/maintenance", methods=["GET"])
+@require_login
+def get_maintenance_tasks():
+    data = load_maintenance()
+    now = datetime.now()
+    for t in data.get("tasks", []):
+        if t.get("status") == "active" and t.get("next_due"):
+            try:
+                due = datetime.fromisoformat(t["next_due"])
+                if due < now:
+                    t["status"] = "overdue"
+            except Exception:
+                pass
+    save_maintenance(data)
+    return jsonify(data)
+
+
+@app.route("/api/maintenance", methods=["POST"])
+@require_login
+def create_maintenance_task():
+    try:
+        body = request.json
+        data = load_maintenance()
+        tid = 1
+        if data.get("tasks"):
+            tid = max(t["id"] for t in data["tasks"]) + 1
+        task = {
+            "id": tid,
+            "title": body.get("title", ""),
+            "description": body.get("description", ""),
+            "category": body.get("category", "cleaning"),
+            "checklist": [{"label": item, "done": False} for item in body.get("checklist", [])],
+            "is_recurring": body.get("is_recurring", False),
+            "interval_days": body.get("interval_days", 0),
+            "created_at": datetime.now().isoformat(),
+            "last_completed": None,
+            "next_due": body.get("next_due"),
+            "status": "active",
+            "source_request_id": body.get("source_request_id"),
+            "notes": body.get("notes", ""),
+        }
+        data.setdefault("tasks", []).append(task)
+        save_maintenance(data)
+        create_notification("maintenance", f"New maintenance task: {task['title']}")
+        return jsonify(task)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/maintenance/<int:task_id>", methods=["PUT"])
+@require_login
+def update_maintenance_task(task_id):
+    try:
+        body = request.json
+        data = load_maintenance()
+        for t in data.get("tasks", []):
+            if t["id"] == task_id:
+                for key in ("title", "description", "category", "is_recurring", "interval_days", "next_due", "notes"):
+                    if key in body:
+                        t[key] = body[key]
+                if "checklist" in body:
+                    t["checklist"] = body["checklist"]
+                save_maintenance(data)
+                return jsonify(t)
+        return jsonify({"error": "Task not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/maintenance/<int:task_id>", methods=["DELETE"])
+@require_login
+def delete_maintenance_task(task_id):
+    try:
+        data = load_maintenance()
+        data["tasks"] = [t for t in data.get("tasks", []) if t["id"] != task_id]
+        save_maintenance(data)
+        return jsonify({"message": "Task deleted"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/maintenance/<int:task_id>/complete", methods=["POST"])
+@require_login
+def complete_maintenance_task(task_id):
+    try:
+        body = request.json or {}
+        data = load_maintenance()
+        now = datetime.now()
+        for t in data.get("tasks", []):
+            if t["id"] == task_id:
+                t["last_completed"] = now.isoformat()
+                data.setdefault("completions", []).append({
+                    "task_id": task_id,
+                    "title": t["title"],
+                    "completed_at": now.isoformat(),
+                    "notes": body.get("notes", ""),
+                })
+                if t.get("is_recurring") and t.get("interval_days", 0) > 0:
+                    next_due = now + timedelta(days=t["interval_days"])
+                    t["next_due"] = next_due.isoformat()
+                    t["status"] = "active"
+                else:
+                    t["status"] = "completed"
+                save_maintenance(data)
+                return jsonify(t)
+        return jsonify({"error": "Task not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/maintenance/<int:task_id>/checklist", methods=["POST"])
+@require_login
+def update_maintenance_checklist(task_id):
+    try:
+        body = request.json
+        items = body.get("items")
+        if not isinstance(items, list):
+            return jsonify({"error": "items required"}), 400
+        data = load_maintenance()
+        for t in data.get("tasks", []):
+            if t["id"] == task_id:
+                t["checklist"] = items
+                save_maintenance(data)
+                return jsonify({"message": "Checklist updated"})
+        return jsonify({"error": "Task not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/maintenance/history", methods=["GET"])
+@require_login
+def get_maintenance_history():
+    data = load_maintenance()
+    return jsonify({"completions": data.get("completions", [])})
 
 
 # ─── Employee Portal Login ──────────────────────────────────
@@ -1755,6 +1934,21 @@ def get_dashboard():
         messages = load_json(os.path.join(os.path.dirname(os.path.abspath(__file__)), "messages.json"), {"messages": []})
         unread_count = sum(1 for m in messages.get("messages", []) if not m.get("admin_read"))
 
+        settings = load_app_settings()
+        maintenance_tasks = []
+        if settings.get("show_maintenance_on_dashboard"):
+            maint = load_maintenance()
+            now = datetime.now()
+            for t in maint.get("tasks", []):
+                if t.get("status") == "overdue" or (t.get("status") == "active" and t.get("next_due")):
+                    try:
+                        due = datetime.fromisoformat(t["next_due"])
+                        if due < now:
+                            t["status"] = "overdue"
+                    except Exception:
+                        pass
+            maintenance_tasks = [t for t in maint.get("tasks", []) if t.get("status") in ("active", "overdue")]
+
         return jsonify({
             "labor_today": round(labor_today, 2),
             "monthly_gross": round(monthly_gross, 2),
@@ -1763,6 +1957,7 @@ def get_dashboard():
             "month_data": month_data,
             "pending_requests": pending_requests[:5],
             "unread_count": unread_count,
+            "maintenance_tasks": maintenance_tasks,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500

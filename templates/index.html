@@ -56,6 +56,7 @@
         .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 500; color: #475569; font-size: 0.85rem; }
         .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 1rem; touch-action: manipulation; min-height: 44px; }
         .form-group input:focus, .form-group select:focus { outline: none; border-color: #1e3a5f; box-shadow: 0 0 0 2px rgba(30,58,95,0.1); }
+        .form-group input[type="checkbox"] { width: auto; padding: 0; border: none; border-radius: 0; min-height: auto; }
         .form-row { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -132,6 +133,7 @@
         .modal-header h2 { margin: 0; font-size: 1.1rem; }
         .modal .btn { min-height: 48px; }
         .modal .form-group input, .modal .form-group select { min-height: 48px; }
+        .modal .form-group input[type="checkbox"] { min-height: auto; width: auto; padding: 0; border: none; }
         .close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b; touch-action: manipulation; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
         .close:hover { background: #f1f5f9; }
 
@@ -312,10 +314,9 @@
         body.emp-mode #emp-nav button.active::after { content: ""; display: block; width: 20px; height: 3px; background: #1e3a5f; border-radius: 2px; margin-top: 1px; }
         .emp-badge { background: #dc2626; color: white; font-size: 0.45rem; min-width: 8px; height: 8px; border-radius: 4px; display: inline-block; text-align: center; line-height: 8px; padding: 1px; box-sizing: content-box; }
         body.emp-mode #emp-label { display: block !important; color: white; font-size: 0.85rem; font-weight: 500; }
-        body.emp-mode .container { padding-bottom: 70px; }
-        body.emp-mode { display: flex; flex-direction: column; min-height: 100vh; }
-        body.emp-mode #app-content { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-        body.emp-mode #app-content > .container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        body.emp-mode .container { padding-bottom: 0; }
+        body.emp-mode { display: flex; flex-direction: column; min-height: 100vh; justify-content: flex-start; margin: 0; }
+        body.emp-mode #app-content { flex: 1; display: flex; flex-direction: column; min-height: 0; justify-content: flex-start; }
         body.emp-mode #page-emp-messages.active { display: flex; flex-direction: column; flex: 1; min-height: 0; }
         body.emp-mode #page-emp-messages .card { padding: 0; display: flex; flex-direction: column; flex: 1; min-height: 0; }
         body.emp-mode .week-selector { padding: 0.5rem 0; flex-wrap: wrap; background: transparent; margin-bottom: 0.75rem; }
@@ -325,6 +326,23 @@
         body.emp-mode .btn { min-height: 48px; font-size: 1rem; }
         body.emp-mode .form-group input, body.emp-mode .form-group select { min-height: 48px; font-size: 1rem; }
         body.emp-mode #emp-to-reason { min-height: 48px; font-size: 1rem; }
+
+        /* ─── Maintenance Log ───────────────────────────── */
+        .maint-card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1rem; margin-bottom: 1rem; }
+        .maint-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.25rem; }
+        .maint-title { font-weight: 600; font-size: 1rem; color: #1e293b; }
+        .maint-desc { font-size: 0.85rem; color: #64748b; margin-bottom: 0.5rem; }
+        .maint-meta { font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.75rem; }
+        .maint-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .maint-badge.active { background: #dbeafe; color: #1e40af; }
+        .maint-badge.overdue { background: #fee2e2; color: #991b1b; }
+        .maint-badge.completed { background: #dcfce7; color: #166534; }
+        .maint-badge.recurring { background: #fef3c7; color: #92400e; margin-left: 0.25rem; }
+        .maint-badge.category { background: #f1f5f9; color: #475569; margin-left: 0.25rem; }
+        .maint-checklist { margin: 0.5rem 0 0.75rem; }
+        .maint-checklist label { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0; font-size: 0.88rem; cursor: pointer; user-select: none; }
+        .maint-checklist label.done span { text-decoration: line-through; color: #94a3b8; }
+        .maint-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
 
         /* ─── Admin Bottom Nav ──────────────────────────── */
         .container { padding-bottom: 66px; }
@@ -344,14 +362,16 @@
         #admin-nav button:nth-child(3)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cpath d='M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6'/%3E%3C/svg%3E"); }
         /* Schedule - calendar */
         #admin-nav button:nth-child(4)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E"); }
-        /* Time Off - calendar-check */
+        /* Requests - clipboard */
         #admin-nav button:nth-child(5)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cpath d='M12 14l-2-2 2-2 2 2 3-3 2 1.5'/%3E%3C/svg%3E"); }
+        /* Maintenance - wrench */
+        #admin-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z'/%3E%3C/svg%3E"); }
         /* Announcements - megaphone */
-        #admin-nav button:nth-child(6)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(7)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 01-3.46 0'/%3E%3C/svg%3E"); }
         /* Reports - bar-chart */
-        #admin-nav button:nth-child(7)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(8)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='20' x2='18' y2='10'/%3E%3Cline x1='12' y1='20' x2='12' y2='4'/%3E%3Cline x1='6' y1='20' x2='6' y2='14'/%3E%3C/svg%3E"); }
         /* Settings - gear */
-        #admin-nav button:nth-child(8)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); }
+        #admin-nav button:nth-child(9)::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z'/%3E%3C/svg%3E"); }
     </style>
 </head>
 <body>
@@ -443,6 +463,10 @@
                 <div id="dash-timeoff" style="margin-bottom:1rem;">
                     <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Pending Requests</h3>
                     <div id="dash-timeoff-list"><div class="empty-state">None</div></div>
+                </div>
+                <div id="dash-maint" style="margin-bottom:1rem;display:none;">
+                    <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Maintenance Tasks</h3>
+                    <div id="dash-maint-list"></div>
                 </div>
                 <div style="margin-bottom:0.5rem;">
                     <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Monthly Summary</h3>
@@ -680,6 +704,11 @@
                         <option value="6">Sunday</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                        <input type="checkbox" id="show-maint-dash"> Show active/overdue maintenance tasks on Dashboard
+                    </label>
+                </div>
                 <button class="btn btn-success" onclick="saveAppSettings()">Save Settings</button>
             </div>
             <div class="card">
@@ -770,6 +799,84 @@
                 </div>
                 <div id="cp-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Log -->
+    <div id="page-admin-maintenance" class="page">
+        <div class="card">
+            <div class="flex-between" style="margin-bottom:0.75rem;">
+                <h2 style="margin:0;">To-Do / Maintenance</h2>
+                <button class="btn btn-primary" onclick="showMaintenanceModal()">+ New Task</button>
+            </div>
+            <div id="maint-tabs" style="display:flex;gap:0.25rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                <button class="btn btn-sm btn-primary" onclick="maintFilter='active';loadMaintenanceTasks()" id="maint-tab-active">Active</button>
+                <button class="btn btn-sm" onclick="maintFilter='overdue';loadMaintenanceTasks()" id="maint-tab-overdue">Overdue</button>
+                <button class="btn btn-sm" onclick="maintFilter='completed';loadMaintenanceTasks()" id="maint-tab-completed">Completed</button>
+                <button class="btn btn-sm" onclick="maintFilter='all';loadMaintenanceTasks()" id="maint-tab-all">All</button>
+                <button class="btn btn-sm" onclick="loadMaintenanceHistory()" id="maint-tab-history">History</button>
+            </div>
+            <div id="maint-container"></div>
+        </div>
+    </div>
+
+    <!-- Maintenance Modal -->
+    <div id="maint-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:500px;height:auto;max-height:90vh;overflow-y:auto;border-radius:8px;margin:auto;align-self:center;margin-top:2rem;">
+            <div class="modal-header">
+                <h3 id="maint-modal-title">New Maintenance Task</h3>
+                <button class="close" onclick="closeModal('maint-modal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="maint-title" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="maint-desc" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;min-height:60px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="maint-category" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                    <option value="cleaning">Cleaning</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="repair">Repair</option>
+                    <option value="inspection">Inspection</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Checklist Items (one per line)</label>
+                <textarea id="maint-checklist-input" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;min-height:80px;" placeholder="Clean nozzles&#10;Check filters&#10;Test operation"></textarea>
+            </div>
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+                    <input type="checkbox" id="maint-recurring" onchange="document.getElementById('maint-interval-wrap').style.display=this.checked?'block':'none'">
+                    Recurring task
+                </label>
+            </div>
+            <div id="maint-interval-wrap" style="display:none;" class="form-group">
+                <label>Repeat every (days)</label>
+                <input type="number" id="maint-interval" value="7" min="1" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <textarea id="maint-notes" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;min-height:40px;"></textarea>
+            </div>
+            <input type="hidden" id="maint-id" value="">
+            <button class="btn btn-success" onclick="saveMaintenanceTask()" style="width:100%;margin-top:0.5rem;">Save Task</button>
+            <div id="maint-save-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
+        </div>
+    </div>
+
+    <!-- Maintenance History Modal -->
+    <div id="maint-history-modal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width:500px;height:auto;max-height:80vh;overflow-y:auto;border-radius:8px;margin:auto;align-self:center;margin-top:2rem;">
+            <div class="modal-header">
+                <h3>Completion History</h3>
+                <button class="close" onclick="closeModal('maint-history-modal')">&times;</button>
+            </div>
+            <div id="maint-history-container"></div>
         </div>
     </div>
 
@@ -2084,6 +2191,7 @@
             if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
             if (page === 'timesheet') renderTimesheet();
             if (page === 'admin-requests') adminLoadRequests();
+            if (page === 'admin-maintenance') loadMaintenanceTasks();
             if (page === 'admin-messages') {
                 adminLoadAnnouncements();
             }
@@ -3256,15 +3364,18 @@
             weekStartDay = s.week_start_day || 0;
             document.getElementById('week-start-day').value = weekStartDay;
             document.getElementById('notify-on-publish').checked = s.notify_on_publish !== false;
+            const mc = document.getElementById('show-maint-dash');
+            if (mc) mc.checked = s.show_maintenance_on_dashboard === true;
         }
 
         async function saveAppSettings() {
             const val = parseInt(document.getElementById('week-start-day').value);
             const notify = document.getElementById('notify-on-publish').checked;
+            const showMaint = document.getElementById('show-maint-dash')?.checked || false;
             const res = await fetch('/api/app-settings', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ week_start_day: val, notify_on_publish: notify })
+                body: JSON.stringify({ week_start_day: val, notify_on_publish: notify, show_maintenance_on_dashboard: showMaint })
             });
             if (res.ok) {
                 weekStartDay = val;
@@ -4320,6 +4431,30 @@
                 toContainer.innerHTML = '<div class="empty-state">None</div>';
             }
 
+            // Maintenance tasks
+            const dashMaint = document.getElementById('dash-maint');
+            const maintList = document.getElementById('dash-maint-list');
+            if (data.maintenance_tasks && data.maintenance_tasks.length > 0) {
+                dashMaint.style.display = 'block';
+                let mhtml = '<div style="display:flex;flex-direction:column;gap:0.35rem;">';
+                data.maintenance_tasks.forEach(t => {
+                    const overdue = t.status === 'overdue';
+                    const cl = t.checklist || [];
+                    const done = cl.filter(i => i.done).length;
+                    const badgeStyle = overdue ? 'background:#fee2e2;color:#991b1b;' : 'background:#dbeafe;color:#1e40af;';
+                    const badgeLabel = overdue ? 'Overdue' : t.is_recurring ? 'Every ' + t.interval_days + 'd' : 'Active';
+                    mhtml += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.35rem 0.5rem;background:#f8fafc;border-radius:4px;font-size:0.85rem;">
+                        <span style="font-weight:500;white-space:nowrap;">${t.title}</span>
+                        <span style="color:#64748b;font-size:0.8rem;flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 0.5rem;">${done}/${cl.length}</span>
+                        <span style="padding:0.15rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:600;${badgeStyle}">${badgeLabel}</span>
+                    </div>`;
+                });
+                mhtml += '</div>';
+                maintList.innerHTML = mhtml;
+            } else {
+                dashMaint.style.display = 'none';
+            }
+
             // Load bills for chart
             await loadBills();
 
@@ -4608,6 +4743,196 @@
                 alert('Error saving request types');
             }
         }
+
+        let maintFilter = 'active';
+
+        async function loadMaintenanceTasks() {
+            const res = await fetch('/api/maintenance');
+            const data = await res.json();
+            const tasks = data.tasks || [];
+            const container = document.getElementById('maint-container');
+            const tabs = ['active','overdue','completed','all'];
+            tabs.forEach(t => {
+                const el = document.getElementById('maint-tab-'+t);
+                if (el) el.className = t === maintFilter ? 'btn btn-sm btn-primary' : 'btn btn-sm';
+            });
+
+            let filtered = tasks;
+            if (maintFilter === 'active') filtered = tasks.filter(t => t.status === 'active');
+            else if (maintFilter === 'overdue') filtered = tasks.filter(t => t.status === 'overdue');
+            else if (maintFilter === 'completed') filtered = tasks.filter(t => t.status === 'completed');
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="empty-state">No ' + maintFilter + ' tasks.</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.sort((a, b) => {
+                if (a.status === 'overdue' && b.status !== 'overdue') return -1;
+                if (b.status === 'overdue' && a.status !== 'overdue') return 1;
+                return (b.id || 0) - (a.id || 0);
+            }).forEach(t => {
+                const statusClass = t.status === 'overdue' ? 'overdue' : t.status === 'completed' ? 'completed' : 'active';
+                const statusLabel = t.status.charAt(0).toUpperCase() + t.status.slice(1);
+                const cl = t.checklist || [];
+                const done = cl.filter(i => i.done).length;
+                const pct = cl.length ? Math.round(done / cl.length * 100) : 0;
+                let clHtml = '';
+                if (cl.length) {
+                    clHtml = '<div class="maint-checklist">';
+                    cl.forEach((item, idx) => {
+                        clHtml += `<label class="${item.done ? 'done' : ''}" onclick="toggleMaintenanceChecklist(${t.id}, ${idx}, ${!item.done})">
+                            <input type="checkbox" ${item.done ? 'checked' : ''}> <span>${item.label}</span>
+                        </label>`;
+                    });
+                    clHtml += '</div>';
+                }
+                const recurringHtml = t.is_recurring && t.interval_days ? `<span class="maint-badge recurring">Every ${t.interval_days}d</span>` : '';
+                const catHtml = `<span class="maint-badge category">${t.category}</span>`;
+                const dueHtml = t.next_due ? `<div class="maint-meta">Next due: ${new Date(t.next_due).toLocaleDateString()}</div>` : '';
+                    html += `<div class="maint-card">
+                    <div class="maint-header">
+                        <div style="flex:1;min-width:0;">
+                            <div class="maint-title">${t.title}</div>
+                            ${t.description ? '<div class="maint-desc">' + t.description + '</div>' : ''}
+                        </div>
+                        <div style="display:flex;gap:0.25rem;flex-wrap:wrap;align-items:center;">
+                            <span class="maint-badge ${statusClass}">${statusLabel}</span>
+                            ${recurringHtml}
+                            ${catHtml}
+                        </div>
+                    </div>
+                    ${t.notes ? '<div class="maint-meta">Notes: ' + t.notes + '</div>' : ''}
+                    ${dueHtml}
+                    ${t.is_recurring && t.last_completed ? '<div class="maint-meta">Last completed: ' + new Date(t.last_completed).toLocaleDateString() + '</div>' : ''}
+                    ${clHtml}
+                    ${cl.length ? '<div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:#64748b;margin-bottom:0.5rem;"><span>' + done + '/' + cl.length + '</span><div style="flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:#059669;border-radius:3px;transition:width 0.3s;"></div></div></div>' : ''}
+                    <div class="maint-actions">
+                        ${t.status !== 'completed' ? '<button class="btn btn-sm btn-success" onclick="completeMaintenanceTask(' + t.id + ')">Mark Complete</button>' : ''}
+                        <button class="btn btn-sm btn-outline" onclick="showMaintenanceModal(' + t.id + ')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMaintenanceTask(' + t.id + ')">Delete</button>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        async function showMaintenanceModal(taskId) {
+            document.getElementById('maint-modal').style.display = 'flex';
+            document.getElementById('maint-save-status').textContent = '';
+            if (taskId) {
+                document.getElementById('maint-modal-title').textContent = 'Edit Task';
+                const res = await fetch('/api/maintenance');
+                const data = await res.json();
+                const t = (data.tasks || []).find(x => x.id === taskId);
+                if (!t) return;
+                document.getElementById('maint-id').value = t.id;
+                document.getElementById('maint-title').value = t.title || '';
+                document.getElementById('maint-desc').value = t.description || '';
+                document.getElementById('maint-category').value = t.category || 'cleaning';
+                document.getElementById('maint-checklist-input').value = (t.checklist || []).map(i => i.label).join('\n');
+                document.getElementById('maint-recurring').checked = t.is_recurring || false;
+                document.getElementById('maint-interval').value = t.interval_days || 7;
+                document.getElementById('maint-interval-wrap').style.display = t.is_recurring ? 'block' : 'none';
+                document.getElementById('maint-notes').value = t.notes || '';
+            } else {
+                document.getElementById('maint-modal-title').textContent = 'New Maintenance Task';
+                document.getElementById('maint-id').value = '';
+                document.getElementById('maint-title').value = '';
+                document.getElementById('maint-desc').value = '';
+                document.getElementById('maint-category').value = 'cleaning';
+                document.getElementById('maint-checklist-input').value = '';
+                document.getElementById('maint-recurring').checked = false;
+                document.getElementById('maint-interval').value = 7;
+                document.getElementById('maint-interval-wrap').style.display = 'none';
+                document.getElementById('maint-notes').value = '';
+            }
+        }
+
+        async function saveMaintenanceTask() {
+            const statusEl = document.getElementById('maint-save-status');
+            const id = document.getElementById('maint-id').value;
+            const title = document.getElementById('maint-title').value.trim();
+            if (!title) { statusEl.textContent = 'Title is required'; statusEl.style.color = '#dc2626'; return; }
+            const checklistRaw = document.getElementById('maint-checklist-input').value.trim();
+            const checklist = checklistRaw ? checklistRaw.split('\n').map(s => s.trim()).filter(s => s) : [];
+            const isRecurring = document.getElementById('maint-recurring').checked;
+            const body = {
+                title,
+                description: document.getElementById('maint-desc').value.trim(),
+                category: document.getElementById('maint-category').value,
+                checklist,
+                is_recurring: isRecurring,
+                interval_days: isRecurring ? parseInt(document.getElementById('maint-interval').value) || 7 : 0,
+                notes: document.getElementById('maint-notes').value.trim(),
+            };
+            let res;
+            if (id) {
+                res = await fetch('/api/maintenance/' + id, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+            } else {
+                res = await fetch('/api/maintenance', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+            }
+            if (res.ok) {
+                closeModal('maint-modal');
+                loadMaintenanceTasks();
+            } else {
+                const data = await res.json();
+                statusEl.textContent = data.error || 'Error saving task';
+                statusEl.style.color = '#dc2626';
+            }
+        }
+
+        async function deleteMaintenanceTask(taskId) {
+            if (!confirm('Delete this maintenance task?')) return;
+            const res = await fetch('/api/maintenance/' + taskId, {method: 'DELETE'});
+            if (res.ok) loadMaintenanceTasks();
+            else alert('Error deleting task');
+        }
+
+        async function toggleMaintenanceChecklist(taskId, idx, done) {
+            const res = await fetch('/api/maintenance');
+            const data = await res.json();
+            const t = (data.tasks || []).find(x => x.id === taskId);
+            if (!t || !t.checklist) return;
+            t.checklist[idx].done = done;
+            await fetch('/api/maintenance/' + taskId + '/checklist', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({items: t.checklist}),
+            });
+            loadMaintenanceTasks();
+        }
+
+        async function completeMaintenanceTask(taskId) {
+            const res = await fetch('/api/maintenance/' + taskId + '/complete', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({})});
+            if (res.ok) loadMaintenanceTasks();
+            else alert('Error completing task');
+        }
+
+        async function loadMaintenanceHistory() {
+            const res = await fetch('/api/maintenance/history');
+            const data = await res.json();
+            const completions = data.completions || [];
+            const container = document.getElementById('maint-history-container');
+            if (!completions.length) {
+                container.innerHTML = '<div class="empty-state">No completion history yet.</div>';
+            } else {
+                let html = '';
+                completions.slice().reverse().forEach(c => {
+                    html += `<div style="padding:0.5rem 0;border-bottom:1px solid #e2e8f0;font-size:0.88rem;">
+                        <div style="font-weight:500;">${c.title || 'Task #' + c.task_id}</div>
+                        <div style="color:#64748b;font-size:0.8rem;">Completed: ${new Date(c.completed_at).toLocaleString()}</div>
+                        ${c.notes ? '<div style="color:#94a3b8;font-size:0.8rem;">Notes: ' + c.notes + '</div>' : ''}
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+            document.getElementById('maint-history-modal').style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
     </script>
     <div class="nav" id="admin-nav">
         <button onclick="showPage('dashboard')">Dashboard</button>
@@ -4615,6 +4940,7 @@
         <button onclick="showPage('payroll')">Payroll</button>
         <button onclick="showPage('schedule')">Schedule</button>
         <button onclick="showPage('admin-requests')">Requests</button>
+        <button onclick="showPage('admin-maintenance')">To-Do</button>
         <button onclick="showPage('admin-messages')"><span style="display:flex;align-items:center;gap:2px;">Announcements<span id="announce-badge"></span></span></button>
         <button onclick="showPage('history-reports')">Reports</button>
         <button onclick="showPage('app-settings')">Settings</button>
