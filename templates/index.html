@@ -477,7 +477,7 @@
                 <div style="margin-bottom:0.5rem;">
                     <h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Monthly Summary</h3>
                     <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
-                        <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;" onchange="loadDashboardChart()"></select>
+                        <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;"></select>
                     </div>
                     <canvas id="dash-chart" style="max-height:250px;"></canvas>
                 </div>
@@ -4483,6 +4483,7 @@
         let dashChart = null;
         let dashData = null;
         let billsData = {bills: []};
+        const serverMonth = "{{ server_month }}";
 
         async function loadDashboard() {
             const res = await fetch('/api/dashboard');
@@ -4550,7 +4551,7 @@
                 Object.keys(data.month_data).sort().forEach(m => { months[m] = data.month_data[m]; });
             }
             // Add current month if not present
-            const currentVal = new Date().toISOString().slice(0, 7);
+            const currentVal = serverMonth || new Date().toISOString().slice(0, 7);
             if (!months[currentVal]) months[currentVal] = {gross: 0, labor: 0};
             Object.keys(months).sort().reverse().forEach(m => {
                 const opt = document.createElement('option');
@@ -4562,22 +4563,31 @@
             // Default to latest month with actual data, fall back to current month
             const dataMonths = data.month_data ? Object.keys(data.month_data).sort() : [];
             sel.value = dataMonths.length > 0 ? dataMonths[dataMonths.length - 1] : currentVal;
-            loadDashboardChart(data);
+            sel.onchange = loadDashboardChart;
+            loadDashboardChart();
         }
 
-        function loadDashboardChart(externalData) {
+        function loadDashboardChart() {
             const sel = document.getElementById('dash-month-year');
             const month = sel.value;
             if (!month) return;
-            const canvas = document.getElementById('dash-chart');
-            if (dashChart) { dashChart.destroy(); dashChart = null; }
+            if (!dashData) {
+                fetch('/api/dashboard').then(r => r.json()).then(d => { dashData = d; loadDashboardChart(); }).catch(() => {});
+                return;
+            }
+            drawChart();
 
-            const useData = (externalData && externalData.month_data) ? externalData : dashData;
-
-            const draw = (data) => {
-                const md = data.month_data || {};
+            function drawChart() {
+                const d = dashData;
+                const md = d.month_data || {};
                 const mData = md[month] || {gross: 0, labor: 0};
-                const totalBills = data.total_bills || 0;
+                const totalBills = d.total_bills || 0;
+                if (dashChart) {
+                    dashChart.data.datasets[0].data = [mData.gross, mData.labor, totalBills];
+                    dashChart.update();
+                    return;
+                }
+                const canvas = document.getElementById('dash-chart');
                 const ctx = canvas.getContext('2d');
                 if (!ctx) return;
                 dashChart = new Chart(ctx, {
@@ -4594,9 +4604,7 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        plugins: {
-                            legend: { display: false },
-                        },
+                        plugins: { legend: { display: false } },
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -4605,12 +4613,6 @@
                         }
                     }
                 });
-            };
-
-            if (useData) {
-                draw(useData);
-            } else {
-                fetch('/api/dashboard').then(r => r.json()).then(draw).catch(() => {});
             }
         }
 

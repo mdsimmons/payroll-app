@@ -147,8 +147,8 @@ def calculate_overtime_pay(hours, hourly_rate, overtime_rate):
     return 0.0
 
 
-def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_year=26, tips=0):
-    settings = load_tax_settings()
+def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_year=26, tips=0, tax_settings=None):
+    settings = tax_settings if tax_settings is not None else load_tax_settings()
     overtime_rate = employee.get("overtime_rate", 0) or 0
     filing_status = employee["filing_status"]
     state = employee["state"]

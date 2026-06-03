@@ -11,7 +11,21 @@ import random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from payroll import load_employees, calculate_payroll
+import db
+from payroll import load_employees as _load_employees_file, calculate_payroll as _calculate_payroll
+
+def load_employees(*args, **kwargs):
+    if db.DATABASE_URL:
+        data = db.load("employees")
+        if data is not None:
+            return data.get("employees", [])
+    return _load_employees_file(*args, **kwargs)
+
+def calculate_payroll(employee, hours, **kw):
+    if db.DATABASE_URL:
+        tax_data = db.load("tax_settings")
+        kw.setdefault("tax_settings", tax_data)
+    return _calculate_payroll(employee, hours, **kw)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24).hex())
@@ -23,6 +37,10 @@ USER_DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "users
 
 
 def load_users():
+    if db.DATABASE_URL:
+        data = db.load("users")
+        if data is not None:
+            return data
     if not os.path.exists(USER_DATA_FILE):
         return {ADMIN_USER: ADMIN_PASS}
     with open(USER_DATA_FILE, "r") as f:
@@ -55,7 +73,16 @@ BILLS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bills.jso
 MAINTENANCE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "maintenance_log.json")
 
 
+def _key_from_path(path):
+    return os.path.splitext(os.path.basename(path))[0]
+
+
 def load_json(path, default=None):
+    if db.DATABASE_URL:
+        result = db.load(_key_from_path(path))
+        if result is not None:
+            return result
+        return default if default is not None else {}
     if not os.path.exists(path):
         return default if default is not None else {}
     with open(path, "r") as f:
@@ -63,11 +90,17 @@ def load_json(path, default=None):
 
 
 def save_json(path, data):
+    if db.DATABASE_URL:
+        db.save(_key_from_path(path), data)
+        return
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
 
 def load_history():
+    if db.DATABASE_URL:
+        result = db.load("payroll_history")
+        return result if result is not None else {}
     if not os.path.exists(HISTORY_FILE):
         return {}
     with open(HISTORY_FILE, "r") as f:
@@ -75,11 +108,18 @@ def load_history():
 
 
 def save_history(history):
+    if db.DATABASE_URL:
+        db.save("payroll_history", history)
+        return
     with open(HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2)
 
 
 def load_tax_settings():
+    if db.DATABASE_URL:
+        result = db.load("tax_settings")
+        if result is not None:
+            return result
     if not os.path.exists(TAX_SETTINGS_FILE):
         return None
     with open(TAX_SETTINGS_FILE, "r") as f:
@@ -87,6 +127,10 @@ def load_tax_settings():
 
 
 def load_app_settings():
+    if db.DATABASE_URL:
+        result = db.load("app_settings")
+        if result is not None:
+            return result
     if not os.path.exists(APP_SETTINGS_FILE):
         return {"week_start_day": 6, "notify_on_publish": True, "show_maintenance_on_dashboard": False}
     with open(APP_SETTINGS_FILE, "r") as f:
@@ -94,6 +138,9 @@ def load_app_settings():
 
 
 def save_app_settings(settings):
+    if db.DATABASE_URL:
+        db.save("app_settings", settings)
+        return
     with open(APP_SETTINGS_FILE, "w") as f:
         json.dump(settings, f, indent=2)
 
@@ -138,7 +185,7 @@ def check_session():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", server_month=datetime.now().strftime("%Y-%m"))
 
 
 @app.route("/api/employees", methods=["GET"])
@@ -162,8 +209,7 @@ def get_managers():
 @require_login
 def add_employee():
     try:
-        with open(EMPLOYEES_FILE, "r") as f:
-            data = json.load(f)
+        data = load_json(EMPLOYEES_FILE, {"employees": []})
 
         new_emp = request.json
         existing_ids = [e["id"] for e in data["employees"]]
@@ -209,8 +255,7 @@ def add_employee():
 
         data["employees"].append(new_emp)
 
-        with open(EMPLOYEES_FILE, "w") as f:
-            json.dump(data, f, indent=2)
+        save_json(EMPLOYEES_FILE, data)
 
         return jsonify(new_emp), 201
     except Exception as e:
@@ -221,8 +266,7 @@ def add_employee():
 @require_login
 def update_employee(emp_id):
     try:
-        with open(EMPLOYEES_FILE, "r") as f:
-            data = json.load(f)
+        data = load_json(EMPLOYEES_FILE, {"employees": []})
 
         updated = request.json
         found = False
@@ -260,8 +304,7 @@ def update_employee(emp_id):
         if not found:
             return jsonify({"error": "Employee not found"}), 404
 
-        with open(EMPLOYEES_FILE, "w") as f:
-            json.dump(data, f, indent=2)
+        save_json(EMPLOYEES_FILE, data)
 
         return jsonify(data["employees"][i])
     except Exception as e:
@@ -272,13 +315,11 @@ def update_employee(emp_id):
 @require_login
 def delete_employee(emp_id):
     try:
-        with open(EMPLOYEES_FILE, "r") as f:
-            data = json.load(f)
+        data = load_json(EMPLOYEES_FILE, {"employees": []})
 
         data["employees"] = [e for e in data["employees"] if e["id"] != emp_id]
 
-        with open(EMPLOYEES_FILE, "w") as f:
-            json.dump(data, f, indent=2)
+        save_json(EMPLOYEES_FILE, data)
 
         return jsonify({"message": "Employee deleted"})
     except Exception as e:
@@ -384,8 +425,7 @@ def get_tax_settings():
 def save_tax_settings():
     try:
         settings = request.json
-        with open(TAX_SETTINGS_FILE, "w") as f:
-            json.dump(settings, f, indent=2)
+        save_json(TAX_SETTINGS_FILE, settings)
         return jsonify({"message": "Settings saved"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -395,7 +435,9 @@ def save_tax_settings():
 @require_login
 def reset_tax_settings():
     try:
-        if os.path.exists(TAX_SETTINGS_FILE):
+        if db.DATABASE_URL:
+            db.save("tax_settings", None)
+        elif os.path.exists(TAX_SETTINGS_FILE):
             os.remove(TAX_SETTINGS_FILE)
         return jsonify({"message": "Settings reset to defaults"})
     except Exception as e:
@@ -441,8 +483,7 @@ def change_password():
 
         del users[current_user]
         users[new_username] = new_password
-        with open(USER_DATA_FILE, "w") as f:
-            json.dump(users, f, indent=2)
+        save_json(USER_DATA_FILE, users)
         session["user"] = new_username
 
         return jsonify({"message": "Credentials updated", "username": new_username})
@@ -1926,7 +1967,10 @@ def get_dashboard():
             if m:
                 if m not in month_data:
                     month_data[m] = {"gross": 0, "labor": 0}
-                sales = float(n.get("sales", 0))
+                try:
+                    sales = float(n.get("sales", 0) or 0)
+                except (ValueError, TypeError):
+                    sales = 0
                 month_data[m]["gross"] += sales
                 if m == current_month:
                     monthly_gross += sales
@@ -1942,6 +1986,10 @@ def get_dashboard():
                     month_data[m]["labor"] += gp
                     if m == current_month:
                         monthly_labor += gp
+
+        # Always include current month
+        if current_month not in month_data:
+            month_data[current_month] = {"gross": 0, "labor": 0}
 
         # Bills for the month
         bills = load_json(BILLS_FILE, {"bills": []})
@@ -2044,24 +2092,32 @@ def save_bills():
 
 
 if __name__ == "__main__":
-    # Ensure all runtime data files exist so fresh deploys start with empty data
-    data_files = {
-        SCHEDULES_FILE: {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": "", "blackouts": {}, "closures": {}},
-        TIMECLOCK_FILE: {"entries": []},
-        REQUESTS_FILE: {"requests": []},
-        SHIFT_SWAPS_FILE: {"swaps": []},
-        MANAGER_NOTES_FILE: {"notes": []},
-        BILLS_FILE: {"bills": []},
-        MAINTENANCE_FILE: {"tasks": [], "completions": []},
-        NOTIFICATIONS_FILE: {"notifications": []},
-        MESSAGES_FILE: {"messages": []},
-        EMPLOYEE_TRACKER_FILE: {"schedule_published": False, "announcement_read": {}},
-        SCHEDULE_TEMPLATES_FILE: {"templates": []},
-        HISTORY_FILE: {},
-        APP_SETTINGS_FILE: {"week_start_day": 6},
-        TIMEOFF_FILE: {"requests": []},
-    }
-    for path, default in data_files.items():
-        if not os.path.exists(path):
-            save_json(path, default)
+    # Initialize PostgreSQL if DATABASE_URL is set
+    db.init_db()
+    if db.DATABASE_URL:
+        B_DIR = os.path.dirname(os.path.abspath(__file__))
+        migrated = db.migrate_from_files(B_DIR)
+        if migrated:
+            print(f"Migrated {migrated} data files to PostgreSQL")
+    else:
+        # Ensure all runtime data files exist so fresh deploys start with empty data
+        data_files = {
+            SCHEDULES_FILE: {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": "", "blackouts": {}, "closures": {}},
+            TIMECLOCK_FILE: {"entries": []},
+            REQUESTS_FILE: {"requests": []},
+            SHIFT_SWAPS_FILE: {"swaps": []},
+            MANAGER_NOTES_FILE: {"notes": []},
+            BILLS_FILE: {"bills": []},
+            MAINTENANCE_FILE: {"tasks": [], "completions": []},
+            NOTIFICATIONS_FILE: {"notifications": []},
+            MESSAGES_FILE: {"messages": []},
+            EMPLOYEE_TRACKER_FILE: {"schedule_published": False, "announcement_read": {}},
+            SCHEDULE_TEMPLATES_FILE: {"templates": []},
+            HISTORY_FILE: {},
+            APP_SETTINGS_FILE: {"week_start_day": 6},
+            TIMEOFF_FILE: {"requests": []},
+        }
+        for path, default in data_files.items():
+            if not os.path.exists(path):
+                save_json(path, default)
     app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1", host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
