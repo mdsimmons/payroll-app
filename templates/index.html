@@ -4481,6 +4481,7 @@
 
         // ─── Dashboard ─────────────────────────────────────
         let dashChart = null;
+        let dashData = null;
         let billsData = {bills: []};
 
         async function loadDashboard() {
@@ -4539,6 +4540,8 @@
             // Load bills for chart
             await loadBills();
 
+            dashData = data;
+
             // Populate month selector
             const sel = document.getElementById('dash-month-year');
             const current = new Date();
@@ -4561,14 +4564,14 @@
             loadDashboardChart(data);
         }
 
-        function loadDashboardChart(dashData) {
+        function loadDashboardChart(externalData) {
             const sel = document.getElementById('dash-month-year');
             const month = sel.value;
             if (!month) return;
             const canvas = document.getElementById('dash-chart');
             if (dashChart) { dashChart.destroy(); dashChart = null; }
 
-            const useData = (dashData && dashData.month_data) ? dashData : null;
+            const useData = (externalData && externalData.month_data) ? externalData : dashData;
 
             const draw = (data) => {
                 const md = data.month_data || {};
