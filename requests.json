@@ -1,0 +1,87 @@
+{
+  "requests": [
+    {
+      "id": 1,
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "type": "Time Off",
+      "fields": {
+        "start_date": "2026-05-30",
+        "end_date": "2026-05-31",
+        "reason": "vacation"
+      },
+      "checklist": [],
+      "status": "pending",
+      "created_at": "2026-05-29T08:21:23.720466"
+    },
+    {
+      "id": 2,
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "type": "New Work Shirt",
+      "fields": {
+        "size": "XS",
+        "color": "red"
+      },
+      "checklist": [
+        {
+          "label": "Order shirt",
+          "done": false
+        },
+        {
+          "label": "Shirt received",
+          "done": false
+        },
+        {
+          "label": "Delivered to employee",
+          "done": false
+        }
+      ],
+      "status": "pending",
+      "created_at": "2026-05-29T08:21:28.664441"
+    },
+    {
+      "id": 3,
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "type": "Equipment Repair",
+      "fields": {
+        "equipment": "soda machine",
+        "description": "not draining"
+      },
+      "checklist": [
+        {
+          "label": "Assess issue",
+          "done": false
+        },
+        {
+          "label": "Order parts (if needed)",
+          "done": false
+        },
+        {
+          "label": "Complete repair",
+          "done": false
+        },
+        {
+          "label": "Test equipment",
+          "done": false
+        }
+      ],
+      "status": "pending",
+      "created_at": "2026-05-29T08:22:01.818580"
+    },
+    {
+      "id": 4,
+      "employee_id": "EMP004",
+      "employee_name": "Anonymous",
+      "type": "Suggestion",
+      "fields": {
+        "suggestion": "I have problems",
+        "anonymous": true
+      },
+      "checklist": [],
+      "status": "pending",
+      "created_at": "2026-05-29T08:22:11.907092"
+    }
+  ]
+}

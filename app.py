@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from io import StringIO
 from flask import Flask, render_template, request, jsonify, Response, session, redirect
 from functools import wraps
+import random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -189,7 +190,6 @@ def add_employee():
         new_emp["role"] = new_emp.get("role", "employee")
 
         # Auto-generate unique 4-digit PIN
-        import random
         existing_pins = {e.get("pin") for e in data["employees"]}
         while True:
             pin = f"{random.randint(0,9999):04d}"
@@ -2044,4 +2044,24 @@ def save_bills():
 
 
 if __name__ == "__main__":
+    # Ensure all runtime data files exist so fresh deploys start with empty data
+    data_files = {
+        SCHEDULES_FILE: {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": "", "blackouts": {}, "closures": {}},
+        TIMECLOCK_FILE: {"entries": []},
+        REQUESTS_FILE: {"requests": []},
+        SHIFT_SWAPS_FILE: {"swaps": []},
+        MANAGER_NOTES_FILE: {"notes": []},
+        BILLS_FILE: {"bills": []},
+        MAINTENANCE_FILE: {"tasks": [], "completions": []},
+        NOTIFICATIONS_FILE: {"notifications": []},
+        MESSAGES_FILE: {"messages": []},
+        EMPLOYEE_TRACKER_FILE: {"schedule_published": False, "announcement_read": {}},
+        SCHEDULE_TEMPLATES_FILE: {"templates": []},
+        HISTORY_FILE: {},
+        APP_SETTINGS_FILE: {"week_start_day": 6},
+        TIMEOFF_FILE: {"requests": []},
+    }
+    for path, default in data_files.items():
+        if not os.path.exists(path):
+            save_json(path, default)
     app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1", host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

@@ -1,30 +1,104 @@
 {
-  "status": "draft",
+  "status": "published",
   "shifts": {
     "EMP004": [
       {
         "start": "06:00",
-        "end": "14:00",
+        "end": "15:00",
         "notes": ""
       },
       {
         "start": "06:00",
-        "end": "14:00",
+        "end": "15:00",
         "notes": ""
       },
       {
         "start": "06:00",
-        "end": "14:00",
+        "end": "15:00",
         "notes": ""
       },
       {
         "start": "06:00",
-        "end": "14:00",
+        "end": "15:00",
         "notes": ""
       },
       {
         "start": "06:00",
-        "end": "14:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP006": [
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "06:00",
+        "end": "15:00",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP007": [
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
         "notes": ""
       },
       {
@@ -60,7 +134,7 @@
         "notes": ""
       },
       {
-        "start": "",
+        "start": "07:00",
         "end": "",
         "notes": ""
       },
@@ -75,7 +149,7 @@
         "notes": ""
       }
     ],
-    "EMP006": [
+    "EMP008": [
       {
         "start": "",
         "end": "",
@@ -97,7 +171,81 @@
         "notes": ""
       },
       {
+        "start": "11:00",
+        "end": "",
+        "notes": ""
+      },
+      {
         "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP009": [
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "08:00",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      }
+    ],
+    "EMP010": [
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "",
+        "end": "",
+        "notes": ""
+      },
+      {
+        "start": "08:00",
         "end": "",
         "notes": ""
       },
@@ -114,6 +262,8 @@
     ]
   },
   "open_shifts": [],
-  "week_start": "2026-05-11",
-  "week_label": "May 11 - May 17, 2026"
+  "week_start": "2026-06-01",
+  "week_label": "Jun 01 - Jun 07, 2026",
+  "blackouts": {},
+  "closures": {}
 }

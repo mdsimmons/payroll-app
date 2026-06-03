@@ -1,0 +1,16 @@
+{
+  "bills": [
+    {
+      "name": "Rent",
+      "amount": 1250
+    },
+    {
+      "name": "Power",
+      "amount": 800
+    },
+    {
+      "name": "Internet",
+      "amount": 150
+    }
+  ]
+}

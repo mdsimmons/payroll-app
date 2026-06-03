@@ -1,0 +1,33 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Clean Hood Filters",
+      "description": "clean the hood filters over the grill",
+      "category": "cleaning",
+      "checklist": [
+        {
+          "label": "take out filters",
+          "done": false
+        },
+        {
+          "label": "clean filters",
+          "done": false
+        },
+        {
+          "label": "replace filters",
+          "done": false
+        }
+      ],
+      "is_recurring": true,
+      "interval_days": 30,
+      "created_at": "2026-06-01T08:08:37.128864",
+      "last_completed": null,
+      "next_due": null,
+      "status": "active",
+      "source_request_id": null,
+      "notes": ""
+    }
+  ],
+  "completions": []
+}

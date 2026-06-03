@@ -1,0 +1,20 @@
+{
+  "notes": [
+    {
+      "date": "2026-05-27",
+      "sales": 1500,
+      "cash_sales": 400,
+      "employee_notes": "employee notes",
+      "daily_notes": "manager note",
+      "timestamp": "2026-05-28T08:32:13.876972"
+    },
+    {
+      "date": "2026-05-28",
+      "sales": 1842,
+      "cash_sales": 503,
+      "employee_notes": "Sarah called in sick, Justin covered",
+      "daily_notes": "Busier than usual Thursday, need to order more supplies",
+      "timestamp": "2026-05-28T08:38:10.635035"
+    }
+  ]
+}

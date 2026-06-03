@@ -4,9 +4,9 @@
       "employee_id": "EMP004",
       "employee_name": "Mitchel Simmons",
       "date": "2026-05-08",
-      "clock_in": "2026-05-08T19:16:51.027780",
-      "clock_out": "2026-05-08T19:17:31.382460",
-      "hours": 0.01,
+      "clock_in": "2026-05-24T06:00:00",
+      "clock_out": "2026-05-24T15:00:00",
+      "hours": 9.0,
       "status": "completed"
     },
     {
@@ -25,6 +25,24 @@
       "clock_in": "2026-05-03T10.22:00",
       "clock_out": "2026-05-03T3:00:00",
       "hours": null,
+      "status": "completed"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-05-24",
+      "clock_in": "2026-05-24T06:00:00",
+      "clock_out": "2026-05-24T15:00:00",
+      "hours": 9.0,
+      "status": "completed"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-05-17",
+      "clock_in": "2026-05-17T06:00:00",
+      "clock_out": "2026-05-17T15:00:00",
+      "hours": 9.0,
       "status": "completed"
     }
   ]

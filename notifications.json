@@ -1,6 +1,575 @@
 {
   "notifications": [
     {
+      "id": 90,
+      "type": "schedule_published",
+      "message": "Schedule for Jun 01 - Jun 07, 2026 has been published",
+      "created_at": "2026-06-01T08:56:30.286247",
+      "read_by": []
+    },
+    {
+      "id": 89,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-06-01T08:56:25.847407",
+      "read_by": []
+    },
+    {
+      "id": 88,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-06-01T08:56:24.154881",
+      "read_by": []
+    },
+    {
+      "id": 87,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-06-01T08:56:20.611872",
+      "read_by": []
+    },
+    {
+      "id": 86,
+      "type": "maintenance",
+      "message": "New maintenance task: Clean Hood Filters",
+      "created_at": "2026-06-01T08:08:37.130452",
+      "read_by": []
+    },
+    {
+      "id": 85,
+      "type": "maintenance",
+      "message": "New maintenance task: Test: Clean filters",
+      "created_at": "2026-06-01T07:56:10.878253",
+      "read_by": []
+    },
+    {
+      "id": 84,
+      "type": "maintenance",
+      "message": "New maintenance task: Clean Under Grill",
+      "created_at": "2026-06-01T07:52:10.670616",
+      "read_by": []
+    },
+    {
+      "id": 83,
+      "type": "maintenance",
+      "message": "New maintenance task: Clean soda machine",
+      "created_at": "2026-06-01T07:48:06.444288",
+      "read_by": []
+    },
+    {
+      "id": 82,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T10:08:13.434478",
+      "read_by": []
+    },
+    {
+      "id": 81,
+      "type": "announcement",
+      "message": "New announcement: Emp badge test",
+      "created_at": "2026-05-29T10:08:13.432921",
+      "read_by": []
+    },
+    {
+      "id": 80,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T10:07:49.278728",
+      "read_by": []
+    },
+    {
+      "id": 79,
+      "type": "announcement",
+      "message": "New announcement: Emp badge test",
+      "created_at": "2026-05-29T10:07:49.277062",
+      "read_by": []
+    },
+    {
+      "id": 78,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T10:07:35.619864",
+      "read_by": []
+    },
+    {
+      "id": 77,
+      "type": "announcement",
+      "message": "New announcement: Emp badge test",
+      "created_at": "2026-05-29T10:07:35.617765",
+      "read_by": []
+    },
+    {
+      "id": 76,
+      "type": "announcement",
+      "message": "New announcement: test2",
+      "created_at": "2026-05-29T09:54:16.185123",
+      "read_by": []
+    },
+    {
+      "id": 75,
+      "type": "announcement",
+      "message": "New announcement: test1",
+      "created_at": "2026-05-29T09:54:16.183233",
+      "read_by": []
+    },
+    {
+      "id": 74,
+      "type": "announcement",
+      "message": "New announcement: Unread badge test",
+      "created_at": "2026-05-29T09:53:50.103356",
+      "read_by": []
+    },
+    {
+      "id": 73,
+      "type": "announcement",
+      "message": "New announcement: Final test",
+      "created_at": "2026-05-29T09:51:23.676706",
+      "read_by": []
+    },
+    {
+      "id": 72,
+      "type": "announcement",
+      "message": "New announcement: Badge test",
+      "created_at": "2026-05-29T09:48:56.652378",
+      "read_by": []
+    },
+    {
+      "id": 71,
+      "type": "announcement",
+      "message": "New announcement: Final badge test",
+      "created_at": "2026-05-29T09:48:16.191698",
+      "read_by": []
+    },
+    {
+      "id": 70,
+      "type": "announcement",
+      "message": "New announcement: Badge test 2",
+      "created_at": "2026-05-29T09:47:39.521753",
+      "read_by": []
+    },
+    {
+      "id": 69,
+      "type": "announcement",
+      "message": "New announcement: Badge test 1",
+      "created_at": "2026-05-29T09:47:39.511061",
+      "read_by": []
+    },
+    {
+      "id": 68,
+      "type": "announcement",
+      "message": "New announcement: Test 2",
+      "created_at": "2026-05-29T09:46:42.970502",
+      "read_by": []
+    },
+    {
+      "id": 67,
+      "type": "announcement",
+      "message": "New announcement: Test 1",
+      "created_at": "2026-05-29T09:46:42.968456",
+      "read_by": []
+    },
+    {
+      "id": 66,
+      "type": "announcement",
+      "message": "New announcement: Test 0",
+      "created_at": "2026-05-29T09:46:42.966093",
+      "read_by": []
+    },
+    {
+      "id": 65,
+      "type": "announcement",
+      "message": "New announcement: Test unread badge",
+      "created_at": "2026-05-29T09:45:37.303672",
+      "read_by": []
+    },
+    {
+      "id": 64,
+      "type": "announcement",
+      "message": "New announcement: this is a announcement",
+      "created_at": "2026-05-29T09:41:32.083506",
+      "read_by": []
+    },
+    {
+      "id": 63,
+      "type": "announcement",
+      "message": "New announcement: Hello from test!",
+      "created_at": "2026-05-29T09:34:49.023256",
+      "read_by": []
+    },
+    {
+      "id": 62,
+      "type": "announcement",
+      "message": "New announcement: Test announcement!",
+      "created_at": "2026-05-29T09:34:19.926091",
+      "read_by": []
+    },
+    {
+      "id": 61,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T09:18:39.509836",
+      "read_by": []
+    },
+    {
+      "id": 60,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-05-29T09:18:21.811199",
+      "read_by": []
+    },
+    {
+      "id": 59,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T09:18:12.316056",
+      "read_by": []
+    },
+    {
+      "id": 58,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-05-29T09:17:53.049784",
+      "read_by": []
+    },
+    {
+      "id": 57,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T09:17:50.365524",
+      "read_by": []
+    },
+    {
+      "id": 56,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-05-29T09:15:34.901868",
+      "read_by": []
+    },
+    {
+      "id": 55,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T09:15:19.986808",
+      "read_by": []
+    },
+    {
+      "id": 54,
+      "type": "schedule_unpublished",
+      "message": "Schedule for May 25 - May 31, 2026 has been unpublished",
+      "created_at": "2026-05-29T08:29:32.895266",
+      "read_by": []
+    },
+    {
+      "id": 53,
+      "type": "schedule_published",
+      "message": "Schedule for May 25 - May 31, 2026 has been published",
+      "created_at": "2026-05-29T08:29:15.508476",
+      "read_by": []
+    },
+    {
+      "id": 52,
+      "type": "request",
+      "message": "New Suggestion from Anonymous",
+      "created_at": "2026-05-29T08:22:11.908245",
+      "read_by": []
+    },
+    {
+      "id": 51,
+      "type": "request",
+      "message": "New Equipment Repair from Mitchel Simmons",
+      "created_at": "2026-05-29T08:22:01.819855",
+      "read_by": []
+    },
+    {
+      "id": 50,
+      "type": "request",
+      "message": "New New Work Shirt from Mitchel Simmons",
+      "created_at": "2026-05-29T08:21:28.665339",
+      "read_by": []
+    },
+    {
+      "id": 49,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T08:21:23.721920",
+      "read_by": []
+    },
+    {
+      "id": 48,
+      "type": "request",
+      "message": "New New Work Shirt from Ciera Mckinney",
+      "created_at": "2026-05-29T08:19:55.727199",
+      "read_by": []
+    },
+    {
+      "id": 47,
+      "type": "request",
+      "message": "New Suggestion from Anonymous",
+      "created_at": "2026-05-29T08:19:55.716389",
+      "read_by": []
+    },
+    {
+      "id": 46,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T08:19:55.706999",
+      "read_by": []
+    },
+    {
+      "id": 45,
+      "type": "request",
+      "message": "New Equipment Repair from Justin White",
+      "created_at": "2026-05-29T08:16:55.283150",
+      "read_by": []
+    },
+    {
+      "id": 44,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T08:16:55.272594",
+      "read_by": []
+    },
+    {
+      "id": 43,
+      "type": "request",
+      "message": "New Suggestion from Ciera Mckinney",
+      "created_at": "2026-05-29T08:16:45.339210",
+      "read_by": []
+    },
+    {
+      "id": 42,
+      "type": "request",
+      "message": "New New Work Shirt from Justin White",
+      "created_at": "2026-05-29T08:16:45.330329",
+      "read_by": []
+    },
+    {
+      "id": 41,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T08:16:45.320666",
+      "read_by": []
+    },
+    {
+      "id": 40,
+      "type": "request",
+      "message": "New Suggestion from Ciera Mckinney",
+      "created_at": "2026-05-29T08:16:28.401321",
+      "read_by": []
+    },
+    {
+      "id": 39,
+      "type": "request",
+      "message": "New New Work Shirt from Justin White",
+      "created_at": "2026-05-29T08:16:28.391481",
+      "read_by": []
+    },
+    {
+      "id": 38,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T08:16:28.381782",
+      "read_by": []
+    },
+    {
+      "id": 37,
+      "type": "request_response",
+      "message": "Your Equipment Repair has been approved",
+      "created_at": "2026-05-29T08:12:56.975912",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 36,
+      "type": "request",
+      "message": "New Suggestion from Mitchel Simmons",
+      "created_at": "2026-05-29T08:11:58.265806",
+      "read_by": []
+    },
+    {
+      "id": 35,
+      "type": "request",
+      "message": "New Equipment Repair from Mitchel Simmons",
+      "created_at": "2026-05-29T08:11:41.699265",
+      "read_by": []
+    },
+    {
+      "id": 34,
+      "type": "request",
+      "message": "New New Work Shirt from Mitchel Simmons",
+      "created_at": "2026-05-29T08:11:08.493967",
+      "read_by": []
+    },
+    {
+      "id": 33,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T07:47:35.189431",
+      "read_by": []
+    },
+    {
+      "id": 32,
+      "type": "request",
+      "message": "New Test from Mitchel Simmons",
+      "created_at": "2026-05-29T07:46:33.036473",
+      "read_by": []
+    },
+    {
+      "id": 31,
+      "type": "request_response",
+      "message": "Your Equipment Repair has been approved",
+      "created_at": "2026-05-29T07:43:32.943792",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 30,
+      "type": "request_response",
+      "message": "Your New Work Shirt has been approved",
+      "created_at": "2026-05-29T07:43:32.932378",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 29,
+      "type": "request",
+      "message": "New Time Off from Ciera Mckinney",
+      "created_at": "2026-05-29T07:43:32.921994",
+      "read_by": []
+    },
+    {
+      "id": 28,
+      "type": "request",
+      "message": "New Equipment Repair from Justin White",
+      "created_at": "2026-05-29T07:43:32.908818",
+      "read_by": []
+    },
+    {
+      "id": 27,
+      "type": "request",
+      "message": "New New Work Shirt from Mitchel Simmons",
+      "created_at": "2026-05-29T07:43:32.894802",
+      "read_by": []
+    },
+    {
+      "id": 26,
+      "type": "request_response",
+      "message": "Your Equipment Repair has been approved",
+      "created_at": "2026-05-29T07:43:07.877432",
+      "read_by": [],
+      "target_employee": "EMP006"
+    },
+    {
+      "id": 25,
+      "type": "request_response",
+      "message": "Your New Work Shirt has been approved",
+      "created_at": "2026-05-29T07:43:07.862778",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 24,
+      "type": "request",
+      "message": "New Time Off from Ciera Mckinney",
+      "created_at": "2026-05-29T07:43:07.850942",
+      "read_by": []
+    },
+    {
+      "id": 23,
+      "type": "request",
+      "message": "New Equipment Repair from Justin White",
+      "created_at": "2026-05-29T07:43:07.835504",
+      "read_by": []
+    },
+    {
+      "id": 22,
+      "type": "request",
+      "message": "New New Work Shirt from Mitchel Simmons",
+      "created_at": "2026-05-29T07:43:07.819332",
+      "read_by": []
+    },
+    {
+      "id": 21,
+      "type": "request_response",
+      "message": "Your request has been approved",
+      "created_at": "2026-05-29T07:29:30.444953",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 20,
+      "type": "request_response",
+      "message": "Your Time Off has been approved",
+      "created_at": "2026-05-29T07:29:30.437268",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 19,
+      "type": "request",
+      "message": "New Suggestion from Ciera Mckinney",
+      "created_at": "2026-05-29T07:29:30.429534",
+      "read_by": []
+    },
+    {
+      "id": 18,
+      "type": "request",
+      "message": "New New Work Shirt from Justin White",
+      "created_at": "2026-05-29T07:29:30.421480",
+      "read_by": []
+    },
+    {
+      "id": 17,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T07:29:30.412944",
+      "read_by": []
+    },
+    {
+      "id": 16,
+      "type": "request_response",
+      "message": "Your request has been denied",
+      "created_at": "2026-05-29T07:29:00.503251",
+      "read_by": [],
+      "target_employee": "EMP004"
+    },
+    {
+      "id": 15,
+      "type": "request_response",
+      "message": "Your request has been approved",
+      "created_at": "2026-05-29T07:29:00.464557",
+      "read_by": [],
+      "target_employee": "EMP001"
+    },
+    {
+      "id": 14,
+      "type": "request",
+      "message": "New Suggestion from Ciera Mckinney",
+      "created_at": "2026-05-29T07:29:00.364152",
+      "read_by": []
+    },
+    {
+      "id": 13,
+      "type": "request",
+      "message": "New Equipment Repair from Justin White",
+      "created_at": "2026-05-29T07:29:00.331867",
+      "read_by": []
+    },
+    {
+      "id": 12,
+      "type": "request",
+      "message": "New New Work Shirt from Justin White",
+      "created_at": "2026-05-29T07:29:00.292878",
+      "read_by": []
+    },
+    {
+      "id": 11,
+      "type": "request",
+      "message": "New Time Off from Mitchel Simmons",
+      "created_at": "2026-05-29T07:28:51.885698",
+      "read_by": []
+    },
+    {
       "id": 10,
       "type": "message",
       "message": "New message: .",

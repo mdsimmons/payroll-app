@@ -1,3 +1,5 @@
 {
-  "week_start_day": 6
+  "week_start_day": 6,
+  "notify_on_publish": true,
+  "show_maintenance_on_dashboard": true
 }

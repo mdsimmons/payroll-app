@@ -1,0 +1,13 @@
+{
+  "swaps": [
+    {
+      "id": 1,
+      "from_employee_id": "EMP004",
+      "to_employee_id": "EMP006",
+      "weekday": 1,
+      "week_start": "2026-05-25",
+      "status": "pending",
+      "created_at": "2026-05-29T09:19:00.826878"
+    }
+  ]
+}
