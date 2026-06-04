@@ -2091,33 +2091,34 @@ def save_bills():
         return jsonify({"error": str(e)}), 500
 
 
+# ─── Startup initialization (runs on both gunicorn and python app.py) ─────
+db.init_db()
+if db.DATABASE_URL:
+    B_DIR = os.path.dirname(os.path.abspath(__file__))
+    migrated = db.migrate_from_files(B_DIR)
+    if migrated:
+        print(f"Migrated {migrated} data files to PostgreSQL")
+else:
+    # Ensure all runtime data files exist so fresh deploys start with empty data
+    data_files = {
+        SCHEDULES_FILE: {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": "", "blackouts": {}, "closures": {}},
+        TIMECLOCK_FILE: {"entries": []},
+        REQUESTS_FILE: {"requests": []},
+        SHIFT_SWAPS_FILE: {"swaps": []},
+        MANAGER_NOTES_FILE: {"notes": []},
+        BILLS_FILE: {"bills": []},
+        MAINTENANCE_FILE: {"tasks": [], "completions": []},
+        NOTIFICATIONS_FILE: {"notifications": []},
+        MESSAGES_FILE: {"messages": []},
+        EMPLOYEE_TRACKER_FILE: {"schedule_published": False, "announcement_read": {}},
+        SCHEDULE_TEMPLATES_FILE: {"templates": []},
+        HISTORY_FILE: {},
+        APP_SETTINGS_FILE: {"week_start_day": 6},
+        TIMEOFF_FILE: {"requests": []},
+    }
+    for path, default in data_files.items():
+        if not os.path.exists(path):
+            save_json(path, default)
+
 if __name__ == "__main__":
-    # Initialize PostgreSQL if DATABASE_URL is set
-    db.init_db()
-    if db.DATABASE_URL:
-        B_DIR = os.path.dirname(os.path.abspath(__file__))
-        migrated = db.migrate_from_files(B_DIR)
-        if migrated:
-            print(f"Migrated {migrated} data files to PostgreSQL")
-    else:
-        # Ensure all runtime data files exist so fresh deploys start with empty data
-        data_files = {
-            SCHEDULES_FILE: {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": "", "blackouts": {}, "closures": {}},
-            TIMECLOCK_FILE: {"entries": []},
-            REQUESTS_FILE: {"requests": []},
-            SHIFT_SWAPS_FILE: {"swaps": []},
-            MANAGER_NOTES_FILE: {"notes": []},
-            BILLS_FILE: {"bills": []},
-            MAINTENANCE_FILE: {"tasks": [], "completions": []},
-            NOTIFICATIONS_FILE: {"notifications": []},
-            MESSAGES_FILE: {"messages": []},
-            EMPLOYEE_TRACKER_FILE: {"schedule_published": False, "announcement_read": {}},
-            SCHEDULE_TEMPLATES_FILE: {"templates": []},
-            HISTORY_FILE: {},
-            APP_SETTINGS_FILE: {"week_start_day": 6},
-            TIMEOFF_FILE: {"requests": []},
-        }
-        for path, default in data_files.items():
-            if not os.path.exists(path):
-                save_json(path, default)
     app.run(debug=os.environ.get("FLASK_DEBUG", "0") == "1", host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
