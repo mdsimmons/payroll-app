@@ -2024,6 +2024,7 @@ def get_dashboard():
             "monthly_labor": round(monthly_labor, 2),
             "total_bills": total_bills,
             "month_data": month_data,
+            "current_month": current_month,
             "pending_requests": pending_requests[:5],
             "unread_count": unread_count,
             "maintenance_tasks": maintenance_tasks,
