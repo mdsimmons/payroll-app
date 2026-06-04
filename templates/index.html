@@ -4554,7 +4554,7 @@
             // Add current month if not present
             const currentVal = data.current_month || serverMonth || new Date().toISOString().slice(0, 7);
             if (!months[currentVal]) months[currentVal] = {gross: 0, labor: 0};
-            document.getElementById('dash-debug').textContent = 'API months: ' + Object.keys(data.month_data||{}).join(', ') + ' | current_month: ' + (data.current_month||'none') + ' | final: ' + Object.keys(months).join(', ');
+            document.getElementById('dash-debug').textContent = 'API months: ' + Object.keys(data.month_data||{}).join(', ') + ' | cur_month: ' + (data.current_month||'none') + ' | options: ' + Array.from(sel.options).map(o => o.value).join(', ') + ' | selected: ' + sel.value;
             Object.keys(months).sort().reverse().forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m;
