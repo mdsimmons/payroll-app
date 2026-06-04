@@ -479,6 +479,7 @@
                     <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
                         <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;"></select>
                     </div>
+                    <div id="dash-debug" style="font-size:0.75rem;color:#64748b;margin-top:0.25rem;text-align:center;"></div>
                     <canvas id="dash-chart" style="max-height:250px;"></canvas>
                 </div>
                 <div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
@@ -4553,6 +4554,7 @@
             // Add current month if not present
             const currentVal = data.current_month || serverMonth || new Date().toISOString().slice(0, 7);
             if (!months[currentVal]) months[currentVal] = {gross: 0, labor: 0};
+            document.getElementById('dash-debug').textContent = 'API months: ' + Object.keys(data.month_data||{}).join(', ') + ' | current_month: ' + (data.current_month||'none') + ' | final: ' + Object.keys(months).join(', ');
             Object.keys(months).sort().reverse().forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m;
