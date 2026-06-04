@@ -479,7 +479,6 @@
                     <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
                         <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;"></select>
                     </div>
-                    <div id="dash-debug" style="font-size:0.75rem;color:#64748b;margin-top:0.25rem;text-align:center;"></div>
                     <canvas id="dash-chart" style="max-height:250px;"></canvas>
                 </div>
                 <div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
@@ -4564,7 +4563,6 @@
             sel.value = dataMonths.length > 0 ? dataMonths[dataMonths.length - 1] : currentVal;
             sel.onchange = loadDashboardChart;
             loadDashboardChart();
-            document.getElementById('dash-debug').textContent = 'API: ' + Object.keys(data.month_data||{}).join(', ') + ' | cur: ' + (data.current_month||'none') + ' | opts: ' + Array.from(sel.options).map(o=>o.text + '(' + o.value + ')').join(', ') + ' | val: ' + sel.value;
         }
 
         function loadDashboardChart() {
