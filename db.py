@@ -2,74 +2,71 @@ import os
 import json
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
+_connection = None
 
 
 def _connect():
+    global _connection
     if not DATABASE_URL:
         return None
-    import psycopg2
-    return psycopg2.connect(DATABASE_URL)
+    if _connection is None or _connection.closed:
+        import psycopg2
+        _connection = psycopg2.connect(DATABASE_URL)
+        _connection.autocommit = True
+        return _connection
+    try:
+        with _connection.cursor() as cur:
+            cur.execute("SELECT 1")
+    except Exception:
+        import psycopg2
+        _connection = psycopg2.connect(DATABASE_URL)
+        _connection.autocommit = True
+    return _connection
 
 
 def init_db():
     conn = _connect()
     if not conn:
         return
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS app_data (
-                        key TEXT PRIMARY KEY,
-                        value TEXT NOT NULL
-                    )
-                """)
-    finally:
-        conn.close()
+    with conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS app_data (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """)
 
 
 def load(key):
     conn = _connect()
     if not conn:
         return None
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT value FROM app_data WHERE key = %s", (key,))
-                row = cur.fetchone()
-                return json.loads(row[0]) if row else None
-    finally:
-        conn.close()
+    with conn.cursor() as cur:
+        cur.execute("SELECT value FROM app_data WHERE key = %s", (key,))
+        row = cur.fetchone()
+        return json.loads(row[0]) if row else None
 
 
 def save(key, data):
     conn = _connect()
     if not conn:
         return False
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "INSERT INTO app_data (key, value) VALUES (%s, %s) "
-                    "ON CONFLICT (key) DO UPDATE SET value = %s",
-                    (key, json.dumps(data), json.dumps(data)),
-                )
-        return True
-    finally:
-        conn.close()
+    with conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO app_data (key, value) VALUES (%s, %s) "
+            "ON CONFLICT (key) DO UPDATE SET value = %s",
+            (key, json.dumps(data), json.dumps(data)),
+        )
+    return True
 
 
 def exists(key):
     conn = _connect()
     if not conn:
         return False
-    try:
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM app_data WHERE key = %s", (key,))
-                return cur.fetchone() is not None
-    finally:
-        conn.close()
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM app_data WHERE key = %s", (key,))
+        return cur.fetchone() is not None
 
 
 def migrate_from_files(data_dir):
