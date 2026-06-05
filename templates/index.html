@@ -3589,12 +3589,14 @@
 body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:#f1f5f9; padding:2rem; }
 .ps { max-width:750px; margin:0 auto 1.5rem; background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,.12); overflow:hidden; }
 .ps-hdr { background:#1e3a5f; color:#fff; padding:1.25rem 1.75rem 0.85rem; }
+.ps-hdr-row { display:flex; align-items:center; gap:1rem; }
+.ps-logo { height:48px; width:auto; border-radius:4px; }
 .ps-co { font-size:1.25rem; font-weight:700; letter-spacing:.02em; }
 .ps-sub { font-size:.8rem; opacity:.75; margin-top:.1rem; }
-.ps-info { width:100%; border-collapse:collapse; padding:0 1.75rem; }
-.ps-info td { padding:.7rem .5rem .5rem 0; vertical-align:top; }
-.ps-lbl { color:#64748b; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; }
-.ps-val { font-weight:600; font-size:.9rem; margin-top:.1rem; }
+.ps-info { display:flex; gap:0.5rem; padding:.7rem 1.75rem .5rem; }
+.ps-info-item { flex:1; }
+.ps-lbl { display:block; color:#64748b; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.1rem; }
+.ps-val { font-weight:600; font-size:.9rem; }
 .ps-sec { padding:.3rem 1.75rem; }
 .ps-sec-title { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#1e3a5f; border-bottom:2px solid #1e3a5f; padding-bottom:.3rem; margin-bottom:.4rem; }
 .ps-tbl { width:100%; border-collapse:collapse; }
@@ -3611,6 +3613,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
         function buildPaystubHtml(eid) {
             const data = window._reportData;
             const emp = data.employees[eid];
+            const logoUrl = window.location.origin + '/static/logo.png';
             let stubsHtml = '';
             for (const w of emp.weeks) {
                 const regHours = Math.min(w.hours_worked, 40);
@@ -3621,14 +3624,19 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 stubsHtml += `
             <div class="ps">
                 <div class="ps-hdr">
-                    <div class="ps-co">Paw-Paw's Place</div>
-                    <div class="ps-sub">Pay Statement</div>
+                    <div class="ps-hdr-row">
+                        <img class="ps-logo" src="${logoUrl}" alt="Logo">
+                        <div>
+                            <div class="ps-co">Paw-Paw's Place LLC</div>
+                            <div class="ps-sub">Pay Statement</div>
+                        </div>
+                    </div>
                 </div>
-                <table class="ps-info"><tr>
-                    <td><span class="ps-lbl">Employee</span><div class="ps-val">${emp.name}</div></td>
-                    <td><span class="ps-lbl">Period</span><div class="ps-val">${w.week_start} &ndash; ${w.week_end}</div></td>
-                    <td><span class="ps-lbl">Pay Date</span><div class="ps-val">${payDate}</div></td>
-                </tr></table>
+                <div class="ps-info">
+                    <div class="ps-info-item"><span class="ps-lbl">Employee</span><div class="ps-val">${emp.name}</div></div>
+                    <div class="ps-info-item"><span class="ps-lbl">Period</span><div class="ps-val">${w.week_start} &ndash; ${w.week_end}</div></div>
+                    <div class="ps-info-item"><span class="ps-lbl">Pay Date</span><div class="ps-val">${payDate}</div></div>
+                </div>
                 <div class="ps-sec">
                     <div class="ps-sec-title">Earnings</div>
                     <table class="ps-tbl">
@@ -4243,6 +4251,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
 
         function buildPaystubsHtml(data) {
             if (!data || !data.length) return '<p>No paystubs</p>';
+            const logoUrl = window.location.origin + '/static/logo.png';
             let stubsHtml = '';
             data.forEach(r => {
                 const regHours = Math.min(r.hours_worked || 0, 40);
@@ -4253,14 +4262,19 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 stubsHtml += `
             <div class="ps">
                 <div class="ps-hdr">
-                    <div class="ps-co">Paw-Paw's Place</div>
-                    <div class="ps-sub">Pay Statement</div>
+                    <div class="ps-hdr-row">
+                        <img class="ps-logo" src="${logoUrl}" alt="Logo">
+                        <div>
+                            <div class="ps-co">Paw-Paw's Place LLC</div>
+                            <div class="ps-sub">Pay Statement</div>
+                        </div>
+                    </div>
                 </div>
-                <table class="ps-info"><tr>
-                    <td><span class="ps-lbl">Employee</span><div class="ps-val">${r.employee_name}</div></td>
-                    <td><span class="ps-lbl">Period</span><div class="ps-val">${r.week_start} &ndash; ${r.week_end}</div></td>
-                    <td><span class="ps-lbl">Pay Date</span><div class="ps-val">${payDate}</div></td>
-                </tr></table>
+                <div class="ps-info">
+                    <div class="ps-info-item"><span class="ps-lbl">Employee</span><div class="ps-val">${r.employee_name}</div></div>
+                    <div class="ps-info-item"><span class="ps-lbl">Period</span><div class="ps-val">${r.week_start} &ndash; ${r.week_end}</div></div>
+                    <div class="ps-info-item"><span class="ps-lbl">Pay Date</span><div class="ps-val">${payDate}</div></div>
+                </div>
                 <div class="ps-sec">
                     <div class="ps-sec-title">Earnings</div>
                     <table class="ps-tbl">
