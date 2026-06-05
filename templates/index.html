@@ -1305,7 +1305,7 @@
                     <span class="co-star" data-v="5">☆</span>
                 </div>
                 <textarea id="co-note" placeholder="Shift notes (optional)…"></textarea>
-                <div id="co-timer">Auto-clocking out in <span id="co-timer-sec">5</span>s</div>
+                <div id="co-timer">Auto-clocking out in <span id="co-timer-sec">10</span>s</div>
             </div>
             <div id="co-step-3" style="display:none;text-align:center;padding:1rem 0;">
                 <p style="font-size:1.1rem;font-weight:600;color:#059669;">☕ On Break</p>
@@ -3222,7 +3222,7 @@
             document.getElementById('co-note').value = '';
             const noteEl = document.getElementById('co-note');
             noteEl.oninput = resetCoTimer;
-            startCoTimer(5);
+            startCoTimer(10);
         }
 
         let coSec = 5;
