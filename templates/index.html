@@ -622,6 +622,24 @@
             #tc-today-section { width:100%; max-width:600px; padding:1rem 1rem 2rem; }
             #clock-toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(80px); background:#059669; color:#fff; padding:1rem 2rem; border-radius:12px; font-size:1.2rem; font-weight:600; opacity:0; transition:all 0.4s ease; pointer-events:none; z-index:200; white-space:nowrap; box-shadow:0 4px 12px rgba(5,150,105,0.3); }
             #clock-toast.toast-show { opacity:1; transform:translateX(-50%) translateY(0); }
+            #co-modal { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:150; }
+            #co-modal.active { display:flex; }
+            #co-box { background:#fff; border-radius:16px; width:90%; max-width:380px; padding:1.5rem; box-shadow:0 8px 30px rgba(0,0,0,0.2); position:relative; }
+            #co-close { position:absolute; top:0.5rem; right:0.75rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#94a3b8; padding:0.25rem; line-height:1; }
+            #co-close:hover { color:#475569; }
+            .co-btn { width:100%; padding:0.9rem; font-size:1.05rem; font-weight:600; border:none; border-radius:10px; cursor:pointer; touch-action:manipulation; margin-bottom:0.5rem; transition:background 0.1s; }
+            .co-btn:active { transform:scale(0.98); }
+            .co-btn.break { background:#f1f5f9; color:#475569; }
+            .co-btn.clockout { background:#1e3a5f; color:#fff; }
+            #co-stars { text-align:center; font-size:2.2rem; margin-bottom:0.75rem; cursor:pointer; user-select:none; }
+            #co-stars span { transition:color 0.1s; }
+            #co-stars span:hover, #co-stars span.hovered { color:#f59e0b; }
+            .co-star { color:#cbd5e1; }
+            .co-star.active { color:#f59e0b; }
+            #co-note { width:100%; padding:0.6rem; border:1px solid #cbd5e1; border-radius:8px; font-size:0.9rem; min-height:70px; resize:vertical; box-sizing:border-box; font-family:inherit; }
+            #co-timer { text-align:center; font-size:0.8rem; color:#94a3b8; margin-top:0.5rem; }
+            #co-resume { text-align:center; margin-top:1rem; }
+            #co-resume button { padding:0.7rem 2rem; font-size:1rem; font-weight:600; background:#1e3a5f; color:#fff; border:none; border-radius:10px; cursor:pointer; }
         </style>
 
         <div id="page-history-reports" class="page">
@@ -1268,6 +1286,39 @@
     </div>
 
     <div id="clock-toast"></div>
+
+    <div id="co-modal">
+        <div id="co-box">
+            <button id="co-close" onclick="dismissClockOut()">✕</button>
+            <div id="co-step-1">
+                <h3 style="margin:0 0 1rem;font-size:1.15rem;">Clock Out Options</h3>
+                <button class="co-btn break" onclick="doBreak()">☕ Take Break</button>
+                <button class="co-btn clockout" onclick="showRatingStep()">🚪 Clock Out</button>
+            </div>
+            <div id="co-step-2" style="display:none;">
+                <h3 style="margin:0 0 0.5rem;font-size:1.15rem;text-align:center;">Rate Your Day</h3>
+                <div id="co-stars">
+                    <span class="co-star" data-v="1">☆</span>
+                    <span class="co-star" data-v="2">☆</span>
+                    <span class="co-star" data-v="3">☆</span>
+                    <span class="co-star" data-v="4">☆</span>
+                    <span class="co-star" data-v="5">☆</span>
+                </div>
+                <textarea id="co-note" placeholder="Shift notes (optional)…"></textarea>
+                <div id="co-timer">Auto-clocking out in <span id="co-timer-sec">5</span>s</div>
+            </div>
+            <div id="co-step-3" style="display:none;text-align:center;padding:1rem 0;">
+                <p style="font-size:1.1rem;font-weight:600;color:#059669;">☕ On Break</p>
+                <p style="color:#64748b;font-size:0.9rem;margin:0.25rem 0 1rem;">Take your break. Come back and enter your PIN to resume.</p>
+                <button class="co-btn clockout" onclick="closeClockoutModal()">Close</button>
+            </div>
+            <div id="co-step-4" style="display:none;text-align:center;padding:0.5rem 0;">
+                <p style="font-size:0.95rem;color:#64748b;">You're on break. Enter your PIN again to resume work.</p>
+                <button class="co-btn clockout" onclick="resumeFromBreak()">Back to Work</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let employees = [];
         let currentWeek = null;
@@ -3051,13 +3102,42 @@
                     body: JSON.stringify({pin: kpPin}),
                 });
                 const data = await res.json();
-                    if (res.ok) {
+                if (res.ok) {
+                    if (data.action === 'show_choice' || data.action === 'on_break') {
+                        window._coPin = kpPin;
+                    }
                     kpPin = '';
                     updateDots();
-                    statusEl.style.color = '#059669';
-                    statusEl.textContent = data.message;
-                    refreshTimeClock();
-                    showClockToast(data.message);
+                    if (data.action === 'show_choice') {
+                        statusEl.textContent = '';
+                        showClockoutModal();
+                    } else if (data.action === 'on_break') {
+                        statusEl.textContent = '';
+                        showOnBreakModal();
+                    } else if (data.action === 'break') {
+                        statusEl.style.color = '#059669';
+                        statusEl.textContent = data.message;
+                        closeClockoutModal();
+                        refreshTimeClock();
+                        showClockToast(data.message);
+                    } else if (data.action === 'clocked_out') {
+                        statusEl.style.color = '#059669';
+                        statusEl.textContent = data.message;
+                        closeClockoutModal();
+                        refreshTimeClock();
+                        showClockToast(data.message);
+                    } else if (data.action === 'resumed') {
+                        statusEl.style.color = '#059669';
+                        statusEl.textContent = data.message;
+                        closeClockoutModal();
+                        refreshTimeClock();
+                        showClockToast(data.message);
+                    } else {
+                        statusEl.style.color = '#059669';
+                        statusEl.textContent = data.message;
+                        refreshTimeClock();
+                        showClockToast(data.message);
+                    }
                 } else {
                     statusEl.style.color = '#dc2626';
                     statusEl.textContent = data.error || 'Error';
@@ -3072,12 +3152,159 @@
 
         function showClockToast(msg) {
             const toast = document.getElementById('clock-toast');
-            const isClockIn = msg.includes('Clocked in');
-            toast.textContent = isClockIn ? 'Have a great day at work!' : 'Enjoy your rest of the day!';
+            if (msg.includes('Clocked in')) {
+                toast.textContent = 'Have a great day at work!';
+            } else if (msg.includes('On break')) {
+                toast.textContent = 'Enjoy your break!';
+            } else if (msg.includes('Resumed')) {
+                toast.textContent = 'Welcome back!';
+            } else {
+                toast.textContent = 'Have a great rest of the day!';
+            }
             toast.className = 'toast-show';
             setTimeout(() => toast.className = '', 4000);
         }
 
+        let coTimer = null;
+        let coRating = 0;
+
+        function showClockoutModal() {
+            document.getElementById('co-step-1').style.display = 'block';
+            document.getElementById('co-step-2').style.display = 'none';
+            document.getElementById('co-step-3').style.display = 'none';
+            document.getElementById('co-step-4').style.display = 'none';
+            document.getElementById('co-close').style.display = 'block';
+            document.getElementById('co-modal').classList.add('active');
+        }
+
+        function showOnBreakModal() {
+            document.getElementById('co-step-1').style.display = 'none';
+            document.getElementById('co-step-2').style.display = 'none';
+            document.getElementById('co-step-3').style.display = 'none';
+            document.getElementById('co-step-4').style.display = 'block';
+            document.getElementById('co-close').style.display = 'block';
+            document.getElementById('co-modal').classList.add('active');
+        }
+
+        async function doBreak() {
+            const pin = window._coPin || kpPin;
+            if (!pin) return;
+            const res = await fetch('/api/timeclock/clock', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({pin: pin, action: 'break'}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('co-step-1').style.display = 'none';
+                document.getElementById('co-step-3').style.display = 'block';
+                document.getElementById('co-close').style.display = 'none';
+                document.getElementById('tc-status').textContent = '';
+                refreshTimeClock();
+                showClockToast('On break');
+            } else {
+                document.getElementById('tc-status').textContent = data.error || 'Error';
+                closeClockoutModal();
+            }
+        }
+
+        function showRatingStep() {
+            coRatingLocal = 0;
+            document.getElementById('co-step-1').style.display = 'none';
+            document.getElementById('co-step-2').style.display = 'block';
+            document.getElementById('co-close').style.display = 'block';
+            document.querySelectorAll('.co-star').forEach(el => {
+                el.textContent = '☆';
+                el.classList.remove('active');
+                el.style.color = '';
+            });
+            document.getElementById('co-note').value = '';
+            let sec = 5;
+            const timerEl = document.getElementById('co-timer-sec');
+            timerEl.textContent = sec;
+            clearTimeout(coTimer);
+            coTimer = setInterval(() => {
+                sec--;
+                timerEl.textContent = sec;
+                if (sec <= 0) {
+                    clearInterval(coTimer);
+                    submitClockOut();
+                }
+            }, 1000);
+        }
+
+        let coRatingLocal = 0;
+        document.addEventListener('click', function(e) {
+            const star = e.target.closest('.co-star');
+            if (!star) return;
+            const val = parseInt(star.dataset.v);
+            coRatingLocal = val;
+            document.querySelectorAll('.co-star').forEach(el => {
+                const v = parseInt(el.dataset.v);
+                if (v <= val) {
+                    el.textContent = '★';
+                    el.classList.add('active');
+                } else {
+                    el.textContent = '☆';
+                    el.classList.remove('active');
+                }
+            });
+        });
+
+        async function submitClockOut() {
+            clearInterval(coTimer);
+            const note = document.getElementById('co-note').value.trim();
+            const body = {pin: window._coPin || kpPin, action: 'clockout', rating: coRatingLocal};
+            if (note) body.note = note;
+            const res = await fetch('/api/timeclock/clock', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('tc-status').style.color = '#059669';
+                document.getElementById('tc-status').textContent = data.message;
+                refreshTimeClock();
+                showClockToast(data.message);
+            } else {
+                document.getElementById('tc-status').textContent = data.error || 'Error';
+            }
+            closeClockoutModal();
+        }
+
+        function dismissClockOut() {
+            clearInterval(coTimer);
+            if (document.getElementById('co-step-2').style.display !== 'none') {
+                submitClockOut();
+            } else {
+                closeClockoutModal();
+            }
+        }
+
+        function closeClockoutModal() {
+            clearInterval(coTimer);
+            document.getElementById('co-modal').classList.remove('active');
+        }
+
+        async function resumeFromBreak() {
+            const res = await fetch('/api/timeclock/clock', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({pin: window._coPin || kpPin, action: 'resume'}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('tc-status').style.color = '#059669';
+                document.getElementById('tc-status').textContent = data.message;
+                closeClockoutModal();
+                refreshTimeClock();
+                showClockToast(data.message);
+            } else {
+                document.getElementById('tc-status').textContent = data.error || 'Error';
+                closeClockoutModal();
+            }
+        }
         async function initTimeClock() {
             document.getElementById('tc-fullscreen').style.display = 'flex';
             refreshTimeClock();

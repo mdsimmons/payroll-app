@@ -836,11 +836,12 @@ def get_timeclock_now():
 
 @app.route("/api/timeclock/clock", methods=["POST"])
 def clock_in_out():
-    """Clock in or out. Body: {pin} (PIN identifies employee). Public for tablet use."""
+    """Clock in/out, take break, resume from break. Body: {pin, action?, rating?, note?}"""
     try:
         data = request.json
         emp_id = data.get("employee_id")
         pin = str(data.get("pin", "")).strip()
+        action = data.get("action")  # "break", "resume", "clockout"
         employees = load_employees(EMPLOYEES_FILE)
 
         # If no employee_id, look up by PIN
@@ -854,7 +855,7 @@ def clock_in_out():
             if not emp:
                 return jsonify({"error": "Employee not found"}), 404
             if str(emp.get("pin", "")).strip() != pin:
-                if pin != "admin":  # admin bypass
+                if pin != "admin":
                     return jsonify({"error": "Invalid PIN"}), 403
 
         clock = load_json(TIMECLOCK_FILE, {"entries": []})
@@ -864,11 +865,44 @@ def clock_in_out():
 
         if active:
             entry = active[0]
-            entry["clock_out"] = now.isoformat()
-            hours = (now - datetime.fromisoformat(entry["clock_in"])).total_seconds() / 3600
-            entry["hours"] = round(hours, 2)
-            entry["status"] = "completed"
-            msg = f"Clocked out. Hours: {entry['hours']:.2f}"
+            cur_status = entry.get("status", "active")
+
+            if cur_status == "break":
+                if action == "resume":
+                    break_start = datetime.fromisoformat(entry["break_start"])
+                    break_duration = (now - break_start).total_seconds() / 3600
+                    entry["break_total"] = entry.get("break_total", 0) + round(break_duration, 2)
+                    entry["status"] = "active"
+                    entry.pop("break_start", None)
+                    msg = "Resumed work"
+                    save_json(TIMECLOCK_FILE, clock)
+                    return jsonify({"message": msg, "entry": entry, "action": "resumed"})
+                else:
+                    return jsonify({"action": "on_break", "entry": entry})
+
+            if action == "break":
+                entry["status"] = "break"
+                entry["break_start"] = now.isoformat()
+                msg = "On break"
+                save_json(TIMECLOCK_FILE, clock)
+                return jsonify({"message": msg, "entry": entry, "action": "break"})
+
+            if action == "clockout":
+                entry["clock_out"] = now.isoformat()
+                total = (now - datetime.fromisoformat(entry["clock_in"])).total_seconds() / 3600
+                break_total = entry.get("break_total", 0)
+                entry["hours"] = round(total - break_total, 2)
+                entry["status"] = "completed"
+                if "rating" in data:
+                    entry["rating"] = data["rating"]
+                if "note" in data:
+                    entry["note"] = data["note"]
+                msg = f"Clocked out. Hours: {entry['hours']:.2f}"
+                save_json(TIMECLOCK_FILE, clock)
+                return jsonify({"message": msg, "entry": entry, "action": "clocked_out"})
+
+            # No action specified with active entry — tell frontend to show choice
+            return jsonify({"action": "show_choice", "entry": entry})
         else:
             entry = {
                 "employee_id": emp_id,
@@ -880,10 +914,8 @@ def clock_in_out():
                 "status": "active",
             }
             clock["entries"].append(entry)
-            msg = "Clocked in"
-
-        save_json(TIMECLOCK_FILE, clock)
-        return jsonify({"message": msg, "entry": entry})
+            save_json(TIMECLOCK_FILE, clock)
+            return jsonify({"message": "Clocked in", "entry": entry, "action": "clocked_in"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
