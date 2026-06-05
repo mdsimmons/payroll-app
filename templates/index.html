@@ -2278,6 +2278,7 @@
             if (page === 'app-settings') { loadAppSettings(); loadTaxSettings(); fetchEmployees(); loadRequestTypesSettings(); }
             if (page === 'schedule') { renderSchedule(); adminLoadSwaps(); loadTemplateDropdown(); }
             if (page === 'timesheet') renderTimesheet();
+            if (page === 'timeclock') initTimeClock();
             if (page === 'admin-activity') { showActivityTab('requests'); adminLoadRequests(); }
         }
 
