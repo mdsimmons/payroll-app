@@ -2339,7 +2339,7 @@
             document.getElementById('sched-week-display').textContent = wi.week_label;
 
             const [schedRes, empRes] = await Promise.all([
-                fetch('/api/schedules'),
+                fetch(`/api/schedules?week_start=${wi.week_start}`),
                 fetch('/api/employees'),
             ]);
             scheduleData = await schedRes.json();
@@ -2357,10 +2357,7 @@
 
         function renderScheduleFromData() {
             const emps = scheduleData._emps || [];
-            const picker = document.getElementById('sched-week-picker');
-            const wi = getSchedWeekInfo(picker.value);
-            const weekMatch = scheduleData.week_start && scheduleData.week_start === wi.week_start;
-            const isPub = scheduleData.status === 'published' && weekMatch;
+            const isPub = scheduleData.status === 'published';
             document.getElementById('publish-btn').textContent = isPub ? 'Unpublish' : 'Publish';
             document.getElementById('publish-btn').className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
             const badge = document.getElementById('sched-status-badge');
@@ -2368,10 +2365,6 @@
                 badge.textContent = 'Published';
                 badge.style.background = '#dcfce7';
                 badge.style.color = '#166534';
-            } else if (scheduleData.week_start && scheduleData.week_start !== wi.week_start) {
-                badge.textContent = `Published for ${scheduleData.week_label || scheduleData.week_start}`;
-                badge.style.background = '#fef3c7';
-                badge.style.color = '#92400e';
             } else {
                 badge.textContent = 'Draft';
                 badge.style.background = '#fef3c7';
@@ -2379,16 +2372,7 @@
             }
 
             const container = document.getElementById('schedule-container');
-
-            let banner = '';
-            if (scheduleData.week_start && scheduleData.week_start !== wi.week_start) {
-                banner = `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
-                    <span style="font-size:0.9rem;color:#92400e;">Schedule shows last saved schedule (${scheduleData.week_label || scheduleData.week_start}). Build a new one or copy from previous week.</span>
-                    <button class="btn btn-sm btn-secondary" onclick="copyPrevWeek()">Copy from Previous</button>
-                </div>`;
-            }
-
-            let html = banner + '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
+            let html = '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
             SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;min-width:100px;">${d.slice(0,3)}</th>`; });
             html += '<th style="text-align:center;width:50px;font-size:0.8rem;">Total</th>';
             html += '</tr></thead><tbody>';
@@ -2657,9 +2641,18 @@
             await renderSchedule();
         }
 
-        function copyPrevWeek() {
-            delete scheduleData._prevWeekLabel;
-            renderScheduleFromData();
+        async function copyPrevWeek() {
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            const prevDate = new Date(picker.value + 'T00:00:00');
+            prevDate.setDate(prevDate.getDate() - 7);
+            const prevWi = getSchedWeekInfo(prevDate.toISOString().split('T')[0]);
+            await fetch('/api/schedules/copy', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({source_week: prevWi.week_start, target_week: wi.week_start, week_label: wi.week_label}),
+            });
+            await renderSchedule();
         }
 
         // ─── Schedule Templates ───────────────────────────
@@ -2681,7 +2674,7 @@
             const res = await fetch('/api/schedule-templates', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name}),
+                body: JSON.stringify({name, week_start: scheduleData.week_start}),
             });
             if (res.ok) {
                 alert(`Template "${name}" saved`);
@@ -2698,7 +2691,13 @@
                 document.getElementById('template-select').value = '';
                 return;
             }
-            const res = await fetch(`/api/schedule-templates/${templateId}/apply`, {method: 'POST'});
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            const res = await fetch(`/api/schedule-templates/${templateId}/apply`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({week_start: wi.week_start, week_label: wi.week_label}),
+            });
             const data = await res.json();
             if (res.ok) {
                 alert(data.message);

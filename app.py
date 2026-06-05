@@ -492,10 +492,36 @@ def change_password():
 
 
 # ─── Scheduling ─────────────────────────────────────────────
+
+def _migrate_schedules(data):
+    """Migrate old single-schedule format to per-week format. Returns migrated data."""
+    if "shifts" in data:
+        old_ws = data.get("week_start") or ""
+        if old_ws:
+            new_data = {old_ws: {k: data[k] for k in ["shifts", "open_shifts", "blackouts", "closures", "status", "week_label"] if k in data}}
+            save_json(SCHEDULES_FILE, new_data)
+            return new_data
+    return data
+
+
 @app.route("/api/schedules", methods=["GET"])
 @require_login
 def get_schedules():
-    data = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""})
+    data = load_json(SCHEDULES_FILE, {})
+    data = _migrate_schedules(data)
+
+    week_start = request.args.get("week_start")
+    if week_start:
+        week = data.get(week_start, {})
+        return jsonify({
+            "shifts": week.get("shifts", {}),
+            "open_shifts": week.get("open_shifts", []),
+            "blackouts": week.get("blackouts", {}),
+            "closures": week.get("closures", {}),
+            "status": week.get("status", "draft"),
+            "week_start": week_start,
+            "week_label": week.get("week_label", ""),
+        })
     return jsonify(data)
 
 
@@ -503,11 +529,19 @@ def get_schedules():
 @require_login
 def save_schedules():
     try:
-        data = request.json
-        existing = load_json(SCHEDULES_FILE, {})
-        existing.update(data)
-        save_json(SCHEDULES_FILE, existing)
-        return jsonify({"message": "Schedules saved"})
+        body = request.json
+        ws = body.get("week_start")
+        if not ws:
+            return jsonify({"error": "week_start required"}), 400
+        data = load_json(SCHEDULES_FILE, {})
+        week = data.get(ws, {})
+        for k in ["shifts", "open_shifts", "blackouts", "closures", "status", "week_label"]:
+            if k in body:
+                week[k] = body[k]
+        week["week_start"] = ws
+        data[ws] = week
+        save_json(SCHEDULES_FILE, data)
+        return jsonify({"message": "Schedule saved"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -515,39 +549,72 @@ def save_schedules():
 @app.route("/api/schedules/publish", methods=["POST"])
 @require_login
 def publish_schedule():
-    data = load_json(SCHEDULES_FILE, {})
-    data["status"] = "published"
-    save_json(SCHEDULES_FILE, data)
-    label = data.get("week_label", "this week")
-    settings = load_app_settings()
-    if settings.get("notify_on_publish", True):
-        create_notification("schedule_published", f"Schedule for {label} has been published")
-    tracker = load_json(EMPLOYEE_TRACKER_FILE, {"schedule_published": False, "announcement_read": {}})
-    tracker["schedule_published"] = True
-    save_json(EMPLOYEE_TRACKER_FILE, tracker)
-    return jsonify({"message": "Schedule published"})
+    try:
+        ws = request.json.get("week_start")
+        if not ws:
+            return jsonify({"error": "week_start required"}), 400
+        data = load_json(SCHEDULES_FILE, {})
+        if ws not in data:
+            return jsonify({"error": "No schedule saved for this week. Save first."}), 400
+        data[ws]["status"] = "published"
+        save_json(SCHEDULES_FILE, data)
+        label = data[ws].get("week_label", ws)
+        settings = load_app_settings()
+        if settings.get("notify_on_publish", True):
+            create_notification("schedule_published", f"Schedule for {label} has been published")
+        tracker = load_json(EMPLOYEE_TRACKER_FILE, {"schedule_published": False, "announcement_read": {}})
+        tracker["schedule_published"] = True
+        save_json(EMPLOYEE_TRACKER_FILE, tracker)
+        return jsonify({"message": "Schedule published"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/schedules/unpublish", methods=["POST"])
 @require_login
 def unpublish_schedule():
-    data = load_json(SCHEDULES_FILE, {})
-    data["status"] = "draft"
-    save_json(SCHEDULES_FILE, data)
-    label = data.get("week_label", "this week")
-    settings = load_app_settings()
-    if settings.get("notify_on_publish", True):
-        create_notification("schedule_unpublished", f"Schedule for {label} has been unpublished")
-    return jsonify({"message": "Schedule set to draft"})
+    try:
+        ws = request.json.get("week_start")
+        if not ws:
+            return jsonify({"error": "week_start required"}), 400
+        data = load_json(SCHEDULES_FILE, {})
+        if ws in data:
+            data[ws]["status"] = "draft"
+            save_json(SCHEDULES_FILE, data)
+        label = data.get(ws, {}).get("week_label", ws)
+        settings = load_app_settings()
+        if settings.get("notify_on_publish", True):
+            create_notification("schedule_unpublished", f"Schedule for {label} has been unpublished")
+        return jsonify({"message": "Schedule set to draft"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/schedules/copy", methods=["POST"])
 @require_login
 def copy_schedule():
-    data = load_json(SCHEDULES_FILE, {"shifts": {}})
-    data["status"] = "draft"
-    save_json(SCHEDULES_FILE, data)
-    return jsonify({"message": "Schedule copied"})
+    try:
+        body = request.json
+        source = body.get("source_week")
+        target = body.get("target_week")
+        if not source or not target:
+            return jsonify({"error": "source_week and target_week required"}), 400
+        data = load_json(SCHEDULES_FILE, {})
+        if source not in data:
+            return jsonify({"error": "Source week not found. Save a schedule for that week first."}), 404
+        data[target] = {
+            "shifts": {eid: list(shifts) for eid, shifts in data[source].get("shifts", {}).items()},
+            "open_shifts": list(data[source].get("open_shifts", [])),
+            "blackouts": {eid: dict(bs) for eid, bs in data[source].get("blackouts", {}).items()},
+            "closures": dict(data[source].get("closures", {})),
+            "status": "draft",
+            "week_start": target,
+            "week_label": body.get("week_label", target),
+        }
+        save_json(SCHEDULES_FILE, data)
+        return jsonify({"message": "Schedule copied"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ─── Schedule Templates ─────────────────────────────────────
@@ -591,7 +658,10 @@ def create_schedule_template():
         name = request.json.get("name", "").strip()
         if not name:
             return jsonify({"error": "Template name required"}), 400
-        current = load_json(SCHEDULES_FILE, {"shifts": {}, "open_shifts": []})
+        ws = request.json.get("week_start")
+        data = load_json(SCHEDULES_FILE, {})
+        data = _migrate_schedules(data)
+        current = data.get(ws, {}) if ws else {}
         templates = load_templates()
         tid = f"T{len(templates['templates']) + 1:03d}"
         templates["templates"].append({
@@ -646,11 +716,21 @@ def apply_schedule_template(template_id):
                 break
         if not template:
             return jsonify({"error": "Template not found"}), 404
-        current = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft", "open_shifts": [], "week_start": "", "week_label": ""})
-        current["shifts"] = {k: [dict(s) for s in v] for k, v in template.get("shifts", {}).items()}
-        current["open_shifts"] = [dict(o) for o in template.get("open_shifts", [])]
-        current["status"] = "draft"
-        save_json(SCHEDULES_FILE, current)
+        ws = request.json.get("week_start")
+        if not ws:
+            return jsonify({"error": "week_start required"}), 400
+        data = load_json(SCHEDULES_FILE, {})
+        data = _migrate_schedules(data)
+        data[ws] = {
+            "shifts": {k: [dict(s) for s in v] for k, v in template.get("shifts", {}).items()},
+            "open_shifts": [dict(o) for o in template.get("open_shifts", [])],
+            "blackouts": {},
+            "closures": {},
+            "status": "draft",
+            "week_start": ws,
+            "week_label": request.json.get("week_label", ws),
+        }
+        save_json(SCHEDULES_FILE, data)
         return jsonify({"message": f"Template '{template['name']}' applied"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -1466,24 +1546,31 @@ def employee_schedule():
     if not eid:
         return jsonify({"error": "Unauthorized"}), 401
     week_start = request.args.get("week_start")
-    data = load_json(SCHEDULES_FILE, {"shifts": {}, "status": "draft"})
+    data = load_json(SCHEDULES_FILE, {})
+    data = _migrate_schedules(data)
 
-    if data.get("status") != "published":
+    if not week_start:
+        published = {ws: w for ws, w in data.items() if isinstance(w, dict) and w.get("status") == "published"}
+        if not published:
+            return jsonify({"shifts": [], "status": "draft", "week_start": "", "week_label": ""})
+        ws = max(published.keys())
+        week = published[ws]
+    else:
+        week = data.get(week_start, {})
+
+    if week.get("status") != "published":
         return jsonify({"shifts": [], "status": "draft", "week_start": week_start or "", "week_label": ""})
 
-    if week_start and data.get("week_start") != week_start:
-        return jsonify({"shifts": [], "status": "published", "week_start": week_start, "week_label": ""})
-
-    shifts = data.get("shifts", {}).get(eid, [])
-    blackouts = data.get("blackouts", {}).get(eid, {})
-    closures = data.get("closures", {})
+    shifts = week.get("shifts", {}).get(eid, [])
+    blackouts = week.get("blackouts", {}).get(eid, {})
+    closures = week.get("closures", {})
     return jsonify({
         "shifts": shifts,
         "blackouts": blackouts,
         "closures": closures,
         "status": "published",
-        "week_start": data.get("week_start", ""),
-        "week_label": data.get("week_label", ""),
+        "week_start": week_start or "",
+        "week_label": week.get("week_label", ""),
     })
 
 
@@ -1502,8 +1589,17 @@ def employee_my_timeoff():
 # ─── Shift Claiming & Swapping ─────────────────────────────
 @app.route("/api/employee/open-shifts", methods=["GET"])
 def get_open_shifts():
-    data = load_json(SCHEDULES_FILE, {"shifts": {}, "open_shifts": []})
-    return jsonify(data.get("open_shifts", []))
+    data = load_json(SCHEDULES_FILE, {})
+    data = _migrate_schedules(data)
+    week_start = request.args.get("week_start")
+    if week_start:
+        week = data.get(week_start, {})
+        return jsonify(week.get("open_shifts", []))
+    published = {ws: w for ws, w in data.items() if isinstance(w, dict) and w.get("status") == "published"}
+    if published:
+        ws = max(published.keys())
+        return jsonify(published[ws].get("open_shifts", []))
+    return jsonify([])
 
 
 @app.route("/api/employee/claim-shift", methods=["POST"])
