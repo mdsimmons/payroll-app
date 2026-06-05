@@ -1790,7 +1790,7 @@
                 </div>
             </div>
             <div style="overflow-x:auto;"><table>
-            <thead><tr><th>Day</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th></th></tr></thead><tbody>`;
+            <thead><tr><th>Day</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Notes</th><th></th></tr></thead><tbody>`;
 
             dates.forEach(d => {
                 const dayEntries = empEntries.filter(e => e.date === d.iso);
@@ -1798,7 +1798,7 @@
                     html += `<tr style="background:#fafafa;">
                         <td>${d.label}</td>
                         <td style="color:#94a3b8;">${d.iso}</td>
-                        <td colspan="3" style="color:#94a3b8;text-align:center;">No entries</td>
+                        <td colspan="4" style="color:#94a3b8;text-align:center;">No entries</td>
                         <td><button class="btn btn-sm btn-secondary" onclick="tsAddEntry('${d.iso}')">+ Add</button></td>
                     </tr>`;
                 } else {
@@ -1814,6 +1814,7 @@
                             <td>${timeSelectHtml(`ts-cin-${idx}`, cin, `tsPreviewHours(${idx})`)}</td>
                             <td>${timeSelectHtml(`ts-cout-${idx}`, cout, `tsPreviewHours(${idx})`)}</td>
                             <td><span id="ts-hrs-${idx}">${hrs.toFixed(2)}</span></td>
+                            <td style="max-width:150px;font-size:0.8rem;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${entry.note ? entry.note : ''}</td>
                             <td><button class="btn btn-sm btn-danger" onclick="tsDeleteEntry(${entry.original_index})" style="font-size:0.7rem;">✕</button></td>
                         </tr>`;
                     });
@@ -2356,16 +2357,38 @@
 
         function renderScheduleFromData() {
             const emps = scheduleData._emps || [];
-            const isPub = scheduleData.status === 'published';
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            const weekMatch = scheduleData.week_start && scheduleData.week_start === wi.week_start;
+            const isPub = scheduleData.status === 'published' && weekMatch;
             document.getElementById('publish-btn').textContent = isPub ? 'Unpublish' : 'Publish';
             document.getElementById('publish-btn').className = isPub ? 'btn btn-warning btn-sm' : 'btn btn-success btn-sm';
             const badge = document.getElementById('sched-status-badge');
-            badge.textContent = isPub ? 'Published' : 'Draft';
-            badge.style.background = isPub ? '#dcfce7' : '#fef3c7';
-            badge.style.color = isPub ? '#166534' : '#92400e';
+            if (isPub) {
+                badge.textContent = 'Published';
+                badge.style.background = '#dcfce7';
+                badge.style.color = '#166534';
+            } else if (scheduleData.week_start && scheduleData.week_start !== wi.week_start) {
+                badge.textContent = `Published for ${scheduleData.week_label || scheduleData.week_start}`;
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#92400e';
+            } else {
+                badge.textContent = 'Draft';
+                badge.style.background = '#fef3c7';
+                badge.style.color = '#92400e';
+            }
 
             const container = document.getElementById('schedule-container');
-            let html = '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
+
+            let banner = '';
+            if (scheduleData.week_start && scheduleData.week_start !== wi.week_start) {
+                banner = `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                    <span style="font-size:0.9rem;color:#92400e;">Schedule shows last saved schedule (${scheduleData.week_label || scheduleData.week_start}). Build a new one or copy from previous week.</span>
+                    <button class="btn btn-sm btn-secondary" onclick="copyPrevWeek()">Copy from Previous</button>
+                </div>`;
+            }
+
+            let html = banner + '<div style="overflow-x:auto;"><table style="min-width:800px;"><thead><tr><th style="min-width:120px;">Employee</th>';
             SCHED_DAYS.forEach(d => { html += `<th style="text-align:center;min-width:100px;">${d.slice(0,3)}</th>`; });
             html += '<th style="text-align:center;width:50px;font-size:0.8rem;">Total</th>';
             html += '</tr></thead><tbody>';
@@ -2615,15 +2638,28 @@
         }
 
         async function publishSchedule() {
-            const isPub = scheduleData.status === 'published';
-            await fetch(`/api/schedules/${isPub ? 'unpublish' : 'publish'}`, {method: 'POST'});
+            const isPub = scheduleData.status === 'published' && scheduleData.week_start === getSchedWeekInfo(document.getElementById('sched-week-picker').value).week_start;
+            const picker = document.getElementById('sched-week-picker');
+            const wi = getSchedWeekInfo(picker.value);
+            await fetch('/api/schedules', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    shifts: scheduleData.shifts,
+                    open_shifts: scheduleData.open_shifts || [],
+                    week_start: wi.week_start,
+                    week_label: wi.week_label,
+                    blackouts: scheduleData.blackouts || {},
+                    closures: scheduleData.closures || {},
+                    status: isPub ? 'draft' : 'published',
+                }),
+            });
             await renderSchedule();
         }
 
-        async function copyPrevWeek() {
-            await fetch('/api/schedules/copy', {method: 'POST'});
-            await renderSchedule();
-            alert('Schedule reset to draft (copied from current data)');
+        function copyPrevWeek() {
+            delete scheduleData._prevWeekLabel;
+            renderScheduleFromData();
         }
 
         // ─── Schedule Templates ───────────────────────────
@@ -3340,12 +3376,12 @@
             }
 
             if (data.today_entries && data.today_entries.length) {
-                let html = `<h3 style="margin-bottom:0.5rem;">Today's Entries</h3><div style="overflow-x:auto;"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr></thead><tbody>`;
+                let html = `<h3 style="margin-bottom:0.5rem;">Today's Entries</h3><div style="overflow-x:auto;"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Notes</th></tr></thead><tbody>`;
                 data.today_entries.forEach(e => {
                     const cin = new Date(e.clock_in).toLocaleTimeString();
                     const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString() : '<span style="color:#059669;">Clocked In</span>';
                     const hrs = e.hours ? e.hours.toFixed(2) : '—';
-                    html += `<tr><td>${e.employee_name||e.employee_id}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td></tr>`;
+                    html += `<tr><td>${e.employee_name||e.employee_id}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td><td style="max-width:120px;font-size:0.8rem;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.note ? e.note : ''}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 todayEl.innerHTML = html;
@@ -4321,14 +4357,14 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
 
             if (myClockEntries.length > 0) {
                 html += '<h3 style="font-size:0.95rem;margin-bottom:0.5rem;color:#475569;">Clock Entries</h3>';
-                html += '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th></tr></thead><tbody>';
+                html += '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Notes</th></tr></thead><tbody>';
                 myClockEntries.sort((a, b) => a.date.localeCompare(b.date) || (a.clock_in || '').localeCompare(b.clock_in || ''));
                 myClockEntries.forEach(e => {
                     const dateStr = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
                     const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
                     const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
                     const hrs = e.hours != null ? e.hours.toFixed(2) : '—';
-                    html += `<tr><td>${dateStr}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td></tr>`;
+                    html += `<tr><td>${dateStr}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td><td style="max-width:150px;font-size:0.8rem;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.note ? e.note : ''}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
             } else if (weekEntry) {
