@@ -3220,18 +3220,28 @@
                 el.style.color = '';
             });
             document.getElementById('co-note').value = '';
-            let sec = 5;
+            const noteEl = document.getElementById('co-note');
+            noteEl.oninput = resetCoTimer;
+            startCoTimer(5);
+        }
+
+        let coSec = 5;
+        function startCoTimer(n) {
+            clearInterval(coTimer);
+            coSec = n;
             const timerEl = document.getElementById('co-timer-sec');
-            timerEl.textContent = sec;
-            clearTimeout(coTimer);
+            timerEl.textContent = coSec;
             coTimer = setInterval(() => {
-                sec--;
-                timerEl.textContent = sec;
-                if (sec <= 0) {
+                coSec--;
+                timerEl.textContent = coSec;
+                if (coSec <= 0) {
                     clearInterval(coTimer);
                     submitClockOut();
                 }
             }, 1000);
+        }
+        function resetCoTimer() {
+            startCoTimer(5);
         }
 
         let coRatingLocal = 0;
