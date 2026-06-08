@@ -4363,7 +4363,18 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                     const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
                     const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
                     const hrs = e.hours != null ? e.hours.toFixed(2) : '—';
-                    html += `<tr><td>${dateStr}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td><td style="max-width:150px;font-size:0.8rem;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.note ? e.note : ''}</td></tr>`;
+                    html += `<tr>
+                        <td>${dateStr}</td>
+                        <td>${cin}</td>
+                        <td>${cout}</td>
+                        <td>${hrs}</td>
+                        <td style="max-width:200px;">
+                            <div style="display:flex;gap:0.25rem;align-items:center;">
+                                <input type="text" id="emp-note-${e.original_index}" value="${(e.note || '').replace(/"/g,'&quot;')}" style="flex:1;font-size:0.8rem;padding:0.2rem 0.4rem;border:1px solid #d1d5db;border-radius:4px;width:120px;" placeholder="Add note...">
+                                <button onclick="saveEmpNote(${e.original_index})" style="font-size:0.7rem;padding:0.2rem 0.4rem;border:none;border-radius:3px;background:#1e3a5f;color:white;cursor:pointer;">Save</button>
+                            </div>
+                        </td>
+                    </tr>`;
                 });
                 html += '</tbody></table></div>';
             } else if (weekEntry) {
@@ -4372,6 +4383,24 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
 
             html += '</div>';
             container.innerHTML = html;
+        }
+
+        async function saveEmpNote(originalIndex) {
+            const input = document.getElementById(`emp-note-${originalIndex}`);
+            const note = input ? input.value.trim() : '';
+            const res = await fetch(`/api/employee/clock-note/${originalIndex}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({note, employee_id: empSession.id}),
+            });
+            if (res.ok) {
+                input.style.borderColor = '#86efac';
+                input.style.background = '#f0fdf4';
+                setTimeout(() => { input.style.borderColor = '#d1d5db'; input.style.background = ''; }, 1500);
+            } else {
+                input.style.borderColor = '#fca5a5';
+                setTimeout(() => { input.style.borderColor = '#d1d5db'; }, 1500);
+            }
         }
 
         // ─── Request Types Management ──────────────────────

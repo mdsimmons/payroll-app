@@ -1049,6 +1049,8 @@ def update_timeclock_entry(idx):
             entry["clock_in"] = body["clock_in"]
         if "clock_out" in body:
             entry["clock_out"] = body["clock_out"]
+        if "note" in body:
+            entry["note"] = body["note"]
         # Recalculate hours
         if entry.get("clock_in") and entry.get("clock_out"):
             try:
@@ -1063,6 +1065,26 @@ def update_timeclock_entry(idx):
             entry["status"] = "active"
         save_json(TIMECLOCK_FILE, data)
         return jsonify({"message": "Entry updated", "entry": entry})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/employee/clock-note/<int:idx>", methods=["PUT"])
+def employee_update_clock_note(idx):
+    try:
+        eid = request.json.get("employee_id") or session.get("employee_id")
+        if not eid:
+            return jsonify({"error": "Unauthorized"}), 401
+        data = load_json(TIMECLOCK_FILE, {"entries": []})
+        if idx < 0 or idx >= len(data["entries"]):
+            return jsonify({"error": "Invalid index"}), 400
+        entry = data["entries"][idx]
+        if entry.get("employee_id") != eid:
+            return jsonify({"error": "Not your entry"}), 403
+        if "note" in request.json:
+            entry["note"] = request.json["note"]
+        save_json(TIMECLOCK_FILE, data)
+        return jsonify({"message": "Note saved"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
