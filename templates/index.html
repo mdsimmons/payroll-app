@@ -4991,20 +4991,21 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
             }
         }
 
-        async function openManagerNotes() {
+        async function openManagerNotes(editDate) {
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('mn-date').value = today;
+            const targetDate = editDate || today;
+            document.getElementById('mn-date').value = targetDate;
             document.getElementById('mn-sales').value = '';
             document.getElementById('mn-cash').value = '';
             document.getElementById('mn-employee-notes').value = '';
             document.getElementById('mn-daily-notes').value = '';
             document.getElementById('mn-status').textContent = '';
 
-            // Try to load existing note for today
+            // Try to load existing note for target date
             const res = await fetch('/api/manager-notes');
             if (res.ok) {
                 const data = await res.json();
-                const existing = (data.notes || []).find(n => n.date === today);
+                const existing = (data.notes || []).find(n => n.date === targetDate);
                 if (existing) {
                     document.getElementById('mn-sales').value = existing.sales || '';
                     document.getElementById('mn-cash').value = existing.cash_sales || '';
@@ -5038,6 +5039,9 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 document.getElementById('mn-status').textContent = 'Notes saved!';
                 setTimeout(closeManagerNotes, 1000);
                 loadDashboard();
+                if (document.getElementById('page-manager-notes-history').classList.contains('active')) {
+                    loadManagerNotesHistory();
+                }
             }
         }
 
@@ -5058,7 +5062,9 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 html += `<div style="background:#f8fafc;border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;">
                     <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;">
                         <strong style="font-size:0.9rem;">${n.date}</strong>
-                        <span style="font-size:0.85rem;color:#475569;">Sales: $${parseFloat(n.sales||0).toFixed(2)} | Cash: $${parseFloat(n.cash_sales||0).toFixed(2)}</span>
+                        <span style="font-size:0.85rem;color:#475569;">Sales: $${parseFloat(n.sales||0).toFixed(2)} | Cash: $${parseFloat(n.cash_sales||0).toFixed(2)}
+                            <button onclick="openManagerNotes('${n.date}')" style="margin-left:0.5rem;font-size:0.7rem;padding:0.15rem 0.4rem;border:1px solid #cbd5e1;border-radius:3px;background:white;cursor:pointer;">Edit</button>
+                        </span>
                     </div>
                     ${n.employee_notes ? '<div style="font-size:0.85rem;color:#64748b;margin-bottom:0.25rem;"><strong>Employee Notes:</strong> ' + n.employee_notes + '</div>' : ''}
                     ${n.daily_notes ? '<div style="font-size:0.85rem;color:#64748b;"><strong>Daily Notes:</strong> ' + n.daily_notes + '</div>' : ''}
