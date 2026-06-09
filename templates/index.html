@@ -494,6 +494,11 @@
                     <button class="btn btn-sm btn-outline" onclick="showPage('dashboard')">Back</button>
                 </div>
                 <div class="form-group" style="margin-bottom:1rem;">
+                    <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap;">
+                        <input type="date" id="mn-start-date" style="flex:1;min-width:120px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;" onchange="loadManagerNotesHistory()">
+                        <input type="date" id="mn-end-date" style="flex:1;min-width:120px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;" onchange="loadManagerNotesHistory()">
+                        <button class="btn btn-sm btn-outline" onclick="document.getElementById('mn-start-date').value='';document.getElementById('mn-end-date').value='';loadManagerNotesHistory()" style="padding:0.5rem 0.75rem;">Clear</button>
+                    </div>
                     <input type="text" id="mn-search" placeholder="Search notes..." onkeyup="loadManagerNotesHistory()" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
                 </div>
                 <div id="manager-notes-history-list"></div>
@@ -5047,7 +5052,14 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
 
         async function loadManagerNotesHistory() {
             const search = document.getElementById('mn-search')?.value || '';
-            const url = search ? '/api/manager-notes?search=' + encodeURIComponent(search) : '/api/manager-notes';
+            const startDate = document.getElementById('mn-start-date')?.value || '';
+            const endDate = document.getElementById('mn-end-date')?.value || '';
+            let url = '/api/manager-notes?';
+            const params = [];
+            if (search) params.push('search=' + encodeURIComponent(search));
+            if (startDate) params.push('start_date=' + encodeURIComponent(startDate));
+            if (endDate) params.push('end_date=' + encodeURIComponent(endDate));
+            url += params.join('&');
             const res = await fetch(url);
             if (!res.ok) return;
             const data = await res.json();

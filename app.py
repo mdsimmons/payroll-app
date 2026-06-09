@@ -2188,14 +2188,17 @@ def get_dashboard():
 def get_manager_notes():
     try:
         notes = load_json(MANAGER_NOTES_FILE, {"notes": []})
+        result = notes.get("notes", [])
         search = request.args.get("search", "").lower()
         if search:
-            filtered = []
-            for n in notes.get("notes", []):
-                if search in n.get("daily_notes", "").lower() or search in n.get("employee_notes", "").lower() or search in n.get("date", ""):
-                    filtered.append(n)
-            return jsonify({"notes": filtered})
-        return jsonify(notes)
+            result = [n for n in result if search in n.get("daily_notes", "").lower() or search in n.get("employee_notes", "").lower() or search in n.get("date", "")]
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
+        if start_date:
+            result = [n for n in result if n.get("date", "") >= start_date]
+        if end_date:
+            result = [n for n in result if n.get("date", "") <= end_date]
+        return jsonify({"notes": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
