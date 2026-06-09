@@ -1809,8 +1809,13 @@
                 } else {
                     dayEntries.forEach((entry, ei) => {
                         const idx = tsClockEntries.indexOf(entry);
-                        const cin = entry.clock_in ? entry.clock_in.slice(11, 16) : '';
-                        const cout = entry.clock_out ? entry.clock_out.slice(11, 16) : '';
+                        function toLocalHHMM(s) {
+                            if (!s) return '';
+                            const d = new Date(s);
+                            return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+                        }
+                        const cin = toLocalHHMM(entry.clock_in);
+                        const cout = toLocalHHMM(entry.clock_out);
                         const hrs = entry.hours || 0;
                         totalHours += hrs;
                         html += `<tr>
@@ -1888,8 +1893,8 @@
                 const cin = timeSelectValue(`ts-cin-${idx}`);
                 const cout = timeSelectValue(`ts-cout-${idx}`);
                 const date = entry.date;
-                const clockIn = `${date}T${cin}:00`;
-                const clockOut = cout ? `${date}T${cout}:00` : null;
+                const clockIn = new Date(`${date}T${cin}:00`).toISOString();
+                const clockOut = cout ? new Date(`${date}T${cout}:00`).toISOString() : null;
                 const body = {clock_in: clockIn};
                 if (cout) body.clock_out = clockOut;
                 const origIdx = entry.original_index;
@@ -1929,8 +1934,8 @@
             const cin = prompt('Clock in time (HH:MM):');
             if (!cin) return;
             const cout = prompt('Clock out time (HH:MM, or leave blank):');
-            const clockIn = `${date}T${cin}:00`;
-            const clockOut = cout ? `${date}T${cout}:00` : null;
+            const clockIn = new Date(`${date}T${cin}:00`).toISOString();
+            const clockOut = cout ? new Date(`${date}T${cout}:00`).toISOString() : null;
             const res = await fetch('/api/timeclock/add', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
