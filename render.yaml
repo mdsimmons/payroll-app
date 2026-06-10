@@ -11,4 +11,6 @@ services:
         value: admin
       - key: ADMIN_PASS
         value: admin
+      - key: TZ
+        value: America/New_York
 
