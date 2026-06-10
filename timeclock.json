@@ -7,7 +7,8 @@
       "clock_in": "2026-05-24T06:00:00",
       "clock_out": "2026-05-24T15:00:00",
       "hours": 9.0,
-      "status": "completed"
+      "status": "completed",
+      "note": "Test note from API"
     },
     {
       "employee_id": "EMP004",
@@ -44,6 +45,69 @@
       "clock_out": "2026-05-17T15:00:00",
       "hours": 9.0,
       "status": "completed"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-05",
+      "clock_in": "2026-06-05T09:10:01.953018",
+      "clock_out": "2026-06-05T09:10:14.187179",
+      "hours": 0.0,
+      "status": "completed",
+      "rating": 5,
+      "note": "note"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-09",
+      "clock_in": "2026-06-09T07:07:33.224380",
+      "clock_out": "2026-06-09T07:08:07.655574",
+      "hours": 0.01,
+      "status": "completed",
+      "rating": 5,
+      "note": "test"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-09",
+      "clock_in": "2026-06-09T07:08:07.687210",
+      "clock_out": "2026-06-09T07:09:19.168162",
+      "hours": 4.02,
+      "status": "completed",
+      "rating": 5,
+      "note": "test"
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-09",
+      "clock_in": "2026-06-09T07:09:19.200307",
+      "clock_out": "2026-06-09T07:09:25.284361",
+      "hours": 0.0,
+      "status": "completed",
+      "rating": 5
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-09",
+      "clock_in": "2026-06-09T07:09:34.541970",
+      "clock_out": "2026-06-10T07:11:35.195382",
+      "hours": 24.03,
+      "status": "completed",
+      "rating": 5
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-10",
+      "clock_in": "2026-06-10T07:11:35.223213",
+      "clock_out": "2026-06-10T07:11:41.510814",
+      "hours": 0.0,
+      "status": "completed",
+      "rating": 5
     }
   ]
 }

@@ -1367,20 +1367,28 @@
             renderEmployees();
         }
 
+        function utcDate(dateStr) {
+            const [y,m,d] = dateStr.split('-').map(Number);
+            return new Date(Date.UTC(y, m - 1, d));
+        }
+        function fmtDate(d) { return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric', timeZone: 'UTC' }); }
+        function localDateStr(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        function keyDate(d) { return d.toISOString().split('T')[0]; }
+
         function getWeekInfo(dateStr, weekStartDay) {
-            const dt = new Date(dateStr + 'T00:00:00');
+            const dt = utcDate(dateStr);
             const jsWeekStart = (weekStartDay + 1) % 7;
-            const diff = (dt.getDay() - jsWeekStart + 7) % 7;
+            const diff = (dt.getUTCDay() - jsWeekStart + 7) % 7;
             const start = new Date(dt);
-            start.setDate(dt.getDate() - diff);
+            start.setUTCDate(dt.getUTCDate() - diff);
             const end = new Date(start);
-            end.setDate(start.getDate() + 6);
-            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-            const key = (d) => d.toISOString().split('T')[0];
+            end.setUTCDate(start.getUTCDate() + 6);
             return {
-                week_start: key(start),
-                week_end: key(end),
-                week_label: `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${fmt(end)}`,
+                week_start: keyDate(start),
+                week_end: keyDate(end),
+                week_label: `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })} - ${fmtDate(end)}`,
             };
         }
 
@@ -1393,7 +1401,7 @@
             const picker = document.getElementById('ts-week-picker');
             if (picker && !picker.value) {
                 const today = new Date();
-                picker.value = today.toISOString().split('T')[0];
+                picker.value = localDateStr(today);
             }
         }
 
@@ -1734,7 +1742,7 @@
             const picker = document.getElementById('ts-week-picker');
             if (!picker.value) {
                 const today = new Date();
-                picker.value = today.toISOString().split('T')[0];
+                picker.value = localDateStr(today);
             }
             timesheetWeek = getWeekInfo(picker.value, weekStartDay);
             document.getElementById('ts-week-display').textContent = timesheetWeek.week_label;
@@ -1842,12 +1850,11 @@
         }
 
         function tsGetDates() {
-            const start = new Date(timesheetWeek.week_start + 'T00:00:00');
+            const start = utcDate(timesheetWeek.week_start);
             const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
             return days.map((d, i) => {
-                const dt = new Date(start);
-                dt.setDate(start.getDate() + i);
-                return { label: d, iso: dt.toISOString().split('T')[0], weekday: i };
+                const dt = new Date(start); dt.setUTCDate(start.getUTCDate() + i);
+                return { label: d, iso: keyDate(dt), weekday: dt.getUTCDay() };
             });
         }
 
@@ -2317,20 +2324,18 @@
         const EMP_COLORS = ['#1e3a5f','#059669','#7c3aed','#d97706','#0891b2','#be123c','#16a34a','#ca8a04','#db2777','#0284c7','#65a30d','#9333ea','#0d9488','#dc2626','#4f46e5'];
 
         function getSchedWeekInfo(dateStr) {
-            const dt = new Date(dateStr + 'T00:00:00');
-            const diff = (dt.getDay() + 6) % 7;
-            const start = new Date(dt); start.setDate(dt.getDate() - diff);
-            const end = new Date(start); end.setDate(start.getDate() + 6);
-            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-            const key = (d) => d.toISOString().split('T')[0];
-            return { week_start: key(start), week_end: key(end), week_label: `${start.toLocaleDateString('en-US', {month:'short',day:'2-digit'})} - ${fmt(end)}` };
+            const dt = utcDate(dateStr);
+            const diff = (dt.getUTCDay() + 6) % 7;
+            const start = new Date(dt); start.setUTCDate(dt.getUTCDate() - diff);
+            const end = new Date(start); end.setUTCDate(start.getUTCDate() + 6);
+            return { week_start: keyDate(start), week_end: keyDate(end), week_label: `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })} - ${fmtDate(end)}` };
         }
 
         function getWeekDates(weekStartStr) {
-            const start = new Date(weekStartStr + 'T00:00:00');
+            const start = utcDate(weekStartStr);
             return SCHED_DAYS.map((d, i) => {
-                const dt = new Date(start); dt.setDate(start.getDate() + i);
-                return { weekday: dt.getDay(), date: dt.getDate(), month: dt.toLocaleString('en-US', {month:'short'}), iso: dt.toISOString().split('T')[0] };
+                const dt = new Date(start); dt.setUTCDate(start.getUTCDate() + i);
+                return { weekday: dt.getUTCDay(), date: dt.getUTCDate(), month: dt.toLocaleString('en-US', {month:'short', timeZone: 'UTC'}), iso: keyDate(dt) };
             });
         }
 
@@ -2338,7 +2343,7 @@
             const picker = document.getElementById('sched-week-picker');
             if (!picker.value) {
                 const today = new Date();
-                picker.value = today.toISOString().split('T')[0];
+                picker.value = localDateStr(today);
             }
             const wi = getSchedWeekInfo(picker.value);
             document.getElementById('sched-week-display').textContent = wi.week_label;
@@ -2649,9 +2654,9 @@
         async function copyPrevWeek() {
             const picker = document.getElementById('sched-week-picker');
             const wi = getSchedWeekInfo(picker.value);
-            const prevDate = new Date(picker.value + 'T00:00:00');
-            prevDate.setDate(prevDate.getDate() - 7);
-            const prevWi = getSchedWeekInfo(prevDate.toISOString().split('T')[0]);
+            const dt = utcDate(picker.value);
+            dt.setUTCDate(dt.getUTCDate() - 7);
+            const prevWi = getSchedWeekInfo(keyDate(dt));
             await fetch('/api/schedules/copy', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -3710,8 +3715,8 @@
             const end = new Date();
             const start = new Date();
             start.setDate(start.getDate() - 30);
-            document.getElementById('report-end').value = end.toISOString().split('T')[0];
-            document.getElementById('report-start').value = start.toISOString().split('T')[0];
+            document.getElementById('report-end').value = localDateStr(end);
+            document.getElementById('report-start').value = localDateStr(start);
             runReport();
         }
 
@@ -4269,7 +4274,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
 
         async function empLoadSchedule() {
             const picker = document.getElementById('emp-sched-week-picker');
-            if (!picker.value) { picker.value = new Date().toISOString().split('T')[0]; }
+            if (!picker.value) { picker.value = localDateStr(new Date()); }
             const wi = getSchedWeekInfo(picker.value);
             document.getElementById('emp-sched-week-display').textContent = wi.week_label;
 
@@ -4322,26 +4327,26 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
             const picker = document.getElementById('emp-ts-week-picker');
             if (!picker.value) {
                 const today = new Date();
-                picker.value = today.toISOString().split('T')[0];
+                picker.value = localDateStr(today);
             }
-            const dt = new Date(picker.value + 'T00:00:00');
-            const diff = (dt.getDay() + 6) % 7;
+            const dt = utcDate(picker.value);
+            const diff = (dt.getUTCDay() + 6) % 7;
             const start = new Date(dt);
-            start.setDate(dt.getDate() - diff);
+            start.setUTCDate(dt.getUTCDate() - diff);
             const end = new Date(start);
-            end.setDate(start.getDate() + 6);
+            end.setUTCDate(start.getUTCDate() + 6);
             const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
             const weekLabel = `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })} - ${fmt(end)}`;
             document.getElementById('emp-ts-week-display').textContent = weekLabel;
 
             const [hoursRes, clockRes] = await Promise.all([
                 fetch(`/api/employee/hours?employee_id=${empSession.id}`),
-                fetch(`/api/timeclock/history?start=${start.toISOString().split('T')[0]}&end=${end.toISOString().split('T')[0]}`),
+                fetch(`/api/timeclock/history?start=${keyDate(start)}&end=${keyDate(end)}`),
             ]);
             const hoursData = await hoursRes.json();
             const clockData = await clockRes.json();
 
-            const weekStartKey = start.toISOString().split('T')[0];
+            const weekStartKey = keyDate(start);
             const weekEntry = hoursData.find(h => h.week_start === weekStartKey);
 
             const myClockEntries = clockData.filter(e => e.employee_id === empSession.id);
@@ -4364,7 +4369,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 html += '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Notes</th></tr></thead><tbody>';
                 myClockEntries.sort((a, b) => a.date.localeCompare(b.date) || (a.clock_in || '').localeCompare(b.clock_in || ''));
                 myClockEntries.forEach(e => {
-                    const dateStr = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    const dateStr = new Date(e.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
                     const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }) : '—';
                     const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }) : '—';
                     const hrs = e.hours != null ? e.hours.toFixed(2) : '—';
@@ -4997,7 +5002,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
         }
 
         async function openManagerNotes(editDate) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = localDateStr(new Date());
             const targetDate = editDate || today;
             document.getElementById('mn-date').value = targetDate;
             document.getElementById('mn-sales').value = '';
