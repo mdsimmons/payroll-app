@@ -2077,6 +2077,7 @@
                     <div class="value">$${data.summary.total_net.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                 </div>
             </div>
+            ${data.summary.total_fed !== undefined ? `
             <div class="card" style="margin-top:1rem;padding:1rem;font-size:0.9rem;">
                 <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">Payroll Tax Summary</h3>
                 <table style="width:100%;border-collapse:collapse;">
@@ -2089,11 +2090,11 @@
                     <tbody>
                         <tr><td style="padding:0.25rem 0.5rem;">Federal</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">—</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">&mdash;</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td></tr>
                         <tr><td style="padding:0.25rem 0.5rem;">State</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">—</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">&mdash;</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td></tr>
                         <tr><td style="padding:0.25rem 0.5rem;">Social Security</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_ss.toFixed(2)}</td>
@@ -2111,7 +2112,7 @@
                         <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_fed+data.summary.total_state+(data.summary.total_ss+data.summary.total_mc)*2).toFixed(2)}</td>
                     </tr></tfoot>
                 </table>
-            </div>
+            </div>` : ''}
             <div class="card" style="margin-top:1rem;padding:1rem;">
                 <div class="flex-between" style="margin-bottom:0.5rem;">
                     <label style="font-weight:600;">Week Notes</label>
