@@ -214,7 +214,7 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
 
     if employee.get("tipped"):
         employer_paid = round(regular_pay + makeup, 2)
-        net_pay = round(employer_paid - total_deductions, 2)
+        net_pay = round(max(0, employer_paid - tips - total_deductions), 2)
     else:
         net_pay = round(gross_pay - total_deductions, 2)
 
