@@ -480,6 +480,7 @@
                         <select id="dash-month-year" style="flex:1;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;"></select>
                     </div>
                     <canvas id="dash-chart" style="max-height:250px;"></canvas>
+                    <div id="dash-month-raw" style="display:flex;justify-content:space-around;margin-top:0.5rem;font-size:0.8rem;color:#64748b;"></div>
                 </div>
                 <div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
                     <button class="btn btn-primary btn-sm" onclick="loadDashboard()" style="flex:1;">Refresh</button>
@@ -5060,6 +5061,10 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 const md = d.month_data || {};
                 const mData = md[month] || {gross: 0, labor: 0};
                 const totalBills = d.total_bills || 0;
+                document.getElementById('dash-month-raw').innerHTML =
+                    '<span>Sales: $' + (mData.gross||0).toFixed(2) + '</span>' +
+                    '<span>Labor: $' + (mData.labor||0).toFixed(2) + '</span>' +
+                    '<span>Bills: $' + (totalBills||0).toFixed(2) + '</span>';
                 if (dashChart) {
                     dashChart.data.datasets[0].data = [mData.gross, mData.labor, totalBills];
                     dashChart.update();

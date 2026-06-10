@@ -2178,14 +2178,14 @@ def get_dashboard():
                 if m == current_month:
                     monthly_gross += sales
 
-        # Sum labor (gross_pay) from payroll history per month
+        # Sum labor (gross_pay + tips) from payroll history per month
         for wk_key, wk in history.items():
             m = wk.get("week_start", "")[:7]
             if m:
                 if m not in month_data:
                     month_data[m] = {"gross": 0, "labor": 0}
                 for r in wk.get("results", []):
-                    gp = r.get("gross_pay", 0)
+                    gp = r.get("gross_pay", 0) + r.get("tips", 0)
                     month_data[m]["labor"] += gp
                     if m == current_month:
                         monthly_labor += gp
