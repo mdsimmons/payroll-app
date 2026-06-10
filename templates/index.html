@@ -1809,13 +1809,8 @@
                 } else {
                     dayEntries.forEach((entry, ei) => {
                         const idx = tsClockEntries.indexOf(entry);
-                        function toLocalHHMM(s) {
-                            if (!s) return '';
-                            const d = new Date(s);
-                            return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-                        }
-                        const cin = toLocalHHMM(entry.clock_in);
-                        const cout = toLocalHHMM(entry.clock_out);
+                        const cin = entry.clock_in ? entry.clock_in.slice(11, 16) : '';
+                        const cout = entry.clock_out ? entry.clock_out.slice(11, 16) : '';
                         const hrs = entry.hours || 0;
                         totalHours += hrs;
                         html += `<tr>
@@ -1893,8 +1888,8 @@
                 const cin = timeSelectValue(`ts-cin-${idx}`);
                 const cout = timeSelectValue(`ts-cout-${idx}`);
                 const date = entry.date;
-                const clockIn = new Date(`${date}T${cin}:00`).toISOString();
-                const clockOut = cout ? new Date(`${date}T${cout}:00`).toISOString() : null;
+                const clockIn = `${date}T${cin}:00`;
+                const clockOut = cout ? `${date}T${cout}:00` : null;
                 const body = {clock_in: clockIn};
                 if (cout) body.clock_out = clockOut;
                 const origIdx = entry.original_index;
@@ -1934,8 +1929,8 @@
             const cin = prompt('Clock in time (HH:MM):');
             if (!cin) return;
             const cout = prompt('Clock out time (HH:MM, or leave blank):');
-            const clockIn = new Date(`${date}T${cin}:00`).toISOString();
-            const clockOut = cout ? new Date(`${date}T${cout}:00`).toISOString() : null;
+            const clockIn = `${date}T${cin}:00`;
+            const clockOut = cout ? `${date}T${cout}:00` : null;
             const res = await fetch('/api/timeclock/add', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -3379,7 +3374,7 @@
 
             if (data.active && data.active.length) {
                 activeEl.innerHTML = '<strong>Currently Clocked In:</strong><br>' +
-                    data.active.map(e => `<span style="color:#059669;">&#9679; ${e.employee_name} (since ${new Date(e.clock_in).toLocaleTimeString()})</span>`).join('<br>');
+                    data.active.map(e => `<span style="color:#059669;">&#9679; ${e.employee_name} (since ${new Date(e.clock_in).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'})})</span>`).join('<br>');
             } else {
                 activeEl.innerHTML = '<span style="color:#64748b;">No one clocked in</span>';
             }
@@ -3387,8 +3382,8 @@
             if (data.today_entries && data.today_entries.length) {
                 let html = `<h3 style="margin-bottom:0.5rem;">Today's Entries</h3><div style="overflow-x:auto;"><table><thead><tr><th>Employee</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Notes</th></tr></thead><tbody>`;
                 data.today_entries.forEach(e => {
-                    const cin = new Date(e.clock_in).toLocaleTimeString();
-                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString() : '<span style="color:#059669;">Clocked In</span>';
+                    const cin = new Date(e.clock_in).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'});
+                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'}) : '<span style="color:#059669;">Clocked In</span>';
                     const hrs = e.hours ? e.hours.toFixed(2) : '—';
                     html += `<tr><td>${e.employee_name||e.employee_id}</td><td>${cin}</td><td>${cout}</td><td>${hrs}</td><td style="max-width:120px;font-size:0.8rem;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.note ? e.note : ''}</td></tr>`;
                 });
@@ -4370,8 +4365,8 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 myClockEntries.sort((a, b) => a.date.localeCompare(b.date) || (a.clock_in || '').localeCompare(b.clock_in || ''));
                 myClockEntries.forEach(e => {
                     const dateStr = new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                    const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
-                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—';
+                    const cin = e.clock_in ? new Date(e.clock_in).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }) : '—';
+                    const cout = e.clock_out ? new Date(e.clock_out).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit' }) : '—';
                     const hrs = e.hours != null ? e.hours.toFixed(2) : '—';
                     html += `<tr>
                         <td>${dateStr}</td>

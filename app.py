@@ -3,21 +3,23 @@ import sys
 import json
 import csv
 import re
-from datetime import datetime, timedelta, timezone
+import time
+from datetime import datetime, timedelta
 from io import StringIO
 from flask import Flask, render_template, request, jsonify, Response, session, redirect
 from functools import wraps
 import random
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+os.environ["TZ"] = "America/New_York"
+time.tzset()
 
-def _parse_dt(s):
-    """Parse a datetime string, treating naive timestamps as UTC for backward compat."""
-    s = s.replace("Z", "+00:00")
-    dt = datetime.fromisoformat(s)
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
+def _naive(dt):
+    """Strip timezone info, converting to local (ET) time if aware."""
+    if dt.tzinfo is not None:
+        return dt.astimezone().replace(tzinfo=None)
     return dt
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import db
 from payroll import load_employees as _load_employees_file, calculate_payroll as _calculate_payroll
@@ -915,17 +917,8 @@ def get_timeclock_now():
         today_entries = [e for e in data["entries"] if e.get("date") == today]
         employees = load_employees(EMPLOYEES_FILE)
         emp_map = {e["id"]: e["name"] for e in employees}
-        def norm_ts(v):
-            if v and isinstance(v, str) and not v.endswith("+00:00") and not v.endswith("Z") and "+" not in v and v.count("-") >= 2:
-                return v + "+00:00"
-            return v
         for e in active:
             e["employee_name"] = emp_map.get(e["employee_id"], "Unknown")
-            for f in ("clock_in", "clock_out", "break_start"):
-                e[f] = norm_ts(e.get(f))
-        for e in today_entries:
-            for f in ("clock_in", "clock_out", "break_start"):
-                e[f] = norm_ts(e.get(f))
         return jsonify({"active": active, "today_entries": today_entries, "date": today})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -956,7 +949,7 @@ def clock_in_out():
                     return jsonify({"error": "Invalid PIN"}), 403
 
         clock = load_json(TIMECLOCK_FILE, {"entries": []})
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
         today = now.strftime("%Y-%m-%d")
         active = [e for e in clock["entries"] if e.get("employee_id") == emp_id and e.get("clock_out") is None]
 
@@ -966,7 +959,7 @@ def clock_in_out():
 
             if cur_status == "break":
                 if action == "resume":
-                    break_start = _parse_dt(entry["break_start"])
+                    break_start = _naive(datetime.fromisoformat(entry["break_start"]))
                     break_duration = (now - break_start).total_seconds() / 3600
                     entry["break_total"] = entry.get("break_total", 0) + round(break_duration, 2)
                     entry["status"] = "active"
@@ -986,7 +979,7 @@ def clock_in_out():
 
             if action == "clockout":
                 entry["clock_out"] = now.isoformat()
-                total = (now - _parse_dt(entry["clock_in"])).total_seconds() / 3600
+                total = (now - _naive(datetime.fromisoformat(entry["clock_in"]))).total_seconds() / 3600
                 break_total = entry.get("break_total", 0)
                 entry["hours"] = round(total - break_total, 2)
                 entry["status"] = "completed"
@@ -1031,10 +1024,6 @@ def get_timeclock_history():
         if end and d > end:
             continue
         entry = dict(e)
-        for f in ("clock_in", "clock_out", "break_start"):
-            val = entry.get(f)
-            if val and isinstance(val, str) and not val.endswith("+00:00") and not val.endswith("Z") and "+" not in val and val.count("-") >= 2:
-                entry[f] = val + "+00:00"
         entry["original_index"] = i
         result.append(entry)
     return jsonify(result)
@@ -1075,8 +1064,8 @@ def update_timeclock_entry(idx):
         # Recalculate hours
         if entry.get("clock_in") and entry.get("clock_out"):
             try:
-                cin = _parse_dt(entry["clock_in"])
-                cout = _parse_dt(entry["clock_out"])
+                cin = _naive(datetime.fromisoformat(entry["clock_in"]))
+                cout = _naive(datetime.fromisoformat(entry["clock_out"]))
                 entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
                 entry["status"] = "completed"
             except Exception:
@@ -1134,8 +1123,8 @@ def add_timeclock_entry():
         }
         if clock_in and clock_out:
             try:
-                cin = _parse_dt(clock_in)
-                cout = _parse_dt(clock_out)
+                cin = _naive(datetime.fromisoformat(clock_in))
+                cout = _naive(datetime.fromisoformat(clock_out))
                 entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
             except Exception:
                 pass
@@ -2178,7 +2167,7 @@ def get_dashboard():
         maintenance_tasks = []
         if settings.get("show_maintenance_on_dashboard"):
             maint = load_maintenance()
-            now = datetime.now(timezone.utc)
+            now = datetime.now()
             for t in maint.get("tasks", []):
                 if t.get("status") == "overdue" or (t.get("status") == "active" and t.get("next_due")):
                     try:
