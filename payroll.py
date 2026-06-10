@@ -163,7 +163,7 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
         min_wage = get_state_minimum_wage(state, settings)
         expected_tips = max(0, round(min_wage * hours - regular_pay, 2))
         makeup = max(0, round(expected_tips - tips, 2))
-        gross_pay = round(regular_pay + tips + makeup, 2)
+        gross_pay = round(regular_pay + makeup, 2)
     else:
         gross_pay = calculate_gross_pay(hours, employee["hourly_rate"], overtime_rate)
 
