@@ -1886,6 +1886,11 @@ def run_payroll():
             total_gross += result["gross_pay"]
             total_net += result["net_pay"]
 
+        total_fed = round(sum(r["federal_tax"] for r in results), 2)
+        total_state = round(sum(r["state_tax"] for r in results), 2)
+        total_ss = round(sum(r["social_security"] for r in results), 2)
+        total_mc = round(sum(r["medicare"] for r in results), 2)
+
         notes = request.json.get("notes", "")
         payroll_data = {
             "week_start": week_info["week_start"],
@@ -1896,6 +1901,10 @@ def run_payroll():
             "summary": {
                 "total_gross": round(total_gross, 2),
                 "total_net": round(total_net, 2),
+                "total_fed": total_fed,
+                "total_state": total_state,
+                "total_ss": total_ss,
+                "total_mc": total_mc,
             },
             "notes": notes,
         }

@@ -2077,6 +2077,41 @@
                     <div class="value">$${data.summary.total_net.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                 </div>
             </div>
+            <div class="card" style="margin-top:1rem;padding:1rem;font-size:0.9rem;">
+                <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">Payroll Tax Summary</h3>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead><tr style="border-bottom:2px solid #e2e8f0;">
+                        <th style="text-align:left;padding:0.25rem 0.5rem;">Withholding</th>
+                        <th style="text-align:right;padding:0.25rem 0.5rem;">Employee</th>
+                        <th style="text-align:right;padding:0.25rem 0.5rem;">Employer</th>
+                        <th style="text-align:right;padding:0.25rem 0.5rem;">Total</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr><td style="padding:0.25rem 0.5rem;">Federal</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">—</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0.5rem;">State</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">—</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0.5rem;">Social Security</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_ss.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_ss.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(data.summary.total_ss*2).toFixed(2)}</td></tr>
+                        <tr><td style="padding:0.25rem 0.5rem;">Medicare</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_mc.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_mc.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(data.summary.total_mc*2).toFixed(2)}</td></tr>
+                    </tbody>
+                    <tfoot><tr style="border-top:2px solid #1e3a5f;">
+                        <td style="font-weight:600;padding:0.5rem;">Totals</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_fed+data.summary.total_state+data.summary.total_ss+data.summary.total_mc).toFixed(2)}</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_ss+data.summary.total_mc).toFixed(2)}</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_fed+data.summary.total_state+(data.summary.total_ss+data.summary.total_mc)*2).toFixed(2)}</td>
+                    </tr></tfoot>
+                </table>
+            </div>
             <div class="card" style="margin-top:1rem;padding:1rem;">
                 <div class="flex-between" style="margin-bottom:0.5rem;">
                     <label style="font-weight:600;">Week Notes</label>
