@@ -1736,7 +1736,8 @@
                 html += `<option value="${i}" ${i === hSel ? 'selected' : ''}>${i}</option>`;
             }
             html += `</select>:<select id="${id}-m" class="ts-time-m" onchange="${onChange || ''}" style="width:54px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;"${dis}>`;
-            for (const v of ['00', '15', '30', '45']) {
+            for (let i = 0; i < 60; i++) {
+                const v = String(i).padStart(2, '0');
                 html += `<option value="${v}" ${v === m ? 'selected' : ''}>${v}</option>`;
             }
             html += `</select> <select id="${id}-a" class="ts-time-a" onchange="${onChange || ''}" style="width:54px;padding:0.2rem;border:1px solid #cbd5e1;border-radius:3px;font-size:0.85rem;"${dis}>`;
@@ -1882,7 +1883,8 @@
 
         function tsGetDates() {
             const start = utcDate(timesheetWeek.week_start);
-            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const base = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const days = [...base.slice(weekStartDay), ...base.slice(0, weekStartDay)];
             return days.map((d, i) => {
                 const dt = new Date(start); dt.setUTCDate(start.getUTCDate() + i);
                 return { label: d, iso: keyDate(dt), weekday: dt.getUTCDay() };
@@ -2356,7 +2358,8 @@
 
         function getSchedWeekInfo(dateStr) {
             const dt = utcDate(dateStr);
-            const diff = (dt.getUTCDay() + 6) % 7;
+            const jsWeekStart = (weekStartDay + 1) % 7;
+            const diff = (dt.getUTCDay() - jsWeekStart + 7) % 7;
             const start = new Date(dt); start.setUTCDate(dt.getUTCDate() - diff);
             const end = new Date(start); end.setUTCDate(start.getUTCDate() + 6);
             return { week_start: keyDate(start), week_end: keyDate(end), week_label: `${start.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'UTC' })} - ${fmtDate(end)}` };
