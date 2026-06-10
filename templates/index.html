@@ -1652,9 +1652,8 @@
             const hint = document.getElementById(`tips-${empId}-hint`);
             if (!hoursInput || !tipsInput) return;
             const expected = calcExpectedTips(emp, hoursInput.value);
-            tipsInput.placeholder = expected.toFixed(2);
-            if (hint) hint.textContent = `Expected: $${expected.toFixed(2)}`;
-            tipsInput.value = expected.toFixed(2);
+            tipsInput.placeholder = `Expected: $${expected.toFixed(2)}`;
+            if (hint) hint.textContent = `Tips expected: $${expected.toFixed(2)}`;
         }
 
         function renderHoursForm() {
@@ -1671,7 +1670,7 @@
                     <td><strong>${emp.name}</strong></td>
                     <td>${isSalary ? `$${(emp.salary_amount||0).toFixed(2)}/wk` : `$${emp.hourly_rate.toFixed(2)}/hr`}</td>
                     <td><input type="number" id="hours-${emp.id}" min="0" max="168" step="0.5" placeholder="0.0" oninput="onHoursChange('${emp.id}')" style="width: 100px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"></td>
-                    <td>${isTipped ? `<input type="number" id="hours-${emp.id}_tips" min="0" step="0.01" placeholder="0.00" style="width: 110px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"><br><span id="tips-${emp.id}-hint" style="font-size:0.75rem;color:#64748b;">Expected: $0.00</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
+                    <td>${isTipped ? `<input type="number" id="hours-${emp.id}_tips" min="0" step="0.01" placeholder="0.00" style="width: 110px; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px;"><br><span id="tips-${emp.id}-hint" style="font-size:0.75rem;color:#64748b;">Enter tips received</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -2093,7 +2092,8 @@
                         <span>${r.employee_id} | ${r.hours_worked} hrs</span>
                     </div>
                     ${r.tipped ? `<div class="paystub-row"><span>Regular Pay</span><span>$${r.regular_pay.toFixed(2)}</span></div>
-                    <div class="paystub-row"><span>Tips & Makeup</span><span>$${(r.tips + r.makeup).toFixed(2)}</span></div>
+                    <div class="paystub-row"><span>Tips Received</span><span>$${r.tips.toFixed(2)}</span></div>
+                    ${r.makeup > 0 ? `<div class="paystub-row"><span>Tip Makeup (by employer)</span><span>$${r.makeup.toFixed(2)}</span></div>` : ''}
                     <div class="paystub-row" style="font-weight:600;border-top:1px solid #e2e8f0;padding-top:0.5rem;"><span>Employer Paid</span><span>$${r.employer_paid.toFixed(2)}</span></div>` : ''}
                     ${r.hours_worked > 40 ? `<div class="paystub-row"><span>Overtime Pay</span><span>$${(r.overtime_pay || (r.hours_worked - 40) * r.hourly_rate * 1.5).toFixed(2)}</span></div>` : ''}
                     <div class="paystub-row"><span>Gross Pay</span><span><strong>$${r.gross_pay.toFixed(2)}</strong></span></div>
