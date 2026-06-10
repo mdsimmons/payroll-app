@@ -1939,9 +1939,12 @@
                     body: JSON.stringify(body),
                 });
                 if (res.ok) saved++;
+                else console.warn('Save failed for entry', origIdx, await res.text());
             }
-            statusEl.style.color = '#059669';
-            statusEl.textContent = `${saved} entr${saved === 1 ? 'y' : 'ies'} saved`;
+            statusEl.style.color = saved === empEntries.length ? '#059669' : '#dc2626';
+            statusEl.textContent = `${saved}/${empEntries.length} entr${empEntries.length === 1 ? 'y' : 'ies'} saved`;
+            const res2 = await fetch(`/api/timeclock/history?start=${timesheetWeek.week_start}&end=${timesheetWeek.week_end}`);
+            tsClockEntries = await res2.json();
             await tsOpenDetail(tsDetailEmpId);
         }
 
