@@ -1,269 +1,279 @@
 {
-  "status": "published",
-  "shifts": {
-    "EMP004": [
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP006": [
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "06:00",
-        "end": "15:00",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP007": [
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP005": [
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "07:00",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP008": [
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "11:00",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP009": [
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "08:00",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ],
-    "EMP010": [
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "08:00",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      },
-      {
-        "start": "",
-        "end": "",
-        "notes": ""
-      }
-    ]
+  "2026-06-01": {
+    "shifts": {
+      "EMP004": [
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP006": [
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "06:00",
+          "end": "15:00",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP007": [
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP005": [
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "07:00",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP008": [
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "11:00",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP009": [
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "08:00",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ],
+      "EMP010": [
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "08:00",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        },
+        {
+          "start": "",
+          "end": "",
+          "notes": ""
+        }
+      ]
+    },
+    "open_shifts": [],
+    "blackouts": {},
+    "closures": {},
+    "status": "published",
+    "week_label": "Jun 01 - Jun 07, 2026"
   },
-  "open_shifts": [],
-  "week_start": "2026-06-01",
-  "week_label": "Jun 01 - Jun 07, 2026",
-  "blackouts": {},
-  "closures": {}
+  "2026-06-08": {
+    "shifts": {},
+    "open_shifts": [],
+    "blackouts": {},
+    "closures": {},
+    "status": "published",
+    "week_label": "Jun 8 - Jun 14, 2026",
+    "week_start": "2026-06-08"
+  }
 }

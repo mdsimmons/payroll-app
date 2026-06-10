@@ -3,23 +3,22 @@ import sys
 import json
 import csv
 import re
-import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from io import StringIO
 from flask import Flask, render_template, request, jsonify, Response, session, redirect
 from functools import wraps
 import random
 
-os.environ["TZ"] = "America/New_York"
-time.tzset()
-
-def _naive(dt):
-    """Strip timezone info, converting to local (ET) time if aware."""
-    if dt.tzinfo is not None:
-        return dt.astimezone().replace(tzinfo=None)
-    return dt
-
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+def _parse_dt(s):
+    """Parse an ISO datetime string. Handles Z suffix and naive (assumed UTC) timestamps."""
+    s = s.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
 
 import db
 from payroll import load_employees as _load_employees_file, calculate_payroll as _calculate_payroll
@@ -912,13 +911,16 @@ def get_timeclock_now():
     """Returns current clock status for all employees. Public (used by tablet clock UI)."""
     try:
         data = load_json(TIMECLOCK_FILE, {"entries": []})
-        today = datetime.now().strftime("%Y-%m-%d")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         active = [e for e in data["entries"] if e.get("clock_out") is None]
         today_entries = [e for e in data["entries"] if e.get("date") == today]
         employees = load_employees(EMPLOYEES_FILE)
         emp_map = {e["id"]: e["name"] for e in employees}
         for e in active:
             e["employee_name"] = emp_map.get(e["employee_id"], "Unknown")
+            _normalize_ts(e)
+        for e in today_entries:
+            _normalize_ts(e)
         return jsonify({"active": active, "today_entries": today_entries, "date": today})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -949,7 +951,7 @@ def clock_in_out():
                     return jsonify({"error": "Invalid PIN"}), 403
 
         clock = load_json(TIMECLOCK_FILE, {"entries": []})
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         today = now.strftime("%Y-%m-%d")
         active = [e for e in clock["entries"] if e.get("employee_id") == emp_id and e.get("clock_out") is None]
 
@@ -959,7 +961,7 @@ def clock_in_out():
 
             if cur_status == "break":
                 if action == "resume":
-                    break_start = _naive(datetime.fromisoformat(entry["break_start"]))
+                    break_start = _parse_dt(entry["break_start"])
                     break_duration = (now - break_start).total_seconds() / 3600
                     entry["break_total"] = entry.get("break_total", 0) + round(break_duration, 2)
                     entry["status"] = "active"
@@ -979,7 +981,7 @@ def clock_in_out():
 
             if action == "clockout":
                 entry["clock_out"] = now.isoformat()
-                total = (now - _naive(datetime.fromisoformat(entry["clock_in"]))).total_seconds() / 3600
+                total = (now - _parse_dt(entry["clock_in"])).total_seconds() / 3600
                 break_total = entry.get("break_total", 0)
                 entry["hours"] = round(total - break_total, 2)
                 entry["status"] = "completed"
@@ -1010,6 +1012,31 @@ def clock_in_out():
         return jsonify({"error": str(e)}), 500
 
 
+def _normalize_ts(entry):
+    """Convert naive-ET timestamps to UTC-aware (+00:00) for consistent frontend parsing."""
+    try:
+        et_tz = ZoneInfo("America/New_York")
+    except Exception:
+        et_tz = None
+    for f in ("clock_in", "clock_out", "break_start"):
+        val = entry.get(f)
+        if not val or not isinstance(val, str):
+            continue
+        if "+" in val or val.endswith("Z") or val.endswith("z"):
+            continue  # already has timezone info
+        if et_tz is None:
+            entry[f] = val + "+00:00"
+            continue
+        try:
+            naive_dt = datetime.fromisoformat(val)
+            if naive_dt.tzinfo is not None:
+                continue  # not naive despite our check
+            et_dt = naive_dt.replace(tzinfo=et_tz)
+            utc_dt = et_dt.astimezone(timezone.utc)
+            entry[f] = utc_dt.isoformat()
+        except Exception:
+            entry[f] = val + "+00:00"
+
 @app.route("/api/timeclock/history", methods=["GET"])
 @require_login
 def get_timeclock_history():
@@ -1024,6 +1051,7 @@ def get_timeclock_history():
         if end and d > end:
             continue
         entry = dict(e)
+        _normalize_ts(entry)
         entry["original_index"] = i
         result.append(entry)
     return jsonify(result)
@@ -1064,8 +1092,8 @@ def update_timeclock_entry(idx):
         # Recalculate hours
         if entry.get("clock_in") and entry.get("clock_out"):
             try:
-                cin = _naive(datetime.fromisoformat(entry["clock_in"]))
-                cout = _naive(datetime.fromisoformat(entry["clock_out"]))
+                cin = _parse_dt(entry["clock_in"])
+                cout = _parse_dt(entry["clock_out"])
                 entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
                 entry["status"] = "completed"
             except Exception:
@@ -1123,8 +1151,8 @@ def add_timeclock_entry():
         }
         if clock_in and clock_out:
             try:
-                cin = _naive(datetime.fromisoformat(clock_in))
-                cout = _naive(datetime.fromisoformat(clock_out))
+                cin = _parse_dt(clock_in)
+                cout = _parse_dt(clock_out)
                 entry["hours"] = round((cout - cin).total_seconds() / 3600, 2)
             except Exception:
                 pass
@@ -2167,7 +2195,7 @@ def get_dashboard():
         maintenance_tasks = []
         if settings.get("show_maintenance_on_dashboard"):
             maint = load_maintenance()
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             for t in maint.get("tasks", []):
                 if t.get("status") == "overdue" or (t.get("status") == "active" and t.get("next_due")):
                     try:

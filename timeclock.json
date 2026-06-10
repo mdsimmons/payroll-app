@@ -108,6 +108,26 @@
       "hours": 0.0,
       "status": "completed",
       "rating": 5
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-10",
+      "clock_in": "2026-06-10T11:42:50.721140+00:00",
+      "clock_out": "2026-06-10T11:42:57.578357+00:00",
+      "hours": 0.0,
+      "status": "completed",
+      "rating": 5
+    },
+    {
+      "employee_id": "EMP004",
+      "employee_name": "Mitchel Simmons",
+      "date": "2026-06-10",
+      "clock_in": "2026-06-10T11:45:51.551076+00:00",
+      "clock_out": "2026-06-10T11:45:51.577289+00:00",
+      "hours": 0.0,
+      "status": "completed",
+      "rating": 5
     }
   ]
 }

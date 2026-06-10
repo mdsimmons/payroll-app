@@ -1377,6 +1377,37 @@
         }
         function keyDate(d) { return d.toISOString().split('T')[0]; }
 
+        // ─── Eastern Time (America/New_York) helpers ────────
+        function _etOffset(y, m, d, h) {
+            function sun(mo, nth) {
+                let dt = new Date(Date.UTC(y, mo, 1));
+                while (dt.getUTCDay() !== 0) dt.setUTCDate(dt.getUTCDate() + 1);
+                dt.setUTCDate(dt.getUTCDate() + 7 * (nth - 1));
+                return dt.getUTCDate();
+            }
+            const dstS = sun(2, 2), dstE = sun(9, 1);
+            if (m < 3 || m > 10) return -5;
+            if (m > 3 && m < 10) return -4;
+            if (m === 3) return d < dstS || (d === dstS && h < 2) ? -5 : -4;
+            return d < dstE || (d === dstE && h < 2) ? -4 : -5;
+        }
+        function parseSafe(isoString) {
+            const s = isoString && typeof isoString === 'string' && !isoString.endsWith('Z') && !isoString.includes('+')
+                ? isoString + '+00:00' : isoString;
+            return new Date(s);
+        }
+        function etHHMM(isoString) {
+            if (!isoString) return '';
+            return parseSafe(isoString).toLocaleTimeString('en-US', {timeZone:'America/New_York', hour:'2-digit', minute:'2-digit', hour12:false});
+        }
+        function etToUTC(dateStr, hhmm) {
+            if (!dateStr || !hhmm) return null;
+            const [y,m,d] = dateStr.split('-').map(Number);
+            const [h,mn] = hhmm.split(':').map(Number);
+            const off = _etOffset(y, m, d, h);
+            return new Date(Date.UTC(y, m-1, d, h - off, mn)).toISOString();
+        }
+
         function getWeekInfo(dateStr, weekStartDay) {
             const dt = utcDate(dateStr);
             const jsWeekStart = (weekStartDay + 1) % 7;
@@ -1817,8 +1848,8 @@
                 } else {
                     dayEntries.forEach((entry, ei) => {
                         const idx = tsClockEntries.indexOf(entry);
-                        const cin = entry.clock_in ? entry.clock_in.slice(11, 16) : '';
-                        const cout = entry.clock_out ? entry.clock_out.slice(11, 16) : '';
+                        const cin = etHHMM(entry.clock_in);
+                        const cout = etHHMM(entry.clock_out);
                         const hrs = entry.hours || 0;
                         totalHours += hrs;
                         html += `<tr>
@@ -1895,8 +1926,8 @@
                 const cin = timeSelectValue(`ts-cin-${idx}`);
                 const cout = timeSelectValue(`ts-cout-${idx}`);
                 const date = entry.date;
-                const clockIn = `${date}T${cin}:00`;
-                const clockOut = cout ? `${date}T${cout}:00` : null;
+                const clockIn = etToUTC(date, cin);
+                const clockOut = cout ? etToUTC(date, cout) : null;
                 const body = {clock_in: clockIn};
                 if (cout) body.clock_out = clockOut;
                 const origIdx = entry.original_index;
@@ -1936,8 +1967,8 @@
             const cin = prompt('Clock in time (HH:MM):');
             if (!cin) return;
             const cout = prompt('Clock out time (HH:MM, or leave blank):');
-            const clockIn = `${date}T${cin}:00`;
-            const clockOut = cout ? `${date}T${cout}:00` : null;
+            const clockIn = etToUTC(date, cin);
+            const clockOut = cout ? etToUTC(date, cout) : null;
             const res = await fetch('/api/timeclock/add', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

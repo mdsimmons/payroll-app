@@ -1,6 +1,14 @@
 {
   "notes": [
     {
+      "date": "2026-05-20",
+      "daily_notes": "Edited daily note",
+      "employee_notes": "Edited emp note",
+      "sales": 600,
+      "cash_sales": 300,
+      "timestamp": "2026-06-09T07:00:11.842857"
+    },
+    {
       "date": "2026-05-27",
       "sales": 1500,
       "cash_sales": 400,
