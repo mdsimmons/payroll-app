@@ -218,7 +218,8 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
         net_after_tax = round(gross_pay - total_tax, 2)
 
     net_pay = round(max(0, net_after_tax - child_support), 2)
-    total_deductions = round(total_tax + child_support, 2)
+    tips_deduction = tips if employee.get("tipped") else 0
+    total_deductions = round(total_tax + child_support + tips_deduction, 2)
 
     overtime_pay = calculate_overtime_pay(hours, employee["hourly_rate"], overtime_rate) if not is_salary else 0.0
 

@@ -2103,6 +2103,8 @@
                     <div class="paystub-row"><span>Social Security</span><span>-$${r.social_security.toFixed(2)}</span></div>
                     <div class="paystub-row"><span>Medicare</span><span>-$${r.medicare.toFixed(2)}</span></div>
                     ${r.additional_medicare > 0 ? `<div class="paystub-row"><span>Additional Medicare</span><span>-$${r.additional_medicare.toFixed(2)}</span></div>` : ''}
+                    ${r.tipped ? `<div class="paystub-row"><span>Tips Received</span><span>-$${r.tips.toFixed(2)}</span></div>` : ''}
+                    ${r.child_support > 0 ? `<div class="paystub-row"><span>Child Support</span><span>-$${r.child_support.toFixed(2)}</span></div>` : ''}
                     <div class="paystub-row subtotal"><span>Total Deductions</span><span>-$${r.total_deductions.toFixed(2)}</span></div>
                     <div class="paystub-row net"><span>Net Pay</span><span>$${r.net_pay.toFixed(2)}</span></div>
                 </div>`;
@@ -3858,6 +3860,8 @@
                     <div class="paystub-row"><span>State Tax</span><span>-${fmt(w.state_tax)}</span></div>
                     <div class="paystub-row"><span>Social Security</span><span>-${fmt(w.social_security)}</span></div>
                     <div class="paystub-row"><span>Medicare</span><span>-${fmt(w.medicare)}</span></div>
+                    ${w.tipped ? `<div class="paystub-row"><span>Tips Received</span><span>-${fmt(w.tips)}</span></div>` : ''}
+                    ${w.child_support > 0 ? `<div class="paystub-row"><span>Child Support</span><span>-${fmt(w.child_support)}</span></div>` : ''}
                     <div class="paystub-row" style="border-top:1px solid #e2e8f0; padding-top:0.5rem;"><span>Total Deductions</span><span>-${fmt(w.total_deductions)}</span></div>
                     <div class="paystub-row" style="font-weight:700; border-top:2px solid #1e3a5f; padding-top:0.5rem; margin-top:0.5rem; color:#059669;"><span>Net Pay</span><span>${fmt(w.net_pay)}</span></div>
                 </div>`;
@@ -4008,6 +4012,8 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                 if (w.hours_worked > 40) text += `  Overtime: ${fmt(w.overtime_pay || (w.hours_worked - 40) * w.hourly_rate * 1.5)}\n`;
                 text += `  Gross: ${fmt(w.gross_pay)}\n  Federal: -${fmt(w.federal_tax)}\n  State: -${fmt(w.state_tax)}\n`;
                 text += `  SS: -${fmt(w.social_security)}\n  Medicare: -${fmt(w.medicare)}\n`;
+                if (w.tipped) text += `  Tips: -${fmt(w.tips)}\n`;
+                if (w.child_support) text += `  Child Support: -${fmt(w.child_support)}\n`;
                 text += `  Deductions: -${fmt(w.total_deductions)}\n  Net: ${fmt(w.net_pay)}\n\n`;
             }
             return text;
@@ -4591,6 +4597,8 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                     <div class="paystub-row"><span>State Tax</span><span>$${(r.state_tax||0).toFixed(2)}</span></div>
                     <div class="paystub-row"><span>Social Security</span><span>$${(r.social_security||0).toFixed(2)}</span></div>
                     <div class="paystub-row"><span>Medicare</span><span>$${(r.medicare||0).toFixed(2)}</span></div>
+                    ${r.tipped ? `<div class="paystub-row"><span>Tips Received</span><span>$${(r.tips||0).toFixed(2)}</span></div>` : ''}
+                    ${r.child_support > 0 ? `<div class="paystub-row"><span>Child Support</span><span>$${(r.child_support||0).toFixed(2)}</span></div>` : ''}
                     <div class="paystub-row subtotal"><span>Total Deductions</span><span>$${(r.total_deductions||0).toFixed(2)}</span></div>
                     <div class="paystub-row net"><span>Net Pay</span><span>$${(r.net_pay||0).toFixed(2)}</span></div>
                 </div>`;
@@ -4639,6 +4647,8 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
                         <tr><td>State Withholding</td><td class="ps-amt">&minus;$${(r.state_tax||0).toFixed(2)}</td></tr>
                         <tr><td>Social Security</td><td class="ps-amt">&minus;$${(r.social_security||0).toFixed(2)}</td></tr>
                         <tr><td>Medicare</td><td class="ps-amt">&minus;$${(r.medicare||0).toFixed(2)}</td></tr>
+                        ${r.tipped ? `<tr><td>Tips Received</td><td class="ps-amt">&minus;$${(r.tips||0).toFixed(2)}</td></tr>` : ''}
+                        ${r.child_support > 0 ? `<tr><td>Child Support</td><td class="ps-amt">&minus;$${(r.child_support||0).toFixed(2)}</td></tr>` : ''}
                         <tr class="ps-btm"><td>Total Deductions</td><td class="ps-amt">&minus;$${(r.total_deductions||0).toFixed(2)}</td></tr>
                     </table>
                 </div>
