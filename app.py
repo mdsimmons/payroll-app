@@ -364,7 +364,10 @@ def get_history_week(week_key):
         history = load_history()
         if week_key not in history:
             return jsonify({"error": "Week not found"}), 404
-        return jsonify(history[week_key])
+        data = history[week_key]
+        if "results" in data:
+            data["results"].sort(key=lambda r: r["employee_name"].lower())
+        return jsonify(data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -1883,8 +1886,11 @@ def run_payroll():
             tips = float(hours_data.get(f"{emp_id}_tips", 0)) if isinstance(hours_data, dict) else 0
             result = calculate_payroll(emp, float(hours), tips=tips)
             results.append(result)
-            total_gross += result["gross_pay"]
-            total_net += result["net_pay"]
+
+        results.sort(key=lambda r: r["employee_name"].lower())
+
+        total_gross = round(sum(r["gross_pay"] for r in results), 2)
+        total_net = round(sum(r["net_pay"] for r in results), 2)
 
         total_fed = round(sum(r["federal_tax"] for r in results), 2)
         total_state = round(sum(r["state_tax"] for r in results), 2)

@@ -2063,6 +2063,12 @@
             const container = document.getElementById('payroll-results');
             const weekKey = encodeURIComponent(data.week_label);
             const notes = data.notes || '';
+            const sum = data.summary || {};
+            const results = data.results || [];
+            const taxFed = sum.total_fed !== undefined ? sum.total_fed : results.reduce((a,r) => a + (r.federal_tax||0), 0);
+            const taxState = sum.total_state !== undefined ? sum.total_state : results.reduce((a,r) => a + (r.state_tax||0), 0);
+            const taxSS = sum.total_ss !== undefined ? sum.total_ss : results.reduce((a,r) => a + (r.social_security||0), 0);
+            const taxMC = sum.total_mc !== undefined ? sum.total_mc : results.reduce((a,r) => a + (r.medicare||0), 0);
             let html = `<div class="flex-between" style="margin-bottom: 1rem;">
                 <h2>Payroll: ${data.week_label}</h2>
                 <span style="color: #64748b;">${data.week_start} to ${data.week_end}</span>
@@ -2070,14 +2076,13 @@
             <div class="summary-cards">
                 <div class="summary-card gross">
                     <div class="label">Total Gross</div>
-                    <div class="value">$${data.summary.total_gross.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                    <div class="value">$${(sum.total_gross||0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                 </div>
                 <div class="summary-card net">
                     <div class="label">Total Net Pay</div>
-                    <div class="value">$${data.summary.total_net.toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
+                    <div class="value">$${(sum.total_net||0).toLocaleString('en-US', {minimumFractionDigits: 2})}</div>
                 </div>
             </div>
-            ${data.summary.total_fed !== undefined ? `
             <div class="card" style="margin-top:1rem;padding:1rem;font-size:0.9rem;">
                 <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">Payroll Tax Summary</h3>
                 <table style="width:100%;border-collapse:collapse;">
@@ -2089,30 +2094,30 @@
                     </tr></thead>
                     <tbody>
                         <tr><td style="padding:0.25rem 0.5rem;">Federal</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxFed.toFixed(2)}</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">&mdash;</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_fed.toFixed(2)}</td></tr>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxFed.toFixed(2)}</td></tr>
                         <tr><td style="padding:0.25rem 0.5rem;">State</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxState.toFixed(2)}</td>
                             <td style="text-align:right;padding:0.25rem 0.5rem;color:#94a3b8;">&mdash;</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_state.toFixed(2)}</td></tr>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxState.toFixed(2)}</td></tr>
                         <tr><td style="padding:0.25rem 0.5rem;">Social Security</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_ss.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_ss.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(data.summary.total_ss*2).toFixed(2)}</td></tr>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxSS.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxSS.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(taxSS*2).toFixed(2)}</td></tr>
                         <tr><td style="padding:0.25rem 0.5rem;">Medicare</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_mc.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${data.summary.total_mc.toFixed(2)}</td>
-                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(data.summary.total_mc*2).toFixed(2)}</td></tr>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxMC.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${taxMC.toFixed(2)}</td>
+                            <td style="text-align:right;padding:0.25rem 0.5rem;">$${(taxMC*2).toFixed(2)}</td></tr>
                     </tbody>
                     <tfoot><tr style="border-top:2px solid #1e3a5f;">
                         <td style="font-weight:600;padding:0.5rem;">Totals</td>
-                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_fed+data.summary.total_state+data.summary.total_ss+data.summary.total_mc).toFixed(2)}</td>
-                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_ss+data.summary.total_mc).toFixed(2)}</td>
-                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(data.summary.total_fed+data.summary.total_state+(data.summary.total_ss+data.summary.total_mc)*2).toFixed(2)}</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(taxFed+taxState+taxSS+taxMC).toFixed(2)}</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(taxSS+taxMC).toFixed(2)}</td>
+                        <td style="text-align:right;font-weight:600;padding:0.5rem;">$${(taxFed+taxState+(taxSS+taxMC)*2).toFixed(2)}</td>
                     </tr></tfoot>
                 </table>
-            </div>` : ''}
+            </div>
             <div class="card" style="margin-top:1rem;padding:1rem;">
                 <div class="flex-between" style="margin-bottom:0.5rem;">
                     <label style="font-weight:600;">Week Notes</label>
