@@ -210,13 +210,15 @@ def calculate_payroll(employee, hours, year_to_date_gross=0, pay_periods_per_yea
 
     total_tax = round(federal_tax + state_tax + social_security + medicare, 2)
     child_support = float(employee.get("child_support", 0) or 0)
-    total_deductions = round(total_tax + child_support, 2)
 
     if employee.get("tipped"):
         employer_paid = round(regular_pay + makeup, 2)
-        net_pay = round(max(0, employer_paid - tips - total_deductions), 2)
+        net_after_tax = round(max(0, employer_paid - tips - total_tax), 2)
     else:
-        net_pay = round(gross_pay - total_deductions, 2)
+        net_after_tax = round(gross_pay - total_tax, 2)
+
+    net_pay = round(max(0, net_after_tax - child_support), 2)
+    total_deductions = round(total_tax + child_support, 2)
 
     overtime_pay = calculate_overtime_pay(hours, employee["hourly_rate"], overtime_rate) if not is_salary else 0.0
 
