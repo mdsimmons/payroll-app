@@ -3,6 +3,11 @@ import sys
 import json
 import csv
 import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from io import StringIO
@@ -1921,6 +1926,13 @@ def run_payroll():
         history[week_info["week_label"]] = payroll_data
         save_history(history)
 
+        # Email CSV if configured
+        settings = load_app_settings()
+        freq = settings.get("email_frequency", "never")
+        if freq == "weekly":
+            send_payroll_csv(results, week_info["week_label"], settings)
+        auto_backup_if_due(settings)
+
         return jsonify(payroll_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -2221,6 +2233,8 @@ def get_dashboard():
                         pass
             maintenance_tasks = [t for t in maint.get("tasks", []) if t.get("status") in ("active", "overdue")]
 
+        auto_backup_if_due(settings)
+
         return jsonify({
             "labor_today": round(labor_today, 2),
             "monthly_gross": round(monthly_gross, 2),
@@ -2294,6 +2308,189 @@ def save_bills():
         data = request.json
         save_json(BILLS_FILE, data)
         return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ─── Email CSV Payroll ─────────────────────────────────────────────────────────
+
+def build_payroll_csv(results, week_label):
+    out = StringIO()
+    w = csv.writer(out)
+    w.writerow(["Employee ID", "Name", "Hours", "Rate", "Gross Pay",
+                 "Federal Tax", "State Tax", "Social Security", "Medicare",
+                 "Tips", "Child Support", "Total Deductions", "Net Pay"])
+    for r in results:
+        w.writerow([
+            r["employee_id"], r["employee_name"], r["hours_worked"],
+            r["hourly_rate"], r["gross_pay"],
+            r["federal_tax"], r["state_tax"], r["social_security"], r["medicare"],
+            r.get("tips", 0), r.get("child_support", 0),
+            r["total_deductions"], r["net_pay"],
+        ])
+    return out.getvalue()
+
+
+def send_payroll_csv(results, week_label, settings):
+    to_addr = settings.get("email_to", "").strip()
+    if not to_addr:
+        return False
+    smtp_host = settings.get("smtp_host", "").strip()
+    smtp_port = int(settings.get("smtp_port", 587))
+    smtp_user = settings.get("smtp_user", "").strip()
+    smtp_pass = settings.get("smtp_pass", "")
+    from_addr = settings.get("email_from", "").strip() or smtp_user
+    if not smtp_host or not smtp_user or not smtp_pass:
+        return False
+
+    csv_data = build_payroll_csv(results, week_label)
+    msg = MIMEMultipart()
+    msg["Subject"] = f"Payroll — {week_label}"
+    msg["From"] = from_addr
+    msg["To"] = to_addr
+    msg.attach(MIMEText(f"Payroll CSV for {week_label} is attached.", "plain"))
+    part = MIMEBase("text", "csv")
+    part.set_payload(csv_data)
+    encoders.encode_base64(part)
+    part.add_header("Content-Disposition", f'attachment; filename="payroll_{week_label}.csv"')
+    msg.attach(part)
+
+    try:
+        server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+        server.starttls()
+        server.login(smtp_user, smtp_pass)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception:
+        return False
+
+
+# ─── Backup & Restore ──────────────────────────────────────────────────────────
+
+BACKUP_DATA_FILES = {
+    "employees": EMPLOYEES_FILE,
+    "payroll_history": HISTORY_FILE,
+    "schedules": SCHEDULES_FILE,
+    "timeclock": TIMECLOCK_FILE,
+    "time_off": TIMEOFF_FILE,
+    "requests": REQUESTS_FILE,
+    "request_types": REQUEST_TYPES_FILE,
+    "shift_swaps": SHIFT_SWAPS_FILE,
+    "manager_notes": MANAGER_NOTES_FILE,
+    "bills": BILLS_FILE,
+    "maintenance_log": MAINTENANCE_FILE,
+    "schedule_templates": SCHEDULE_TEMPLATES_FILE,
+    "notifications": NOTIFICATIONS_FILE,
+    "messages": MESSAGES_FILE,
+    "employee_tracker": EMPLOYEE_TRACKER_FILE,
+    "app_settings": APP_SETTINGS_FILE,
+    "tax_settings": TAX_SETTINGS_FILE,
+    "users": USER_DATA_FILE,
+}
+
+
+def collect_backup():
+    backup = {"_exported_at": datetime.now(timezone.utc).isoformat(), "_version": 1}
+    for key, path in BACKUP_DATA_FILES.items():
+        if db.DATABASE_URL:
+            data = db.load(key)
+        else:
+            if os.path.exists(path):
+                with open(path) as f:
+                    data = json.load(f)
+            else:
+                data = None
+        if data is not None:
+            backup[key] = data
+    return backup
+
+
+def restore_backup(backup):
+    for key, path in BACKUP_DATA_FILES.items():
+        if key in backup:
+            if db.DATABASE_URL:
+                db.save(key, backup[key])
+            else:
+                with open(path, "w") as f:
+                    json.dump(backup[key], f, indent=2)
+
+
+def auto_backup_if_due(settings):
+    freq = settings.get("backup_frequency", "never")
+    if freq == "never":
+        return
+    last = settings.get("last_backup")
+    if last:
+        try:
+            last_dt = datetime.fromisoformat(last)
+        except Exception:
+            last_dt = None
+    else:
+        last_dt = None
+    now = datetime.now(timezone.utc)
+    due = False
+    if last_dt is None:
+        due = True
+    elif freq == "weekly" and (now - last_dt).days >= 7:
+        due = True
+    elif freq == "monthly" and (now - last_dt).days >= 28:
+        due = True
+    if due:
+        backup = collect_backup()
+        key = f"auto_backup_{now.strftime('%Y%m%d_%H%M%S')}"
+        if db.DATABASE_URL:
+            backups = db.load("backups") or {}
+            backups[key] = backup
+            db.save("backups", backups)
+        else:
+            bdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backups")
+            os.makedirs(bdir, exist_ok=True)
+            with open(os.path.join(bdir, f"{key}.json"), "w") as f:
+                json.dump(backup, f, indent=2)
+        settings["last_backup"] = now.isoformat()
+        save_app_settings(settings)
+
+
+@app.route("/api/backup", methods=["GET"])
+@require_login
+def download_backup():
+    try:
+        backup = collect_backup()
+        return jsonify(backup)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/backup/restore", methods=["POST"])
+@require_login
+def restore_backup_route():
+    try:
+        data = request.json
+        if not data or "_exported_at" not in data:
+            return jsonify({"error": "Invalid backup file"}), 400
+        restore_backup(data)
+        return jsonify({"message": "Backup restored"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/backup/list", methods=["GET"])
+@require_login
+def list_backups():
+    try:
+        if db.DATABASE_URL:
+            backups = db.load("backups") or {}
+        else:
+            bdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backups")
+            backups = {}
+            if os.path.isdir(bdir):
+                for fn in sorted(os.listdir(bdir), reverse=True):
+                    if fn.endswith(".json"):
+                        with open(os.path.join(bdir, fn)) as f:
+                            backups[fn.replace(".json", "")] = json.load(f)
+        names = sorted(backups.keys(), reverse=True)[:20]
+        return jsonify([{"key": k, "date": k.replace("auto_backup_", "")} for k in names])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

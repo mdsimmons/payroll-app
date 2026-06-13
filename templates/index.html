@@ -853,6 +853,78 @@
                 </div>
                 <div id="cp-status" style="margin-top:0.5rem;font-size:0.9rem;"></div>
             </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('email-settings-body', this)">
+                    <h2 style="margin:0;">Email &amp; Payroll</h2>
+                    <span style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="email-settings-body" style="display:none;">
+                    <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Configure automatic CSV payroll emails and SMTP settings.</p>
+                    <div class="form-group">
+                        <label>Email Frequency</label>
+                        <select id="email-frequency" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                            <option value="never">Never (manual only)</option>
+                            <option value="weekly">Weekly (after each payroll)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Send To (email address)</label>
+                        <input type="email" id="email-to" placeholder="owner@example.com" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                    </div>
+                    <hr style="margin:1rem 0;border-color:#e2e8f0;">
+                    <h3 style="font-size:1rem;margin:0 0 0.5rem;">SMTP Server</h3>
+                    <div class="form-row">
+                        <div class="form-group" style="flex:2;">
+                            <label>Host</label>
+                            <input type="text" id="smtp-host" placeholder="smtp.gmail.com" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>Port</label>
+                            <input type="number" id="smtp-port" placeholder="587" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="smtp-user" placeholder="user@gmail.com" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" id="smtp-pass" placeholder="App password" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>From Address (optional)</label>
+                        <input type="email" id="email-from" placeholder="payroll@yourdomain.com" style="width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.9rem;">
+                    </div>
+                    <button class="btn btn-success" onclick="saveAppSettings()" style="width:100%;">Save Settings</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="flex-between" style="cursor:pointer;user-select:none;" onclick="toggleCollapse('backup-settings-body', this);setTimeout(loadBackupList,100);">
+                    <h2 style="margin:0;">Backup &amp; Restore</h2>
+                    <span style="font-size:1.2rem;color:#64748b;">&#9650;</span>
+                </div>
+                <div id="backup-settings-body" style="display:none;">
+                    <p style="color:#64748b;font-size:0.85rem;margin-bottom:0.75rem;">Download a full backup of all data or restore from a previous backup.</p>
+                    <div class="form-group">
+                        <label>Auto-Backup Frequency</label>
+                        <select id="backup-frequency" style="padding:0.5rem;border:1px solid #cbd5e1;border-radius:4px;font-size:0.95rem;">
+                            <option value="never">Never (manual only)</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+                        <button class="btn btn-primary" onclick="downloadBackup()" style="flex:1;">Download Backup</button>
+                        <button class="btn btn-success" onclick="document.getElementById('restore-file-input').click()" style="flex:1;">Restore from Backup</button>
+                    </div>
+                    <input type="file" id="restore-file-input" accept=".json" style="display:none;" onchange="uploadBackup(event)">
+                    <div id="backup-status" style="font-size:0.9rem;color:#059669;margin-top:0.5rem;"></div>
+                    <div id="backup-list" style="margin-top:0.75rem;"></div>
+                    <button class="btn btn-success" onclick="saveAppSettings()" style="width:100%;margin-top:0.5rem;">Save Settings</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3774,21 +3846,104 @@
             document.getElementById('notify-on-publish').checked = s.notify_on_publish !== false;
             const mc = document.getElementById('show-maint-dash');
             if (mc) mc.checked = s.show_maintenance_on_dashboard === true;
+            const emailFreq = document.getElementById('email-frequency');
+            if (emailFreq) emailFreq.value = s.email_frequency || 'never';
+            const emailTo = document.getElementById('email-to');
+            if (emailTo) emailTo.value = s.email_to || '';
+            const smtpHost = document.getElementById('smtp-host');
+            if (smtpHost) smtpHost.value = s.smtp_host || '';
+            const smtpPort = document.getElementById('smtp-port');
+            if (smtpPort) smtpPort.value = s.smtp_port || '587';
+            const smtpUser = document.getElementById('smtp-user');
+            if (smtpUser) smtpUser.value = s.smtp_user || '';
+            const emailFrom = document.getElementById('email-from');
+            if (emailFrom) emailFrom.value = s.email_from || '';
+            const backupFreq = document.getElementById('backup-frequency');
+            if (backupFreq) backupFreq.value = s.backup_frequency || 'never';
         }
 
         async function saveAppSettings() {
             const val = parseInt(document.getElementById('week-start-day').value);
             const notify = document.getElementById('notify-on-publish').checked;
             const showMaint = document.getElementById('show-maint-dash')?.checked || false;
+            const settings = {
+                week_start_day: val,
+                notify_on_publish: notify,
+                show_maintenance_on_dashboard: showMaint,
+                email_frequency: document.getElementById('email-frequency')?.value || 'never',
+                email_to: document.getElementById('email-to')?.value || '',
+                smtp_host: document.getElementById('smtp-host')?.value || '',
+                smtp_port: parseInt(document.getElementById('smtp-port')?.value) || 587,
+                smtp_user: document.getElementById('smtp-user')?.value || '',
+                smtp_pass: document.getElementById('smtp-pass')?.value || '',
+                email_from: document.getElementById('email-from')?.value || '',
+                backup_frequency: document.getElementById('backup-frequency')?.value || 'never',
+            };
             const res = await fetch('/api/app-settings', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ week_start_day: val, notify_on_publish: notify, show_maintenance_on_dashboard: showMaint })
+                body: JSON.stringify(settings)
             });
             if (res.ok) {
                 weekStartDay = val;
                 alert('Settings saved');
             }
+        }
+
+        async function downloadBackup() {
+            try {
+                const res = await fetch('/api/backup');
+                if (!res.ok) { alert('Failed to download backup'); return; }
+                const data = await res.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `payroll_backup_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                document.getElementById('backup-status').textContent = 'Backup downloaded.';
+            } catch(e) { alert('Backup failed: ' + e.message); }
+        }
+
+        async function uploadBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!confirm('Restore will replace ALL current data. Continue?')) return;
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const res = await fetch('/api/backup/restore', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    document.getElementById('backup-status').textContent = 'Restore complete. Refreshing...';
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert('Restore failed: ' + (result.error || 'unknown error'));
+                }
+            } catch(e) { alert('Restore failed: ' + e.message); }
+        }
+
+        async function loadBackupList() {
+            const container = document.getElementById('backup-list');
+            if (!container) return;
+            try {
+                const res = await fetch('/api/backup/list');
+                if (!res.ok) return;
+                const list = await res.json();
+                if (list.length === 0) { container.innerHTML = '<p style="color:#64748b;font-size:0.85rem;">No auto-backups found.</p>'; return; }
+                let html = '<p style="color:#64748b;font-size:0.85rem;margin-bottom:0.25rem;">Auto-backups:</p>';
+                list.forEach(b => {
+                    html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0;font-size:0.85rem;border-bottom:1px solid #f1f5f9;">
+                        <span>${b.date}</span>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch(e) { /* ignore */ }
         }
 
         function fmt(n) { return '$' + Number(n).toFixed(2); }
