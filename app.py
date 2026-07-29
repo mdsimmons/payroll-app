@@ -2131,7 +2131,7 @@ def download_reports_csv():
             "Hours Worked", "Hourly Rate", "Gross Pay",
             "Federal Tax", "State Tax", "Social Security",
             "Medicare", "Additional Medicare", "Total Tax",
-            "Tips", "Tip Makeup", "Child Support", "Total Deductions", "Net Pay",
+            "Tips", "Child Support", "Total Deductions", "Net Pay",
         ])
         for entry in history.values():
             if not entry.get("results"):
@@ -2146,7 +2146,7 @@ def download_reports_csv():
                     r.get("hours_worked", 0), r.get("hourly_rate", 0), r.get("gross_pay", 0),
                     r.get("federal_tax", 0), r.get("state_tax", 0), r.get("social_security", 0),
                     r.get("medicare", 0), r.get("additional_medicare", 0), r.get("total_tax", 0),
-                    r.get("tips", 0), r.get("child_support", 0), r.get("makeup", 0),
+                    r.get("tips", 0) + r.get("makeup", 0), r.get("child_support", 0),
                     r.get("total_deductions", 0), r.get("net_pay", 0),
                 ])
         return Response(
@@ -2338,7 +2338,7 @@ def build_payroll_csv(results, week_label):
             r["employee_id"], r["employee_name"], r["hours_worked"],
             r["hourly_rate"], r["gross_pay"],
             r["federal_tax"], r["state_tax"], r["social_security"], r["medicare"],
-            r.get("tips", 0), r.get("child_support", 0),
+            r.get("tips", 0) + r.get("makeup", 0), r.get("child_support", 0),
             r["total_deductions"], r["net_pay"],
         ])
     return out.getvalue()
