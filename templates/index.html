@@ -4005,9 +4005,9 @@
             const container = document.getElementById('report-employees');
             const empIds = Object.keys(data.employees);
             if (empIds.length === 0) { container.innerHTML = ''; return; }
-            let html = `<table>
+            let html = `<div style="overflow-x:auto;"><table>
                 <thead><tr>
-                    <th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Tax</th><th>Deductions</th><th>Net</th><th></th>
+                    <th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Child Support</th><th>Net</th><th></th>
                 </tr></thead><tbody>`;
             for (const eid of empIds) {
                 const e = data.employees[eid];
@@ -4017,13 +4017,17 @@
                     <td>${e.weeks.length}</td>
                     <td>${t.total_hours.toFixed(1)}</td>
                     <td>${fmt(t.total_gross)}</td>
-                    <td>${fmt(t.total_tax)}</td>
-                    <td>${fmt(t.total_deductions)}</td>
+                    <td>${fmt(t.total_federal_tax)}</td>
+                    <td>${fmt(t.total_state_tax)}</td>
+                    <td>${fmt(t.total_social_security)}</td>
+                    <td>${fmt(t.total_medicare)}</td>
+                    <td>${fmt(t.total_tips || 0)}</td>
+                    <td>${fmt(t.total_child_support || 0)}</td>
                     <td>${fmt(t.total_net)}</td>
                     <td><button class="btn btn-sm btn-primary" onclick="showEmployeeDetail('${eid}')">Paystubs</button></td>
                 </tr>`;
             }
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
             window._reportData = data;
         }
@@ -4076,15 +4080,15 @@
             for (const eid of Object.keys(data.employees)) {
                 const e = data.employees[eid];
                 const t = e.totals;
-                empRows += `<tr><td>${e.name}</td><td>${e.weeks.length}</td><td>${t.total_hours.toFixed(1)}</td><td>${fmt(t.total_gross)}</td><td>${fmt(t.total_tax)}</td><td>${fmt(t.total_deductions)}</td><td>${fmt(t.total_net)}</td></tr>`;
+                empRows += `<tr><td>${e.name}</td><td>${e.weeks.length}</td><td>${t.total_hours.toFixed(1)}</td><td>${fmt(t.total_gross)}</td><td>${fmt(t.total_federal_tax)}</td><td>${fmt(t.total_state_tax)}</td><td>${fmt(t.total_social_security)}</td><td>${fmt(t.total_medicare)}</td><td>${fmt(t.total_tips || 0)}</td><td>${fmt(t.total_child_support || 0)}</td><td>${fmt(t.total_net)}</td></tr>`;
             }
             return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payroll Report</title><style>
                 body { font-family: -apple-system, sans-serif; padding: 2rem; color: #1e293b; }
                 h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
                 .meta { color: #64748b; margin-bottom: 1.5rem; }
                 table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-                th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
-                th { background: #f8fafc; font-size: 0.85rem; text-transform: uppercase; color: #64748b; }
+                th, td { padding: 0.5rem; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; }
+                th { background: #f8fafc; font-size: 0.8rem; text-transform: uppercase; color: #64748b; white-space: nowrap; }
                 .summary { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
                 .sum-item { padding: 0.75rem; background: #f8fafc; border-radius: 4px; }
                 .sum-item .val { font-size: 1.25rem; font-weight: 700; }
@@ -4095,15 +4099,17 @@
                 <div class="meta">${data.start} to ${data.end} — ${data.weeks_in_range.length} week(s)</div>
                 <div class="summary">
                     <div class="sum-item"><div class="lbl">Gross Pay</div><div class="val">${fmt(s.total_gross)}</div></div>
+                    <div class="sum-item"><div class="lbl">Tips</div><div class="val">${fmt(s.total_tips || 0)}</div></div>
                     <div class="sum-item"><div class="lbl">Federal Tax</div><div class="val">${fmt(s.total_federal_tax)}</div></div>
                     <div class="sum-item"><div class="lbl">State Tax</div><div class="val">${fmt(s.total_state_tax)}</div></div>
                     <div class="sum-item"><div class="lbl">Social Security</div><div class="val">${fmt(s.total_social_security)}</div></div>
                     <div class="sum-item"><div class="lbl">Medicare</div><div class="val">${fmt(s.total_medicare)}</div></div>
+                    <div class="sum-item"><div class="lbl">Child Support</div><div class="val">${fmt(s.total_child_support || 0)}</div></div>
                     <div class="sum-item"><div class="lbl">Total Tax</div><div class="val">${fmt(s.total_tax)}</div></div>
                     <div class="sum-item"><div class="lbl">Total Deductions</div><div class="val">${fmt(s.total_deductions)}</div></div>
                     <div class="sum-item"><div class="lbl net">Net Pay</div><div class="val net">${fmt(s.total_net)}</div></div>
                 </div>
-                <table><thead><tr><th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Tax</th><th>Deductions</th><th>Net</th></tr></thead><tbody>${empRows}</tbody></table>
+                <table><thead><tr><th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Child Supp.</th><th>Net</th></tr></thead><tbody>${empRows}</tbody></table>
             </body></html>`;
         }
 

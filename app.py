@@ -2001,6 +2001,8 @@ def get_reports():
                     tt = float(r.get("total_tax", 0))
                     td = float(r.get("total_deductions", 0))
                     nt = float(r.get("net_pay", 0))
+                    ti = float(r.get("tips", 0))
+                    cs = float(r.get("child_support", 0))
 
                     summary["total_hours"] += h
                     summary["total_gross"] += g
@@ -2012,6 +2014,8 @@ def get_reports():
                     summary["total_tax"] += tt
                     summary["total_deductions"] += td
                     summary["total_net"] += nt
+                    summary["total_tips"] = summary.get("total_tips", 0) + ti
+                    summary["total_child_support"] = summary.get("total_child_support", 0) + cs
 
                     if eid not in employees:
                         employees[eid] = {
@@ -2021,6 +2025,7 @@ def get_reports():
                                 "total_hours": 0, "total_gross": 0, "total_federal_tax": 0,
                                 "total_state_tax": 0, "total_social_security": 0, "total_medicare": 0,
                                 "total_additional_medicare": 0, "total_tax": 0, "total_deductions": 0, "total_net": 0,
+                                "total_tips": 0, "total_child_support": 0,
                             },
                         }
                     employees[eid]["weeks"].append({
@@ -2031,6 +2036,8 @@ def get_reports():
                         "gross_pay": g, "federal_tax": ft, "state_tax": st,
                         "social_security": ss, "medicare": mc, "additional_medicare": am,
                         "total_tax": tt, "total_deductions": td, "net_pay": nt,
+                        "tips": r.get("tips", 0), "child_support": r.get("child_support", 0),
+                        "makeup": r.get("makeup", 0), "tipped": r.get("tipped", False),
                     })
                     employees[eid]["totals"]["total_hours"] += h
                     employees[eid]["totals"]["total_gross"] += g
@@ -2042,6 +2049,8 @@ def get_reports():
                     employees[eid]["totals"]["total_tax"] += tt
                     employees[eid]["totals"]["total_deductions"] += td
                     employees[eid]["totals"]["total_net"] += nt
+                    employees[eid]["totals"]["total_tips"] += ti
+                    employees[eid]["totals"]["total_child_support"] += cs
 
         for k in ("total_hours", "total_gross", "total_federal_tax", "total_state_tax",
                   "total_social_security", "total_medicare", "total_additional_medicare",
@@ -2119,7 +2128,7 @@ def download_reports_csv():
             "Hours Worked", "Hourly Rate", "Gross Pay",
             "Federal Tax", "State Tax", "Social Security",
             "Medicare", "Additional Medicare", "Total Tax",
-            "Total Deductions", "Net Pay",
+            "Tips", "Child Support", "Total Deductions", "Net Pay",
         ])
         for entry in history.values():
             if not entry.get("results"):
@@ -2134,6 +2143,7 @@ def download_reports_csv():
                     r.get("hours_worked", 0), r.get("hourly_rate", 0), r.get("gross_pay", 0),
                     r.get("federal_tax", 0), r.get("state_tax", 0), r.get("social_security", 0),
                     r.get("medicare", 0), r.get("additional_medicare", 0), r.get("total_tax", 0),
+                    r.get("tips", 0), r.get("child_support", 0),
                     r.get("total_deductions", 0), r.get("net_pay", 0),
                 ])
         return Response(
