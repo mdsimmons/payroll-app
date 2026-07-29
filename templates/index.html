@@ -4007,7 +4007,7 @@
             if (empIds.length === 0) { container.innerHTML = ''; return; }
             let html = `<div style="overflow-x:auto;"><table>
                 <thead><tr>
-                    <th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Child Support</th><th>Net</th><th></th>
+                    <th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Makeup</th><th>Child Supp.</th><th>Net</th><th></th>
                 </tr></thead><tbody>`;
             for (const eid of empIds) {
                 const e = data.employees[eid];
@@ -4022,6 +4022,7 @@
                     <td>${fmt(t.total_social_security)}</td>
                     <td>${fmt(t.total_medicare)}</td>
                     <td>${fmt(t.total_tips || 0)}</td>
+                    <td>${fmt(t.total_makeup || 0)}</td>
                     <td>${fmt(t.total_child_support || 0)}</td>
                     <td>${fmt(t.total_net)}</td>
                     <td><button class="btn btn-sm btn-primary" onclick="showEmployeeDetail('${eid}')">Paystubs</button></td>
@@ -4080,7 +4081,7 @@
             for (const eid of Object.keys(data.employees)) {
                 const e = data.employees[eid];
                 const t = e.totals;
-                empRows += `<tr><td>${e.name}</td><td>${e.weeks.length}</td><td>${t.total_hours.toFixed(1)}</td><td>${fmt(t.total_gross)}</td><td>${fmt(t.total_federal_tax)}</td><td>${fmt(t.total_state_tax)}</td><td>${fmt(t.total_social_security)}</td><td>${fmt(t.total_medicare)}</td><td>${fmt(t.total_tips || 0)}</td><td>${fmt(t.total_child_support || 0)}</td><td>${fmt(t.total_net)}</td></tr>`;
+                empRows += `<tr><td>${e.name}</td><td>${e.weeks.length}</td><td>${t.total_hours.toFixed(1)}</td><td>${fmt(t.total_gross)}</td><td>${fmt(t.total_federal_tax)}</td><td>${fmt(t.total_state_tax)}</td><td>${fmt(t.total_social_security)}</td><td>${fmt(t.total_medicare)}</td><td>${fmt(t.total_tips || 0)}</td><td>${fmt(t.total_makeup || 0)}</td><td>${fmt(t.total_child_support || 0)}</td><td>${fmt(t.total_net)}</td></tr>`;
             }
             return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payroll Report</title><style>
                 body { font-family: -apple-system, sans-serif; padding: 2rem; color: #1e293b; }
@@ -4100,6 +4101,7 @@
                 <div class="summary">
                     <div class="sum-item"><div class="lbl">Gross Pay</div><div class="val">${fmt(s.total_gross)}</div></div>
                     <div class="sum-item"><div class="lbl">Tips</div><div class="val">${fmt(s.total_tips || 0)}</div></div>
+                    <div class="sum-item"><div class="lbl">Tip Makeup</div><div class="val">${fmt(s.total_makeup || 0)}</div></div>
                     <div class="sum-item"><div class="lbl">Federal Tax</div><div class="val">${fmt(s.total_federal_tax)}</div></div>
                     <div class="sum-item"><div class="lbl">State Tax</div><div class="val">${fmt(s.total_state_tax)}</div></div>
                     <div class="sum-item"><div class="lbl">Social Security</div><div class="val">${fmt(s.total_social_security)}</div></div>
@@ -4109,7 +4111,7 @@
                     <div class="sum-item"><div class="lbl">Total Deductions</div><div class="val">${fmt(s.total_deductions)}</div></div>
                     <div class="sum-item"><div class="lbl net">Net Pay</div><div class="val net">${fmt(s.total_net)}</div></div>
                 </div>
-                <table><thead><tr><th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Child Supp.</th><th>Net</th></tr></thead><tbody>${empRows}</tbody></table>
+                <table><thead><tr><th>Employee</th><th>Weeks</th><th>Hours</th><th>Gross</th><th>Federal</th><th>State</th><th>SS</th><th>Medicare</th><th>Tips</th><th>Makeup</th><th>Child Supp.</th><th>Net</th></tr></thead><tbody>${empRows}</tbody></table>
             </body></html>`;
         }
 
