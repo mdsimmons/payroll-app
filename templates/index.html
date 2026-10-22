@@ -1063,9 +1063,9 @@
             <div class="flex-between" style="margin-bottom:1rem;">
                 <h2 style="margin:0;">My Paystubs</h2>
                 <div style="display:flex;gap:0.4rem;">
-                    <button class="btn btn-sm btn-outline" onclick="downloadPaystubs()">Download</button>
-                    <button class="btn btn-sm btn-outline" onclick="sharePaystubs()">Share</button>
-                    <button class="btn btn-sm btn-outline" onclick="printPaystubs()">Print</button>
+                    <button class="btn btn-sm btn-outline" onclick="empDownloadPaystubs()">Download</button>
+                    <button class="btn btn-sm btn-outline" onclick="empSharePaystubs()">Share</button>
+                    <button class="btn btn-sm btn-outline" onclick="empPrintPaystubs()">Print</button>
                 </div>
             </div>
             <div class="form-row" style="margin-bottom:1rem;">
@@ -4870,7 +4870,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
             return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Paystubs</title><style>' + PAYSTUB_PRINT_CSS + '</style></head><body>' + stubsHtml + '</body></html>';
         }
 
-        function downloadPaystubs() {
+        function empDownloadPaystubs() {
             const data = window._empPaystubs;
             if (!data || !data.length) return;
             const html = buildPaystubsHtml(data);
@@ -4882,7 +4882,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
             URL.revokeObjectURL(a.href);
         }
 
-        function sharePaystubs() {
+        function empSharePaystubs() {
             const data = window._empPaystubs;
             if (!data || !data.length) return;
             let text = `Paystubs — ${empSession.name}\n\n`;
@@ -4898,7 +4898,7 @@ body { font-family:'Helvetica Neue',Arial,sans-serif; color:#1e293b; background:
             }
         }
 
-        function printPaystubs() {
+        function empPrintPaystubs() {
             const data = window._empPaystubs;
             if (!data || !data.length) return;
             const html = buildPaystubsHtml(data);
